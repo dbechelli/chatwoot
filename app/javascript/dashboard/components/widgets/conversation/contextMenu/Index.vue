@@ -21,6 +21,8 @@ const MENU = {
   AGENT: 'agent',
   TEAM: 'team',
   LABEL: 'label',
+  SALES_STAGE: 'sales-stage',
+  FORWARD_MESSAGE: 'forward-message',
   DELETE: 'delete',
   OPEN_NEW_TAB: 'open-new-tab',
   COPY_LINK: 'copy-link',
@@ -70,6 +72,8 @@ export default {
     'assignAgent',
     'assignTeam',
     'assignLabel',
+    'assignSalesStage',
+    'forwardMessage',
     'deleteConversation',
     'close',
   ],
@@ -170,6 +174,24 @@ export default {
         icon: 'copy',
         label: this.$t('CONVERSATION.CARD_CONTEXT_MENU.COPY_LINK'),
       },
+      salesStageMenuConfig: {
+        key: MENU.SALES_STAGE,
+        icon: 'kanban-square',
+        label: this.$t('CONVERSATION.CARD_CONTEXT_MENU.ASSIGN_STAGE'),
+      },
+      salesStages: [
+        { key: 'lead', label: this.$t('KANBAN.STAGES.LEAD') },
+        { key: 'qualified', label: this.$t('KANBAN.STAGES.QUALIFIED') },
+        { key: 'proposal', label: this.$t('KANBAN.STAGES.PROPOSAL') },
+        { key: 'negotiation', label: this.$t('KANBAN.STAGES.NEGOTIATION') },
+        { key: 'won', label: this.$t('KANBAN.STAGES.WON') },
+        { key: 'lost', label: this.$t('KANBAN.STAGES.LOST') },
+      ],
+      forwardMessageOption: {
+        key: MENU.FORWARD_MESSAGE,
+        icon: 'arrow-reply',
+        label: this.$t('CONVERSATION.CARD_CONTEXT_MENU.FORWARD_MESSAGE'),
+      },
     };
   },
   computed: {
@@ -259,7 +281,7 @@ export default {
     },
     generateMenuLabelConfig(option, type = 'text') {
       return {
-        key: option.id,
+        key: option.id || option.key,
         ...(type === 'icon' && { icon: option.icon }),
         ...(type === 'label' && { color: option.color }),
         ...(type === 'agent' && { thumbnail: option.thumbnail }),
@@ -269,6 +291,12 @@ export default {
         ...(type === 'agent' && { label: option.name }),
         ...(type === 'team' && { label: option.name }),
       };
+    },
+    assignSalesStage(stage) {
+      this.$emit('assignSalesStage', stage);
+    },
+    forwardMessage() {
+      this.$emit('forwardMessage');
     },
   },
 };
@@ -312,7 +340,7 @@ export default {
       <hr class="m-1 rounded border-b border-n-weak dark:border-n-weak" />
     </template>
     <template
-      v-if="isAllowed([MENU.PRIORITY, MENU.LABEL, MENU.AGENT, MENU.TEAM])"
+      v-if="isAllowed([MENU.PRIORITY, MENU.LABEL, MENU.AGENT, MENU.TEAM, MENU.SALES_STAGE])"
     >
       <MenuItemWithSubmenu
         v-if="isAllowed([MENU.PRIORITY])"
@@ -323,6 +351,18 @@ export default {
           :key="i"
           :option="option"
           @click.stop="assignPriority(option.key)"
+        />
+      </MenuItemWithSubmenu>
+      <MenuItemWithSubmenu
+        v-if="isAllowed([MENU.SALES_STAGE])"
+        :option="salesStageMenuConfig"
+        :sub-menu-available="!!salesStages.length"
+      >
+        <MenuItem
+          v-for="stage in salesStages"
+          :key="stage.key"
+          :option="generateMenuLabelConfig(stage, 'text')"
+          @click.stop="assignSalesStage(stage.key)"
         />
       </MenuItemWithSubmenu>
       <MenuItemWithSubmenu
@@ -366,6 +406,14 @@ export default {
           @click.stop="$emit('assignTeam', team)"
         />
       </MenuItemWithSubmenu>
+      <hr class="m-1 rounded border-b border-n-weak dark:border-n-weak" />
+    </template>
+    <template v-if="isAllowed([MENU.FORWARD_MESSAGE])">
+      <MenuItem
+        :option="forwardMessageOption"
+        variant="icon"
+        @click.stop="forwardMessage"
+      />
       <hr class="m-1 rounded border-b border-n-weak dark:border-n-weak" />
     </template>
     <template v-if="isAllowed([MENU.OPEN_NEW_TAB, MENU.COPY_LINK])">

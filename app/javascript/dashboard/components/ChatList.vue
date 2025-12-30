@@ -808,11 +808,33 @@ const handleDelete = conversationId => {
   deleteConversationDialogRef.value.open();
 };
 
+const assignSalesStage = async (stage, conversationId) => {
+  try {
+    await store.dispatch('updateCustomAttributes', {
+      conversationId,
+      customAttributes: {
+        sales_stage: stage,
+      },
+    });
+    useAlert(t('KANBAN.STAGE_UPDATED'));
+  } catch {
+    useAlert(t('KANBAN.UPDATE_ERROR'));
+  }
+};
+
+const forwardMessage = conversationId => {
+  // TODO: Implementar modal de encaminhamento de mensagem
+  useAlert('Funcionalidade de encaminhamento em desenvolvimento');
+  console.log('Forward message for conversation:', conversationId);
+};
+
 provide('selectConversation', selectConversation);
 provide('deSelectConversation', deSelectConversation);
 provide('assignAgent', onAssignAgent);
 provide('assignTeam', onAssignTeam);
 provide('assignLabels', onAssignLabels);
+provide('assignSalesStage', assignSalesStage);
+provide('forwardMessage', forwardMessage);
 provide('updateConversationStatus', toggleConversationStatus);
 provide('toggleContextMenu', onContextMenuToggle);
 provide('markAsUnread', markAsUnread);

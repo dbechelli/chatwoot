@@ -161,6 +161,8 @@
       "ASSIGN_LABEL": "Atribuir etiqueta",
       "AGENTS_LOADING": "Carregando agentes...",
       "ASSIGN_TEAM": "Atribuir time",
+      "ASSIGN_STAGE": "Atribuir estágio de vendas",
+      "FORWARD_MESSAGE": "Encaminhar mensagem",
       "DELETE": "Excluir conversa",
       "OPEN_IN_NEW_TAB": "Abrir em nova aba",
       "COPY_LINK": "Copiar link da conversa",
