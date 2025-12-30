@@ -20,42 +20,13 @@ const showMetrics = ref(true);
 
 // Configuração dos estágios do pipeline de vendas
 const salesStages = ref([
-  {
-    stage: 'lead',
-    title: t('KANBAN.STAGES.LEAD'),
-    color: '#3b82f6',
-    wipLimit: null,
-  },
-  {
-    stage: 'qualified',
-    title: t('KANBAN.STAGES.QUALIFIED'),
-    color: '#8b5cf6',
-    wipLimit: 20,
-  },
-  {
-    stage: 'proposal',
-    title: t('KANBAN.STAGES.PROPOSAL'),
-    color: '#f59e0b',
-    wipLimit: 15,
-  },
-  {
-    stage: 'negotiation',
-    title: t('KANBAN.STAGES.NEGOTIATION'),
-    color: '#ec4899',
-    wipLimit: 10,
-  },
-  {
-    stage: 'won',
-    title: t('KANBAN.STAGES.WON'),
-    color: '#10b981',
-    wipLimit: null,
-  },
-  {
-    stage: 'lost',
-    title: t('KANBAN.STAGES.LOST'),
-    color: '#ef4444',
-    wipLimit: null,
-  },
+  { stage: 'novo_contato', title: t('KANBAN.STAGES.NEW_CONTACT'), color: '#3b82f6', wipLimit: null },
+  { stage: 'qualificacao', title: t('KANBAN.STAGES.QUALIFICATION'), color: '#8b5cf6', wipLimit: 30 },
+  { stage: 'agendamento_pendente', title: t('KANBAN.STAGES.PENDING_APPOINTMENT'), color: '#f59e0b', wipLimit: 20 },
+  { stage: 'agendado', title: t('KANBAN.STAGES.SCHEDULED'), color: '#10b981', wipLimit: null },
+  { stage: 'pos_consulta', title: t('KANBAN.STAGES.POST_CONSULT'), color: '#ec4899', wipLimit: 15 },
+  { stage: 'paciente_ativo', title: t('KANBAN.STAGES.ACTIVE_PATIENT'), color: '#6366f1', wipLimit: null },
+  { stage: 'inativo', title: t('KANBAN.STAGES.INACTIVE'), color: '#64748b', wipLimit: null },
 ]);
 
 // Getters
