@@ -1,0 +1,40 @@
+{
+  "KANBAN": {
+    "TITLE": "Sales Pipeline",
+    "LOADING": "Loading deals...",
+    "REFRESH": "Refresh",
+    "SHOW_METRICS": "Show Metrics",
+    "HIDE_METRICS": "Hide Metrics",
+    "FETCH_ERROR": "Failed to load conversations",
+    "UPDATE_ERROR": "Failed to update deal stage",
+    "STAGE_UPDATED": "Deal stage updated successfully",
+    "UNKNOWN_CONTACT": "Unknown Contact",
+    "NO_MESSAGES": "No messages yet",
+    "UNASSIGNED": "Unassigned",
+    "EMPTY_COLUMN": "No deals in this stage",
+    "WIP_LIMIT_EXCEEDED": "Work in progress limit exceeded!",
+    "STAGES": {
+      "LEAD": "New Lead",
+      "QUALIFIED": "Qualified",
+      "PROPOSAL": "Proposal Sent",
+      "NEGOTIATION": "Negotiation",
+      "WON": "Won",
+      "LOST": "Lost"
+    },
+    "FILTERS": {
+      "INBOX": "Inbox",
+      "ALL_INBOXES": "All Inboxes",
+      "ASSIGNEE": "Assigned to",
+      "ALL_AGENTS": "All Agents",
+      "MY_DEALS": "My Deals",
+      "UNASSIGNED": "Unassigned"
+    },
+    "METRICS": {
+      "TOTAL_DEALS": "Total Deals",
+      "TOTAL_VALUE": "Total Value",
+      "AVG_DEAL_VALUE": "Avg Deal Value",
+      "CONVERSION_RATE": "Conversion Rate",
+      "FORECAST": "Forecast"
+    }
+  }
+}
