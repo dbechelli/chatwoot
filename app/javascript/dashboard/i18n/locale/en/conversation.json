@@ -446,5 +446,20 @@
   },
   "GALLERY_VIEW": {
     "ERROR_DOWNLOADING": "Unable to download attachment. Please try again"
+  },
+  "FORWARD_MESSAGE": {
+    "TITLE": "Forward message",
+    "DESCRIPTION": "Select contacts to forward this message to",
+    "SEARCH_PLACEHOLDER": "Search contacts by name, email or phone...",
+    "NO_CONTACTS": "No contacts found",
+    "UNKNOWN_CONTACT": "Unknown contact",
+    "SELECTED_COUNT": "{count} selected",
+    "INCLUDE_ATTACHMENTS": "Include attachments",
+    "CANCEL": "Cancel",
+    "FORWARD": "Forward",
+    "SUCCESS": "Message forwarded to {count} contact(s)",
+    "ERROR": "Failed to forward message",
+    "PARTIAL_ERROR": "Failed to forward to {count} contact(s)",
+    "NO_MESSAGES": "No messages to forward"
   }
 }

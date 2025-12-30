@@ -436,5 +436,20 @@
   },
   "GALLERY_VIEW": {
     "ERROR_DOWNLOADING": "Não foi possível baixar o anexo. Por favor, tente novamente"
+  },
+  "FORWARD_MESSAGE": {
+    "TITLE": "Encaminhar mensagem",
+    "DESCRIPTION": "Selecione os contatos para encaminhar esta mensagem",
+    "SEARCH_PLACEHOLDER": "Buscar contatos por nome, email ou telefone...",
+    "NO_CONTACTS": "Nenhum contato encontrado",
+    "SELECTED_COUNT": "{count} selecionado(s)",
+    "NO_SELECTION": "Nenhum contato selecionado",
+    "INCLUDE_ATTACHMENTS": "Incluir anexos",
+    "FORWARD": "Encaminhar",
+    "CANCEL": "Cancelar",
+    "SUCCESS": "Mensagem encaminhada para {count} contato(s)",
+    "ERROR": "Falha ao encaminhar mensagem",
+    "LOADING_CONTACTS": "Carregando contatos...",
+    "SELECT_AT_LEAST_ONE": "Selecione pelo menos um contato"
   }
 }

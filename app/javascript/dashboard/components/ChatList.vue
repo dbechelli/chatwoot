@@ -32,6 +32,7 @@ import ConversationBulkActions from './widgets/conversation/conversationBulkActi
 import IntersectionObserver from './IntersectionObserver.vue';
 import TeleportWithDirection from 'dashboard/components-next/TeleportWithDirection.vue';
 import Spinner from 'dashboard/components-next/spinner/Spinner.vue';
+import ForwardMessageModal from './widgets/conversation/ForwardMessageModal.vue';
 
 import { useUISettings } from 'dashboard/composables/useUISettings';
 import { useAlert } from 'dashboard/composables';
@@ -790,6 +791,8 @@ onMounted(() => {
 
 const deleteConversationDialogRef = ref(null);
 const selectedConversationId = ref(null);
+const showForwardModal = ref(false);
+const forwardConversationId = ref(null);
 
 async function deleteConversation() {
   try {
@@ -823,9 +826,13 @@ const assignSalesStage = async (stage, conversationId) => {
 };
 
 const forwardMessage = conversationId => {
-  // TODO: Implementar modal de encaminhamento de mensagem
-  useAlert('Funcionalidade de encaminhamento em desenvolvimento');
-  console.log('Forward message for conversation:', conversationId);
+  forwardConversationId.value = conversationId;
+  showForwardModal.value = true;
+};
+
+const handleForwardModalClose = () => {
+  showForwardModal.value = false;
+  forwardConversationId.value = null;
 };
 
 provide('selectConversation', selectConversation);
@@ -1019,6 +1026,11 @@ watch(conversationFilters, (newVal, oldVal) => {
       :confirm-button-label="$t('CONVERSATION.DELETE_CONVERSATION.CONFIRM')"
       @confirm="deleteConversation"
       @close="selectedConversationId = null"
+    />
+    <ForwardMessageModal
+      :show="showForwardModal"
+      :conversation-id="forwardConversationId"
+      @close="handleForwardModalClose"
     />
     <TeleportWithDirection
       v-if="showAdvancedFilters"
