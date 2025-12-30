@@ -176,52 +176,52 @@ watch([selectedInbox, selectedAssignee], () => {
 <template>
   <div class="flex h-screen flex-col bg-n-slate-1">
     <!-- Header -->
-    <div class="flex flex-col gap-4 border-b border-n-slate-6 bg-white p-4">
-      <div class="flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <i class="i-lucide-kanban-square text-2xl text-n-brand" />
-          <h1 class="text-2xl font-bold text-n-slate-12">
+    <div class="flex flex-col gap-4 border-b border-n-slate-6 bg-white p-3 md:p-4">
+      <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div class="flex items-center gap-2 md:gap-3">
+          <i class="i-lucide-kanban-square text-xl md:text-2xl text-n-brand" />
+          <h1 class="text-lg md:text-2xl font-bold text-n-slate-12">
             {{ t('KANBAN.TITLE') }}
           </h1>
         </div>
 
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2 flex-wrap">
           <!-- Toggle Metrics -->
           <button
-            class="inline-flex items-center gap-2 rounded-lg border border-n-slate-6 px-3 py-2 text-sm font-medium text-n-slate-12 transition-colors hover:bg-n-slate-3"
+            class="inline-flex items-center gap-1.5 md:gap-2 rounded-lg border border-n-slate-6 px-2 md:px-3 py-1.5 md:py-2 text-xs md:text-sm font-medium text-n-slate-12 transition-colors hover:bg-n-slate-3"
             @click="toggleMetrics"
           >
-            <i :class="showMetrics ? 'i-lucide-eye-off' : 'i-lucide-eye'" />
-            {{
+            <i class="text-base" :class="showMetrics ? 'i-lucide-eye-off' : 'i-lucide-eye'" />
+            <span class="hidden sm:inline">{{
               showMetrics ? t('KANBAN.HIDE_METRICS') : t('KANBAN.SHOW_METRICS')
-            }}
+            }}</span>
           </button>
 
           <!-- Refresh -->
           <button
-            class="inline-flex items-center gap-2 rounded-lg border border-n-slate-6 px-3 py-2 text-sm font-medium text-n-slate-12 transition-colors hover:bg-n-slate-3"
+            class="inline-flex items-center gap-1.5 md:gap-2 rounded-lg border border-n-slate-6 px-2 md:px-3 py-1.5 md:py-2 text-xs md:text-sm font-medium text-n-slate-12 transition-colors hover:bg-n-slate-3"
             :disabled="isLoading"
             @click="handleRefresh"
           >
             <i
-              class="i-lucide-refresh-cw"
+              class="text-base i-lucide-refresh-cw"
               :class="{ 'animate-spin': isLoading }"
             />
-            {{ t('KANBAN.REFRESH') }}
+            <span class="hidden sm:inline">{{ t('KANBAN.REFRESH') }}</span>
           </button>
         </div>
       </div>
 
       <!-- Filtros -->
-      <div class="flex items-center gap-4">
+      <div class="flex flex-col gap-3 md:flex-row md:items-center md:gap-4">
         <!-- Filtro de Inbox -->
-        <div class="flex items-center gap-2">
-          <label class="text-sm font-medium text-n-slate-11">
+        <div class="flex items-center gap-2 flex-1 md:flex-initial">
+          <label class="text-xs md:text-sm font-medium text-n-slate-11 whitespace-nowrap">
             {{ t('KANBAN.FILTERS.INBOX') }}:
           </label>
           <select
             v-model="selectedInbox"
-            class="rounded-lg border border-n-slate-6 px-3 py-1.5 text-sm text-n-slate-12 focus:border-n-brand focus:outline-none"
+            class="flex-1 md:flex-initial rounded-lg border border-n-slate-6 px-2 md:px-3 py-1.5 text-xs md:text-sm text-n-slate-12 focus:border-n-brand focus:outline-none"
           >
             <option :value="null">{{ t('KANBAN.FILTERS.ALL_INBOXES') }}</option>
             <option v-for="inbox in inboxes" :key="inbox.id" :value="inbox.id">
@@ -231,13 +231,13 @@ watch([selectedInbox, selectedAssignee], () => {
         </div>
 
         <!-- Filtro de Assignee -->
-        <div class="flex items-center gap-2">
-          <label class="text-sm font-medium text-n-slate-11">
+        <div class="flex items-center gap-2 flex-1 md:flex-initial">
+          <label class="text-xs md:text-sm font-medium text-n-slate-11 whitespace-nowrap">
             {{ t('KANBAN.FILTERS.ASSIGNEE') }}:
           </label>
           <select
             v-model="selectedAssignee"
-            class="rounded-lg border border-n-slate-6 px-3 py-1.5 text-sm text-n-slate-12 focus:border-n-brand focus:outline-none"
+            class="flex-1 md:flex-initial rounded-lg border border-n-slate-6 px-2 md:px-3 py-1.5 text-xs md:text-sm text-n-slate-12 focus:border-n-brand focus:outline-none"
           >
             <option value="all">{{ t('KANBAN.FILTERS.ALL_AGENTS') }}</option>
             <option value="me">{{ t('KANBAN.FILTERS.MY_DEALS') }}</option>
@@ -258,7 +258,7 @@ watch([selectedInbox, selectedAssignee], () => {
     </div>
 
     <!-- Kanban Board -->
-    <div class="flex-1 overflow-x-auto p-4">
+    <div class="flex-1 overflow-x-auto overflow-y-hidden p-2 md:p-4">
       <div
         v-if="isLoading && !allConversations.length"
         class="flex h-full items-center justify-center"
@@ -269,8 +269,8 @@ watch([selectedInbox, selectedAssignee], () => {
         </div>
       </div>
 
-      <div v-else class="flex min-w-fit gap-4">
-        <div v-for="stage in salesStages" :key="stage.stage" class="w-80">
+      <div v-else class="flex gap-3 md:gap-4 pb-4" style="min-width: min-content;">
+        <div v-for="stage in salesStages" :key="stage.stage" class="w-72 md:w-80 flex-shrink-0">
           <KanbanColumn
             :stage="stage.stage"
             :title="stage.title"

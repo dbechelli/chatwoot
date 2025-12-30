@@ -1,56 +1,40 @@
 {
   "KANBAN": {
-    "HEADER": {
-      "TITLE": "Funil de Vendas",
-      "DESCRIPTION": "Gerencie seu pipeline de vendas com quadro Kanban"
-    },
-    "FILTERS": {
-      "INBOX": "Caixa de Entrada",
-      "ALL_INBOXES": "Todas as Caixas",
-      "ASSIGNEE": "Responsável",
-      "ALL": "Todos",
-      "ME": "Eu",
-      "UNASSIGNED": "Não atribuído"
-    },
-    "ACTIONS": {
-      "REFRESH": "Atualizar",
-      "TOGGLE_METRICS": "Mostrar/Ocultar Métricas"
-    },
+    "TITLE": "Funil de Vendas",
+    "LOADING": "Carregando negócios...",
+    "REFRESH": "Atualizar",
+    "SHOW_METRICS": "Mostrar Métricas",
+    "HIDE_METRICS": "Ocultar Métricas",
+    "FETCH_ERROR": "Erro ao carregar conversas",
+    "UPDATE_ERROR": "Erro ao atualizar estágio",
+    "STAGE_UPDATED": "Estágio atualizado com sucesso",
+    "UNKNOWN_CONTACT": "Contato Desconhecido",
+    "NO_MESSAGES": "Sem mensagens",
+    "UNASSIGNED": "Não Atribuído",
+    "EMPTY_COLUMN": "Nenhum negócio neste estágio",
+    "WIP_LIMIT_EXCEEDED": "Limite de trabalho em andamento excedido!",
     "STAGES": {
-      "LEAD": "Lead",
+      "LEAD": "Novo Lead",
       "QUALIFIED": "Qualificado",
-      "PROPOSAL": "Proposta",
+      "PROPOSAL": "Proposta Enviada",
       "NEGOTIATION": "Negociação",
       "WON": "Ganho",
       "LOST": "Perdido"
     },
+    "FILTERS": {
+      "INBOX": "Caixa de Entrada",
+      "ALL_INBOXES": "Todas as Caixas",
+      "ASSIGNEE": "Atribuído para",
+      "ALL_AGENTS": "Todos os Agentes",
+      "MY_DEALS": "Meus Negócios",
+      "UNASSIGNED": "Não Atribuído"
+    },
     "METRICS": {
-      "TITLE": "Métricas do Pipeline",
       "TOTAL_DEALS": "Total de Negócios",
       "TOTAL_VALUE": "Valor Total",
-      "AVERAGE_DEAL": "Ticket Médio",
+      "AVG_DEAL_VALUE": "Ticket Médio",
       "CONVERSION_RATE": "Taxa de Conversão",
       "FORECAST": "Previsão"
-    },
-    "CARD": {
-      "NO_ASSIGNEE": "Sem responsável",
-      "NO_PRIORITY": "Sem prioridade",
-      "MORE_LABELS": "mais"
-    },
-    "COLUMN": {
-      "WIP_WARNING": "Atenção: limite WIP atingido!"
-    },
-    "MESSAGES": {
-      "LOADING": "Carregando conversas...",
-      "NO_CONVERSATIONS": "Nenhuma conversa neste estágio",
-      "STAGE_UPDATED": "Estágio atualizado com sucesso!",
-      "UPDATE_ERROR": "Erro ao atualizar estágio. Tente novamente.",
-      "FETCH_ERROR": "Erro ao carregar conversas. Tente novamente.",
-      "NO_MESSAGES": "Sem mensagens"
-    },
-    "EMPTY_STATE": {
-      "TITLE": "Nenhuma conversa encontrada",
-      "DESCRIPTION": "Adicione conversas ao funil de vendas usando atributos personalizados"
     }
   }
 }
