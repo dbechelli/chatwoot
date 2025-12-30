@@ -1,6 +1,6 @@
 {
   "KANBAN": {
-    "TITLE": "Funil de Vendas",
+    "TITLE": "Pipeline de Pacientes",
     "LOADING": "Carregando negócios...",
     "REFRESH": "Atualizar",
     "SHOW_METRICS": "Mostrar Métricas",
@@ -14,12 +14,13 @@
     "EMPTY_COLUMN": "Nenhum negócio neste estágio",
     "WIP_LIMIT_EXCEEDED": "Limite de trabalho em andamento excedido!",
     "STAGES": {
-      "LEAD": "Novo Lead",
-      "QUALIFIED": "Qualificado",
-      "PROPOSAL": "Proposta Enviada",
-      "NEGOTIATION": "Negociação",
-      "WON": "Ganho",
-      "LOST": "Perdido"
+      "NEW_CONTACT": "📥 Novo Contato",
+      "QUALIFICATION": "🔍 Qualificação",
+      "PENDING_APPOINTMENT": "📅 Agendamento Pendente",
+      "SCHEDULED": "✅ Agendado",
+      "POST_CONSULT": "🔄 Pós-Consulta",
+      "ACTIVE_PATIENT": "⭐ Paciente Ativo",
+      "INACTIVE": "❄️ Inativo"
     },
     "FILTERS": {
       "INBOX": "Caixa de Entrada",
