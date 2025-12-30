@@ -268,16 +268,30 @@ const conversationListPagination = computed(() => {
   return currentPage.value + 1;
 });
 
+const isResolvedTab = computed(() => {
+  return activeAssigneeTab.value === wootConstants.ASSIGNEE_TYPE.RESOLVED;
+});
+
 const conversationFilters = computed(() => {
+  // Para a aba resolved, filtramos por status=resolved com assignee_type=all
+  const assigneeType = isResolvedTab.value
+    ? wootConstants.ASSIGNEE_TYPE.ALL
+    : activeAssigneeTab.value;
+  const status = isResolvedTab.value
+    ? wootConstants.STATUS_TYPE.RESOLVED
+    : activeStatus.value;
+
   return {
     inboxId: props.conversationInbox ? props.conversationInbox : undefined,
-    assigneeType: activeAssigneeTab.value,
-    status: activeStatus.value,
+    assigneeType,
+    status,
     sortBy: activeSortBy.value,
     page: conversationListPagination.value,
     labels: props.label ? [props.label] : undefined,
     teamId: props.teamId || undefined,
     conversationType: props.conversationType || undefined,
+    // Rastreia a aba real para o estado de paginação
+    tabType: activeAssigneeTab.value,
   };
 });
 
