@@ -61,6 +61,9 @@ class Account < ApplicationRecord
   store_accessor :settings, :auto_resolve_after, :auto_resolve_message, :auto_resolve_ignore_waiting
   store_accessor :settings, :audio_transcriptions, :auto_resolve_label, :conversation_required_attributes
 
+  # Kanban configuration accessors
+  store_accessor :kanban_config, :kanban_enabled, :kanban_boards
+
   has_many :account_users, dependent: :destroy_async
   has_many :agent_bot_inboxes, dependent: :destroy_async
   has_many :agent_bots, dependent: :destroy_async
@@ -162,6 +165,46 @@ class Account < ApplicationRecord
     # we need to extract the language code from the locale
     account_locale = locale&.split('_')&.first
     ISO_639.find(account_locale)&.english_name&.downcase || 'english'
+  end
+
+  # Kanban configuration helper methods
+  def kanban_enabled?
+    kanban_config['enabled'] == true
+  end
+
+  def kanban_boards
+    kanban_config['boards'] || []
+  end
+
+  def default_kanban_board
+    kanban_boards.find { |b| b['isDefault'] } || kanban_boards.first
+  end
+
+  def find_kanban_board(board_id)
+    kanban_boards.find { |b| b['id'] == board_id }
+  end
+
+  def add_kanban_board(board_data)
+    board = board_data.merge('id' => SecureRandom.uuid)
+    boards = kanban_boards
+    boards << board
+    update!(kanban_config: kanban_config.merge('boards' => boards))
+    board
+  end
+
+  def update_kanban_board(board_id, board_data)
+    boards = kanban_boards
+    board_index = boards.find_index { |b| b['id'] == board_id }
+    return nil if board_index.nil?
+
+    boards[board_index] = boards[board_index].merge(board_data)
+    update!(kanban_config: kanban_config.merge('boards' => boards))
+    boards[board_index]
+  end
+
+  def delete_kanban_board(board_id)
+    boards = kanban_boards.reject { |b| b['id'] == board_id }
+    update!(kanban_config: kanban_config.merge('boards' => boards))
   end
 
   private
