@@ -181,6 +181,7 @@ export default {
       v-if="showForwardModal"
       :show="showForwardModal"
       :conversation-id="conversationId"
+      :message-id="messageId"
       @close="closeForwardModal"
     />
     <!-- Confirm Deletion -->

@@ -241,6 +241,29 @@ class Whatsapp::Providers::WhatsappBaileysService < Whatsapp::Providers::BaseSer
     response.parsed_response&.first || { 'jid' => remote_jid, 'exists' => false }
   end
 
+  def forward_message(message, destination_jids)
+    # Build the WAMessage object from the Chatwoot message
+    wa_message = build_wa_message_from_message(message)
+
+    # Convert destination JIDs to WhatsApp format
+    formatted_jids = destination_jids.map do |jid|
+      jid.ends_with?('@lid') ? jid : "#{jid.delete('+')}@s.whatsapp.net"
+    end
+
+    response = HTTParty.post(
+      "#{provider_url}/connections/#{whatsapp_channel.phone_number}/forward-message",
+      headers: api_headers,
+      body: {
+        message: wa_message,
+        destinationJids: formatted_jids
+      }.to_json
+    )
+
+    raise ProviderUnavailableError unless process_response(response)
+
+    response.parsed_response.dig('data', 'results')
+  end
+
   private
 
   def provider_url
@@ -312,6 +335,54 @@ class Whatsapp::Providers::WhatsappBaileysService < Whatsapp::Providers::BaseSer
     return @recipient_id if @recipient_id.ends_with?('@lid')
 
     "#{@recipient_id.delete('+')}@s.whatsapp.net"
+  end
+
+  def build_wa_message_from_message(message)
+    # Build the key object
+    source_id = message.source_id || message.id.to_s
+    remote_jid = if message.conversation.contact.identifier.ends_with?('@lid')
+                   message.conversation.contact.identifier
+                 else
+                   "#{message.conversation.contact.identifier.delete('+')}@s.whatsapp.net"
+                 end
+
+    key = {
+      id: source_id,
+      remoteJid: remote_jid,
+      fromMe: message.message_type == 'outgoing'
+    }
+
+    # Build the message content
+    message_content = build_message_content_from_message(message)
+
+    {
+      key: key,
+      message: message_content
+    }
+  end
+
+  def build_message_content_from_message(message)
+    if message.attachments.present?
+      # For messages with attachments, we need to include the media reference
+      # Note: Baileys will handle downloading the media using the URL
+      attachment = message.attachments.first
+      case attachment.file_type
+      when 'image'
+        { imageMessage: { caption: message.content } }
+      when 'video'
+        { videoMessage: { caption: message.content } }
+      when 'audio'
+        { audioMessage: {} }
+      when 'file', 'sticker'
+        { documentMessage: { caption: message.content } }
+      else
+        { conversation: message.content }
+      end
+    elsif message.content.present?
+      { conversation: message.content }
+    else
+      { conversation: '' }
+    end
   end
 
   def update_external_created_at(response)

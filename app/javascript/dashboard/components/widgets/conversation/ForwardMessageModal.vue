@@ -15,6 +15,10 @@ const props = defineProps({
     type: Number,
     required: true,
   },
+  messageId: {
+    type: Number,
+    default: null,
+  },
 });
 
 const emit = defineEmits(['close', 'forward']);
@@ -81,47 +85,31 @@ const forwardToContacts = async () => {
   isForwarding.value = true;
 
   try {
-    // Buscar mensagens da conversa
-    const messages = conversation.value?.messages || [];
-    const lastMessage = messages[messages.length - 1];
+    // Get the message to forward
+    const messageIdToForward =
+      props.messageId ||
+      conversation.value?.messages?.[conversation.value.messages.length - 1]
+        ?.id;
 
-    if (!lastMessage) {
+    if (!messageIdToForward) {
       useAlert(t('FORWARD_MESSAGE.NO_MESSAGES'));
       isForwarding.value = false;
       return;
     }
 
-    const inboxId = conversation.value.inbox_id;
-    const messageContent = `📨 Mensagem encaminhada:\n\n${lastMessage.content}`;
-
-    // Encaminhar para todos os contatos em paralelo
-    const forwardPromises = selectedContacts.value.map(async contactId => {
-      const contact = allContacts.value.find(c => c.id === contactId);
-      if (!contact) {
-        return { success: false, contactId };
-      }
-
-      try {
-        await store.dispatch('sendMessage', {
-          conversationId: null,
-          message: {
-            content: messageContent,
-            private: false,
-          },
-          contactId,
-          inboxId,
-        });
-        return { success: true, contactId };
-      } catch (error) {
-        return { success: false, contactId, error };
-      }
+    // Call the forward API endpoint
+    const response = await store.dispatch('forwardMessage', {
+      conversationId: props.conversationId,
+      messageId: messageIdToForward,
+      contactIds: selectedContacts.value,
     });
 
-    const results = await Promise.all(forwardPromises);
+    // Process results
+    const results = response?.results || [];
     const successCount = results.filter(r => r.success).length;
     const errorCount = results.filter(r => !r.success).length;
 
-    // Mostrar resultado
+    // Show result
     if (successCount > 0) {
       useAlert(
         t('CONVERSATION.FORWARD_MESSAGE.SUCCESS', { count: successCount })
@@ -129,7 +117,16 @@ const forwardToContacts = async () => {
     }
 
     if (errorCount > 0) {
-      useAlert(t('CONVERSATION.FORWARD_MESSAGE.ERROR'));
+      const failureCount = errorCount;
+      if (successCount === 0) {
+        useAlert(t('CONVERSATION.FORWARD_MESSAGE.ERROR'));
+      } else {
+        useAlert(
+          t('CONVERSATION.FORWARD_MESSAGE.PARTIAL_ERROR', {
+            count: failureCount,
+          })
+        );
+      }
     }
 
     emit('forward', {
