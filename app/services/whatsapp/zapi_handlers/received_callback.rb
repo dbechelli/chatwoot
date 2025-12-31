@@ -25,6 +25,7 @@ module Whatsapp::ZapiHandlers::ReceivedCallback # rubocop:disable Metrics/Module
       end
 
       set_conversation
+      update_conversation_group_metadata if @raw_message[:isGroup]
       handle_create_message
     end
   ensure
@@ -74,6 +75,39 @@ module Whatsapp::ZapiHandlers::ReceivedCallback # rubocop:disable Metrics/Module
   end
 
   def set_contact
+    if @raw_message[:isGroup]
+      set_group_contact
+    else
+      set_individual_contact
+    end
+  end
+
+  def set_group_contact
+    # Contact do grupo
+    group_source_id = @raw_message[:chatLid]
+    group_name = @raw_message[:chatName] || 'WhatsApp Group'
+
+    group_contact_attributes = {
+      name: group_name,
+      identifier: group_source_id,
+      is_whatsapp_group: true
+    }
+
+    group_contact_inbox = ::ContactInboxWithContactBuilder.new(
+      source_id: group_source_id,
+      inbox: inbox,
+      contact_attributes: group_contact_attributes
+    ).perform
+
+    @contact_inbox = group_contact_inbox
+    @contact = group_contact_inbox.contact
+
+    # Armazenar informações do remetente (quem enviou no grupo)
+    @sender_phone = @raw_message[:author] || @raw_message[:phone]
+    @sender_name = @raw_message[:senderName]
+  end
+
+  def set_individual_contact
     push_name = contact_name
     source_id = @raw_message[:chatLid].to_s.gsub(/[^\d]/, '')
     identifier = @raw_message[:chatLid]
@@ -125,6 +159,27 @@ module Whatsapp::ZapiHandlers::ReceivedCallback # rubocop:disable Metrics/Module
     return unless avatar_url.present? && avatar_url.start_with?('http')
 
     Avatar::AvatarFromUrlJob.perform_later(@contact, avatar_url)
+  end
+
+  def update_conversation_group_metadata
+    group_data = {
+      id: @raw_message[:chatLid],
+      name: @raw_message[:chatName],
+      participant_count: @raw_message[:participantCount]
+    }
+
+    @conversation.update_whatsapp_group_info(group_data)
+    sync_group_members if @raw_message[:participants].present?
+  end
+
+  def sync_group_members
+    @raw_message[:participants].each do |participant|
+      @conversation.add_whatsapp_group_member(
+        participant[:id],
+        name: participant[:name],
+        is_admin: participant[:isAdmin] || participant[:isSuperAdmin]
+      )
+    end
   end
 
   def handle_create_message
@@ -185,6 +240,14 @@ module Whatsapp::ZapiHandlers::ReceivedCallback # rubocop:disable Metrics/Module
     end
 
     content_attributes[:in_reply_to_external_id] = @raw_message[:referenceMessageId] if @raw_message[:referenceMessageId].present?
+
+    # Add group sender information for attribution
+    if @raw_message[:isGroup] && @sender_phone.present?
+      content_attributes[:whatsapp_group_sender] = {
+        phone: @sender_phone,
+        name: @sender_name
+      }
+    end
 
     content_attributes
   end

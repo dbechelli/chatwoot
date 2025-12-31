@@ -132,6 +132,15 @@ Rails.application.routes.draw do
               resource :participants, only: [:show, :create, :update, :destroy]
               resource :direct_uploads, only: [:create]
               resource :draft_messages, only: [:show, :update, :destroy]
+              resource :whatsapp_groups, only: [:show] do
+                post :update_name
+                post :update_description
+                post :add_member
+                post :remove_member
+                post :promote_admin
+                post :demote_admin
+                post :sync_members
+              end
             end
             member do
               post :mute

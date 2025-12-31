@@ -279,4 +279,113 @@ class Whatsapp::Providers::WhatsappZapiService < Whatsapp::Providers::BaseServic
 
     response.parsed_response&.dig('messageId')
   end
+
+  # WhatsApp Group Management Methods
+
+  def get_group_info(group_id)
+    response = HTTParty.get(
+      "#{api_instance_path_with_token}/group-metadata/#{group_id}",
+      headers: api_headers
+    )
+
+    raise ProviderUnavailableError unless process_response(response)
+
+    response.parsed_response
+  end
+
+  def update_group_name(group_id, new_name)
+    response = HTTParty.put(
+      "#{api_instance_path_with_token}/modify-group",
+      headers: api_headers,
+      body: {
+        groupId: group_id,
+        action: 'update-subject',
+        subject: new_name
+      }.to_json
+    )
+
+    raise ProviderUnavailableError unless process_response(response)
+
+    true
+  end
+
+  def update_group_description(group_id, new_description)
+    response = HTTParty.put(
+      "#{api_instance_path_with_token}/modify-group",
+      headers: api_headers,
+      body: {
+        groupId: group_id,
+        action: 'update-description',
+        description: new_description
+      }.to_json
+    )
+
+    raise ProviderUnavailableError unless process_response(response)
+
+    true
+  end
+
+  def add_group_participant(group_id, phone_number)
+    response = HTTParty.put(
+      "#{api_instance_path_with_token}/modify-group",
+      headers: api_headers,
+      body: {
+        groupId: group_id,
+        action: 'add',
+        phones: [phone_number.delete('+')]
+      }.to_json
+    )
+
+    raise ProviderUnavailableError unless process_response(response)
+
+    true
+  end
+
+  def remove_group_participant(group_id, phone_number)
+    response = HTTParty.put(
+      "#{api_instance_path_with_token}/modify-group",
+      headers: api_headers,
+      body: {
+        groupId: group_id,
+        action: 'remove',
+        phones: [phone_number.delete('+')]
+      }.to_json
+    )
+
+    raise ProviderUnavailableError unless process_response(response)
+
+    true
+  end
+
+  def promote_group_admin(group_id, phone_number)
+    response = HTTParty.put(
+      "#{api_instance_path_with_token}/modify-group",
+      headers: api_headers,
+      body: {
+        groupId: group_id,
+        action: 'promote',
+        phones: [phone_number.delete('+')]
+      }.to_json
+    )
+
+    raise ProviderUnavailableError unless process_response(response)
+
+    true
+  end
+
+  def demote_group_admin(group_id, phone_number)
+    response = HTTParty.put(
+      "#{api_instance_path_with_token}/modify-group",
+      headers: api_headers,
+      body: {
+        groupId: group_id,
+        action: 'demote',
+        phones: [phone_number.delete('+')]
+      }.to_json
+    )
+
+    raise ProviderUnavailableError unless process_response(response)
+
+    true
+  end
 end
