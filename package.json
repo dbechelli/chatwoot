@@ -1,6 +1,7 @@
 {
   "name": "@chatwoot/chatwoot",
   "version": "4.9.0",
+  "_rebuild": "force-20251231",
   "license": "MIT",
   "scripts": {
     "eslint": "eslint app/**/*.{js,vue}",
