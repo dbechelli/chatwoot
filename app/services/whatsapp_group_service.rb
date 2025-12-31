@@ -79,6 +79,8 @@ class WhatsappGroupService
       case channel.provider
       when 'zapi'
         Whatsapp::Providers::WhatsappZapiService.new(whatsapp_channel: channel)
+      when 'baileys'
+        Whatsapp::Providers::WhatsappBaileysService.new(whatsapp_channel: channel)
       else
         raise NotImplementedError, "Provider #{channel.provider} does not support group operations"
       end

@@ -21,7 +21,7 @@ module Whatsapp::BaileysHandlers::MessagesUpsert # rubocop:disable Metrics/Modul
   end
 
   def handle_message
-    return unless %w[lid user].include?(jid_type)
+    return unless %w[lid user group].include?(jid_type)
     return unless extract_from_jid(type: 'lid')
     return if ignore_message?
     return if find_message_by_source_id(raw_message_id) || message_under_process?
@@ -37,11 +37,20 @@ module Whatsapp::BaileysHandlers::MessagesUpsert # rubocop:disable Metrics/Modul
     end
 
     set_conversation
+    update_conversation_group_metadata if is_group?
     handle_create_message
     clear_message_source_id_from_redis
   end
 
   def set_contact
+    if is_group?
+      set_group_contact
+    else
+      set_individual_contact
+    end
+  end
+
+  def set_individual_contact
     phone = extract_from_jid(type: 'pn')
     source_id = extract_from_jid(type: 'lid')
     identifier = "#{source_id}@lid"
@@ -58,6 +67,29 @@ module Whatsapp::BaileysHandlers::MessagesUpsert # rubocop:disable Metrics/Modul
     @contact = contact_inbox.contact
 
     update_contact_info(phone, source_id, identifier)
+  end
+
+  def set_group_contact
+    group_jid = @raw_message[:key][:remoteJid]
+    source_id = extract_from_jid(type: 'lid')
+    group_name = @raw_message[:pushName] || group_jid
+
+    # Store sender information for message attribution
+    @sender_jid = @raw_message[:key][:participant]
+    @sender_name = @raw_message[:pushName]
+
+    contact_inbox = ::ContactInboxWithContactBuilder.new(
+      source_id: source_id,
+      inbox: inbox,
+      contact_attributes: {
+        name: group_name,
+        identifier: group_jid,
+        is_whatsapp_group: true
+      }
+    ).perform
+
+    @contact_inbox = contact_inbox
+    @contact = contact_inbox.contact
   end
 
   def update_existing_contact_inbox(phone, source_id, identifier)
@@ -126,7 +158,55 @@ module Whatsapp::BaileysHandlers::MessagesUpsert # rubocop:disable Metrics/Modul
       content_attributes[:is_unsupported] = true
     end
 
+    # Add group sender information for attribution
+    if is_group? && @sender_jid.present?
+      sender_phone = @sender_jid.split('@').first
+      content_attributes[:whatsapp_group_sender] = {
+        phone: sender_phone,
+        name: @sender_name
+      }
+    end
+
     content_attributes
+  end
+
+  def is_group?
+    jid_type == 'group'
+  end
+
+  def update_conversation_group_metadata
+    # Fetch group metadata from Baileys
+    group_jid = @raw_message[:key][:remoteJid]
+
+    begin
+      group_info = inbox.channel.provider_service.get_group_info(group_jid)
+
+      group_data = {
+        id: group_jid,
+        name: group_info.dig('data', 'subject'),
+        participant_count: group_info.dig('data', 'participants')&.size
+      }
+
+      @conversation.update_whatsapp_group_info(group_data)
+
+      # Sync members if available
+      if group_info.dig('data', 'participants').present?
+        sync_group_members(group_info.dig('data', 'participants'))
+      end
+    rescue StandardError => e
+      Rails.logger.error "Failed to fetch group metadata for #{group_jid}: #{e.message}"
+    end
+  end
+
+  def sync_group_members(participants)
+    participants.each do |participant|
+      phone = participant[:id].split('@').first
+      @conversation.add_whatsapp_group_member(
+        phone,
+        name: nil,
+        is_admin: participant[:admin].present?
+      )
+    end
   end
 
   def handle_attach_media

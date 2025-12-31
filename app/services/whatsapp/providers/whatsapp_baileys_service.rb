@@ -354,6 +354,125 @@ class Whatsapp::Providers::WhatsappBaileysService < Whatsapp::Providers::BaseSer
     end
   end
 
+  # WhatsApp Group Management Methods
+
+  def get_group_info(group_id)
+    response = HTTParty.get(
+      "#{provider_url}/connections/#{whatsapp_channel.phone_number}/group-metadata",
+      headers: api_headers,
+      query: { jid: ensure_group_jid(group_id) }
+    )
+
+    raise ProviderUnavailableError unless process_response(response)
+
+    response.parsed_response
+  end
+
+  def update_group_name(group_id, new_name)
+    response = HTTParty.patch(
+      "#{provider_url}/connections/#{whatsapp_channel.phone_number}/update-group-subject",
+      headers: api_headers,
+      body: {
+        jid: ensure_group_jid(group_id),
+        subject: new_name
+      }.to_json
+    )
+
+    raise ProviderUnavailableError unless process_response(response)
+
+    true
+  end
+
+  def update_group_description(group_id, new_description)
+    response = HTTParty.patch(
+      "#{provider_url}/connections/#{whatsapp_channel.phone_number}/update-group-description",
+      headers: api_headers,
+      body: {
+        jid: ensure_group_jid(group_id),
+        description: new_description
+      }.to_json
+    )
+
+    raise ProviderUnavailableError unless process_response(response)
+
+    true
+  end
+
+  def add_group_participant(group_id, phone_number)
+    response = HTTParty.patch(
+      "#{provider_url}/connections/#{whatsapp_channel.phone_number}/modify-group-participants",
+      headers: api_headers,
+      body: {
+        jid: ensure_group_jid(group_id),
+        participants: [format_phone_to_jid(phone_number)],
+        action: 'add'
+      }.to_json
+    )
+
+    raise ProviderUnavailableError unless process_response(response)
+
+    true
+  end
+
+  def remove_group_participant(group_id, phone_number)
+    response = HTTParty.patch(
+      "#{provider_url}/connections/#{whatsapp_channel.phone_number}/modify-group-participants",
+      headers: api_headers,
+      body: {
+        jid: ensure_group_jid(group_id),
+        participants: [format_phone_to_jid(phone_number)],
+        action: 'remove'
+      }.to_json
+    )
+
+    raise ProviderUnavailableError unless process_response(response)
+
+    true
+  end
+
+  def promote_group_admin(group_id, phone_number)
+    response = HTTParty.patch(
+      "#{provider_url}/connections/#{whatsapp_channel.phone_number}/modify-group-participants",
+      headers: api_headers,
+      body: {
+        jid: ensure_group_jid(group_id),
+        participants: [format_phone_to_jid(phone_number)],
+        action: 'promote'
+      }.to_json
+    )
+
+    raise ProviderUnavailableError unless process_response(response)
+
+    true
+  end
+
+  def demote_group_admin(group_id, phone_number)
+    response = HTTParty.patch(
+      "#{provider_url}/connections/#{whatsapp_channel.phone_number}/modify-group-participants",
+      headers: api_headers,
+      body: {
+        jid: ensure_group_jid(group_id),
+        participants: [format_phone_to_jid(phone_number)],
+        action: 'demote'
+      }.to_json
+    )
+
+    raise ProviderUnavailableError unless process_response(response)
+
+    true
+  end
+
+  def ensure_group_jid(group_id)
+    return group_id if group_id.ends_with?('@g.us')
+
+    "#{group_id}@g.us"
+  end
+
+  def format_phone_to_jid(phone_number)
+    clean_phone = phone_number.delete('+')
+    "#{clean_phone}@s.whatsapp.net"
+  end
+
   with_error_handling :setup_channel_provider,
                       :disconnect_channel_provider,
                       :send_message,
@@ -362,5 +481,12 @@ class Whatsapp::Providers::WhatsappBaileysService < Whatsapp::Providers::BaseSer
                       :read_messages,
                       :unread_message,
                       :received_messages,
-                      :on_whatsapp
+                      :on_whatsapp,
+                      :get_group_info,
+                      :update_group_name,
+                      :update_group_description,
+                      :add_group_participant,
+                      :remove_group_participant,
+                      :promote_group_admin,
+                      :demote_group_admin
 end
