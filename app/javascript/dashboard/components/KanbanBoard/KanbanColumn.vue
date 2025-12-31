@@ -41,7 +41,6 @@ const formatCurrency = value => {
 
 const handleChange = evt => {
   if (evt.added) {
-    // Conversa foi movida para esta coluna
     emit('stageChange', {
       conversationId: evt.added.element.id,
       newStage: props.stage,
@@ -56,95 +55,122 @@ const handleCardClick = conversation => {
 </script>
 
 <template>
-  <div class="flex flex-col rounded-lg border border-n-slate-6 bg-n-slate-2">
-    <!-- Cabeçalho da coluna -->
-    <div
-      class="flex flex-col gap-2 border-b border-n-slate-6 p-4"
-      :class="{ 'bg-red-50': isOverLimit }"
-    >
+  <div 
+    class="flex flex-col rounded-xl border border-slate-200 bg-slate-50/50 shadow-sm overflow-hidden h-full transition-colors"
+    :class="{ 'border-red-300 bg-red-50/30': isOverLimit }"
+  >
+    <div class="flex flex-col gap-2 p-4 bg-white border-b border-slate-200">
       <div class="flex items-center justify-between">
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-2.5 overflow-hidden">
           <div
-            class="h-3 w-3 rounded-full"
-            :style="{ backgroundColor: color }"
+            class="h-3 w-3 rounded-full flex-shrink-0"
+            :style="{ backgroundColor: color, boxShadow: `0 0 8px ${color}60` }"
           />
-          <h3 class="text-sm font-semibold text-n-slate-12">
+          <h3 class="text-sm font-bold text-slate-800 truncate uppercase tracking-wide">
             {{ title }}
           </h3>
         </div>
+        
         <div
-          class="flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium"
+          class="flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-bold shadow-sm border"
           :class="
             isOverLimit
-              ? 'bg-red-100 text-red-800'
-              : 'bg-n-slate-4 text-n-slate-11'
+              ? 'bg-red-500 text-white border-red-600'
+              : 'bg-slate-100 text-slate-600 border-slate-200'
           "
         >
           <span>{{ conversations.length }}</span>
-          <span v-if="wipLimit">/ {{ wipLimit }}</span>
+          <span v-if="wipLimit" class="opacity-70">/ {{ wipLimit }}</span>
         </div>
       </div>
 
-      <!-- Total value -->
-      <div v-if="totalValue > 0" class="flex items-center gap-1">
-        <i class="i-lucide-trending-up text-sm text-green-600" />
-        <span class="text-sm font-semibold text-green-700">
-          {{ formatCurrency(totalValue) }}
-        </span>
+      <div v-if="totalValue > 0" class="flex items-center gap-1.5 mt-1">
+        <div class="flex items-center gap-1 px-2 py-0.5 bg-emerald-50 rounded-md border border-emerald-100">
+          <i class="i-lucide-trending-up text-xs text-emerald-600" />
+          <span class="text-xs font-bold text-emerald-700">
+            {{ formatCurrency(totalValue) }}
+          </span>
+        </div>
       </div>
 
-      <!-- WIP Warning -->
-      <div
-        v-if="isOverLimit"
-        class="flex items-center gap-2 rounded bg-red-50 p-2 text-xs text-red-800"
-      >
-        <i class="i-lucide-alert-triangle" />
-        <span>{{ t('KANBAN.WIP_LIMIT_EXCEEDED') }}</span>
-      </div>
+      <Transition name="fade">
+        <div
+          v-if="isOverLimit"
+          class="flex items-center gap-2 rounded-lg bg-red-100 p-2 text-[11px] font-bold text-red-700 mt-1 animate-pulse"
+        >
+          <i class="i-lucide-alert-triangle text-sm" />
+          <span>{{ t('KANBAN.WIP_LIMIT_EXCEEDED') }}</span>
+        </div>
+      </Transition>
     </div>
 
-    <!-- Lista de cards -->
     <Draggable
       v-model="localConversations"
       group="kanban-conversations"
       item-key="id"
-      class="flex flex-1 flex-col gap-3 overflow-y-auto p-3 min-h-[200px] max-h-[calc(100vh-300px)]"
-      ghost-class="opacity-50"
-      drag-class="rotate-2"
+      class="flex-1 flex flex-col gap-3 overflow-y-auto p-3 min-h-[150px] custom-scrollbar-inside"
+      ghost-class="ghost-card"
+      drag-class="dragging-card"
       @change="handleChange"
     >
       <template #item="{ element }">
-        <div @click="handleCardClick(element)">
+        <div @click="handleCardClick(element)" class="transform transition-transform active:scale-95">
           <KanbanCard :conversation="element" />
         </div>
       </template>
-    </Draggable>
 
-    <!-- Empty state -->
-    <div
-      v-if="!conversations.length"
-      class="flex flex-col items-center justify-center gap-2 p-8 text-center"
-    >
-      <i class="i-lucide-inbox text-4xl text-n-slate-8" />
-      <p class="text-sm text-n-slate-11">
-        {{ t('KANBAN.EMPTY_COLUMN') }}
-      </p>
-    </div>
+      <template #footer v-if="!conversations.length">
+        <div class="flex flex-col items-center justify-center gap-3 py-10 opacity-40 grayscale">
+          <div class="p-4 rounded-full bg-slate-200">
+            <i class="i-lucide-inbox text-3xl text-slate-500" />
+          </div>
+          <p class="text-xs font-bold text-slate-500 text-center px-4 uppercase tracking-tighter">
+            {{ t('KANBAN.EMPTY_COLUMN') }}
+          </p>
+        </div>
+      </template>
+    </Draggable>
   </div>
 </template>
 
 <style scoped>
-/* Scrollbar customizado */
-::-webkit-scrollbar {
-  width: 6px;
+/* Estilo para o card fantasma (onde ele vai cair) */
+.ghost-card {
+  opacity: 0.3;
+  background: #cbd5e1 !important;
+  border: 2px dashed #94a3b8 !important;
+  border-radius: 12px;
 }
 
-::-webkit-scrollbar-thumb {
-  background: var(--color-border);
-  border-radius: 3px;
+/* Estilo para o card sendo arrastado */
+.dragging-card {
+  transform: rotate(3deg);
+  cursor: grabbing !important;
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: var(--color-border-dark);
+/* Scrollbar interno da coluna */
+.custom-scrollbar-inside::-webkit-scrollbar {
+  width: 5px;
+}
+
+.custom-scrollbar-inside::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar-inside::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+
+.custom-scrollbar-inside::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Animação simples */
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
 }
 </style>
