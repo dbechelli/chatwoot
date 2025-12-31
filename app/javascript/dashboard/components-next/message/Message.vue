@@ -379,6 +379,7 @@ const contextMenuEnabledOptions = computed(() => {
     cannedResponse: isOutgoing && hasText && !isMessageDeleted.value,
     copyLink: !isFailedOrProcessing,
     translate: !isFailedOrProcessing && !isMessageDeleted.value && hasText,
+    forward: !isFailedOrProcessing && !isMessageDeleted.value,
     replyTo:
       !props.private &&
       props.inboxSupportsReplyTo.outgoing &&

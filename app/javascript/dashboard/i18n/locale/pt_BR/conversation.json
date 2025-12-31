@@ -266,6 +266,7 @@
       "DELETE": "Excluir",
       "CREATE_A_CANNED_RESPONSE": "Adicionar às respostas prontas",
       "TRANSLATE": "Traduzir",
+      "FORWARD": "Encaminhar mensagem",
       "COPY_PERMALINK": "Copiar link para a mensagem",
       "LINK_COPIED": "URL da mensagem copiada para a área de transferência",
       "DELETE_CONFIRMATION": {
@@ -442,6 +443,7 @@
     "DESCRIPTION": "Selecione os contatos para encaminhar esta mensagem",
     "SEARCH_PLACEHOLDER": "Buscar contatos por nome, email ou telefone...",
     "NO_CONTACTS": "Nenhum contato encontrado",
+    "UNKNOWN_CONTACT": "Contato desconhecido",
     "SELECTED_COUNT": "{count} selecionado(s)",
     "NO_SELECTION": "Nenhum contato selecionado",
     "INCLUDE_ATTACHMENTS": "Incluir anexos",
@@ -449,6 +451,8 @@
     "CANCEL": "Cancelar",
     "SUCCESS": "Mensagem encaminhada para {count} contato(s)",
     "ERROR": "Falha ao encaminhar mensagem",
+    "PARTIAL_ERROR": "Falha ao encaminhar para {count} contato(s)",
+    "NO_MESSAGES": "Nenhuma mensagem para encaminhar",
     "LOADING_CONTACTS": "Carregando contatos...",
     "SELECT_AT_LEAST_ONE": "Selecione pelo menos um contato"
   }

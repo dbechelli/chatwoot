@@ -237,7 +237,7 @@ onMounted(() => {
           <button
             v-for="contact in filteredContacts"
             :key="contact.id"
-            class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-n-slate-2 transition-colors"
+            class="w-full flex items-center gap-2 p-2 rounded-lg hover:bg-n-slate-2 transition-colors"
             :class="{
               'bg-n-brand/10': isContactSelected(contact.id),
             }"
@@ -262,7 +262,7 @@ onMounted(() => {
             <Avatar
               :username="contact.name"
               :src="contact.thumbnail"
-              size="36px"
+              size="24px"
             />
 
             <!-- Informações -->

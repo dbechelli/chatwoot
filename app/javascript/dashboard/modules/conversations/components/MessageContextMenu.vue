@@ -4,6 +4,7 @@ import { mapGetters } from 'vuex';
 import { useMessageFormatter } from 'shared/composables/useMessageFormatter';
 import ContextMenu from 'dashboard/components/ui/ContextMenu.vue';
 import AddCannedModal from 'dashboard/routes/dashboard/settings/canned/AddCanned.vue';
+import ForwardMessageModal from 'dashboard/components/widgets/conversation/ForwardMessageModal.vue';
 import { useSnakeCase } from 'dashboard/composables/useTransformKeys';
 import { copyTextToClipboard } from 'shared/helpers/clipboard';
 import { conversationUrl, frontendURL } from '../../../helper/URLHelper';
@@ -18,6 +19,7 @@ import NextButton from 'dashboard/components-next/button/Button.vue';
 export default {
   components: {
     AddCannedModal,
+    ForwardMessageModal,
     MenuItem,
     ContextMenu,
     NextButton,
@@ -56,6 +58,7 @@ export default {
     return {
       isCannedResponseModalOpen: false,
       showDeleteModal: false,
+      showForwardModal: false,
     };
   },
   computed: {
@@ -149,6 +152,13 @@ export default {
     closeDeleteModal() {
       this.showDeleteModal = false;
     },
+    openForwardModal() {
+      this.handleClose();
+      this.showForwardModal = true;
+    },
+    closeForwardModal() {
+      this.showForwardModal = false;
+    },
   },
 };
 </script>
@@ -166,6 +176,13 @@ export default {
         :on-close="hideCannedResponseModal"
       />
     </woot-modal>
+    <!-- Forward Message Modal -->
+    <ForwardMessageModal
+      v-if="showForwardModal"
+      :show="showForwardModal"
+      :conversation-id="conversationId"
+      @close="closeForwardModal"
+    />
     <!-- Confirm Deletion -->
     <woot-delete-modal
       v-if="showDeleteModal && enabledOptions['delete']"
@@ -220,6 +237,15 @@ export default {
           }"
           variant="icon"
           @click.stop="handleTranslate"
+        />
+        <MenuItem
+          v-if="enabledOptions['forward']"
+          :option="{
+            icon: 'arrow-right',
+            label: $t('CONVERSATION.CONTEXT_MENU.FORWARD'),
+          }"
+          variant="icon"
+          @click.stop="openForwardModal"
         />
         <hr />
         <MenuItem
