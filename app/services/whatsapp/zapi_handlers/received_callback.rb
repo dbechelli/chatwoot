@@ -32,8 +32,8 @@ module Whatsapp::ZapiHandlers::ReceivedCallback # rubocop:disable Metrics/Module
   end
 
   def should_process_message?
-    !@raw_message[:isGroup] &&
-      !@raw_message[:isNewsletter] &&
+    # Accept group messages now
+    !@raw_message[:isNewsletter] &&
       !@raw_message[:broadcast] &&
       !@raw_message[:isStatusReply] &&
       !@raw_message.key?(:notification)
