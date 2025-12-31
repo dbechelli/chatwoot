@@ -1,5 +1,5 @@
 <script setup>
-import { h, computed, onMounted } from 'vue';
+import { h, ref, computed, onMounted } from 'vue';
 import { provideSidebarContext } from './provider';
 import { useAccount } from 'dashboard/composables/useAccount';
 import { useKbd } from 'dashboard/composables/utils/useKbd';
@@ -11,6 +11,7 @@ import { useSidebarKeyboardShortcuts } from './useSidebarKeyboardShortcuts';
 import { vOnClickOutside } from '@vueuse/components';
 import { emitter } from 'shared/helpers/mitt';
 import { BUS_EVENTS } from 'shared/constants/busEvents';
+import axios from 'axios';
 
 import Button from 'dashboard/components-next/button/Button.vue';
 import SidebarGroup from './SidebarGroup.vue';
@@ -81,6 +82,22 @@ const conversationCustomViews = useMapGetter(
   'customViews/getConversationCustomViews'
 );
 
+// Kanban boards
+const kanbanBoards = ref([]);
+
+const loadKanbanBoards = async () => {
+  try {
+    const accountId = store.getters.getCurrentAccountId;
+    const response = await axios.get(
+      `/api/v1/accounts/${accountId}/kanban_settings`
+    );
+    kanbanBoards.value = response.data?.boards || [];
+  } catch (error) {
+    // Silently fail - kanban is optional
+    kanbanBoards.value = [];
+  }
+};
+
 onMounted(() => {
   store.dispatch('labels/get');
   store.dispatch('inboxes/get');
@@ -90,6 +107,7 @@ onMounted(() => {
   store.dispatch('customViews/get', 'conversation');
   store.dispatch('customViews/get', 'contact');
   store.dispatch('dashboardApps/get');
+  loadKanbanBoards();
 });
 
 const sortedInboxes = computed(() =>
@@ -235,8 +253,20 @@ const menuItems = computed(() => {
       name: 'Kanban',
       label: t('SIDEBAR.KANBAN'),
       icon: 'i-lucide-kanban-square',
-      to: accountScopedRoute('kanban'),
+      to:
+        kanbanBoards.value.length > 0
+          ? undefined
+          : accountScopedRoute('kanban'),
       activeOn: ['kanban'],
+      children:
+        kanbanBoards.value.length > 0
+          ? kanbanBoards.value.map(board => ({
+              name: `Kanban-${board.id}`,
+              label: board.name,
+              to: accountScopedRoute('kanban', {}, { board: board.id }),
+              icon: 'i-lucide-kanban-square',
+            }))
+          : undefined,
     },
     {
       name: 'Captain',
@@ -585,6 +615,12 @@ const menuItems = computed(() => {
           label: t('SIDEBAR.SLA'),
           icon: 'i-lucide-clock-alert',
           to: accountScopedRoute('sla_list'),
+        },
+        {
+          name: 'Settings Kanban',
+          label: t('SIDEBAR.KANBAN_SETTINGS'),
+          icon: 'i-lucide-kanban-square',
+          to: accountScopedRoute('kanban_settings'),
         },
         {
           name: 'Settings Security',

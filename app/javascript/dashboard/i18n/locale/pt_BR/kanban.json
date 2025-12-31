@@ -1,6 +1,7 @@
 {
   "KANBAN": {
     "TITLE": "Pipeline de Pacientes",
+    "BOARD": "Funil",
     "LOADING": "Carregando negócios...",
     "REFRESH": "Atualizar",
     "SHOW_METRICS": "Mostrar Métricas",

@@ -401,7 +401,8 @@
       "INFO_SHORT": "Marcar off-line automaticamente quando não estiver usando o aplicativo."
     },
     "DOCS": "Ler documentos",
-    "SECURITY": "Segurança"
+    "SECURITY": "Segurança",
+    "KANBAN_SETTINGS": "Configurações do Funil"
   },
   "BILLING_SETTINGS": {
     "TITLE": "Cobrança",

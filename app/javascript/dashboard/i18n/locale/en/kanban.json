@@ -1,6 +1,7 @@
 {
   "KANBAN": {
     "TITLE": "Sales Pipeline",
+    "BOARD": "Board",
     "LOADING": "Loading deals...",
     "REFRESH": "Refresh",
     "SHOW_METRICS": "Show Metrics",
