@@ -3,6 +3,7 @@ import { ref, computed, onMounted, watch } from 'vue';
 import { useStore } from 'vuex';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
+import axios from 'axios';
 import KanbanColumn from 'dashboard/components/KanbanBoard/KanbanColumn.vue';
 import KanbanMetrics from 'dashboard/components/KanbanBoard/KanbanMetrics.vue';
 import wootConstants from 'dashboard/constants/globals';
@@ -18,16 +19,45 @@ const selectedInbox = ref(null);
 const selectedAssignee = ref('all');
 const showMetrics = ref(true);
 
-// Configuração dos estágios do pipeline de vendas
-const salesStages = ref([
-  { stage: 'novo_contato', title: t('KANBAN.STAGES.NEW_CONTACT'), color: '#3b82f6', wipLimit: null },
-  { stage: 'qualificacao', title: t('KANBAN.STAGES.QUALIFICATION'), color: '#8b5cf6', wipLimit: 30 },
-  { stage: 'agendamento_pendente', title: t('KANBAN.STAGES.PENDING_APPOINTMENT'), color: '#f59e0b', wipLimit: 20 },
-  { stage: 'agendado', title: t('KANBAN.STAGES.SCHEDULED'), color: '#10b981', wipLimit: null },
-  { stage: 'pos_consulta', title: t('KANBAN.STAGES.POST_CONSULT'), color: '#ec4899', wipLimit: 15 },
-  { stage: 'paciente_ativo', title: t('KANBAN.STAGES.ACTIVE_PATIENT'), color: '#6366f1', wipLimit: null },
-  { stage: 'inativo', title: t('KANBAN.STAGES.INACTIVE'), color: '#64748b', wipLimit: null },
-]);
+// Kanban configuration
+const kanbanConfig = ref(null);
+const selectedBoardId = ref(null);
+const isLoadingConfig = ref(true);
+
+// Fallback stages (se não houver config do backend)
+const defaultStages = [
+  { id: 'novo_contato', name: t('KANBAN.STAGES.NEW_CONTACT'), color: '#3b82f6', wipLimit: null },
+  { id: 'qualificacao', name: t('KANBAN.STAGES.QUALIFICATION'), color: '#8b5cf6', wipLimit: 30 },
+  { id: 'agendamento_pendente', name: t('KANBAN.STAGES.PENDING_APPOINTMENT'), color: '#f59e0b', wipLimit: 20 },
+  { id: 'agendado', name: t('KANBAN.STAGES.SCHEDULED'), color: '#10b981', wipLimit: null },
+  { id: 'pos_consulta', name: t('KANBAN.STAGES.POST_CONSULT'), color: '#ec4899', wipLimit: 15 },
+  { id: 'paciente_ativo', name: t('KANBAN.STAGES.ACTIVE_PATIENT'), color: '#6366f1', wipLimit: null },
+  { id: 'inativo', name: t('KANBAN.STAGES.INACTIVE'), color: '#64748b', wipLimit: null },
+];
+
+// Current board computed
+const currentBoard = computed(() => {
+  if (!kanbanConfig.value || !kanbanConfig.value.boards) return null;
+  return kanbanConfig.value.boards.find(b => b.id === selectedBoardId.value);
+});
+
+// Sales stages from current board or fallback
+const salesStages = computed(() => {
+  if (currentBoard.value && currentBoard.value.stages) {
+    return currentBoard.value.stages.map(stage => ({
+      stage: stage.id,
+      title: stage.name,
+      color: stage.color,
+      wipLimit: stage.wipLimit,
+    }));
+  }
+  return defaultStages.map(s => ({ stage: s.id, title: s.name, color: s.color, wipLimit: s.wipLimit }));
+});
+
+// Custom attribute key from current board
+const customAttributeKey = computed(() => {
+  return currentBoard.value?.customAttributeKey || 'sales_stage';
+});
 
 // Getters
 const allConversations = computed(
@@ -39,10 +69,11 @@ const inboxes = computed(() => store.getters['inboxes/getInboxes'] || []);
 // Agrupar conversas por estágio
 const conversationsByStage = computed(() => {
   const grouped = {};
+  const attrKey = customAttributeKey.value;
 
   salesStages.value.forEach(stage => {
     let filtered = allConversations.value.filter(
-      conv => conv.custom_attributes?.sales_stage === stage.stage
+      conv => conv.custom_attributes?.[attrKey] === stage.stage
     );
 
     // Aplicar filtros de inbox
@@ -72,6 +103,26 @@ const filteredConversations = computed(() => {
 });
 
 // Métodos
+const loadKanbanConfig = async () => {
+  isLoadingConfig.value = true;
+  try {
+    const accountId = store.getters.getCurrentAccountId;
+    const response = await axios.get(`/api/v1/accounts/${accountId}/kanban_settings`);
+    kanbanConfig.value = response.data;
+
+    // Selecionar board padrão ou primeiro disponível
+    if (kanbanConfig.value.boards && kanbanConfig.value.boards.length > 0) {
+      const defaultBoard = kanbanConfig.value.boards.find(b => b.isDefault);
+      selectedBoardId.value = defaultBoard?.id || kanbanConfig.value.boards[0].id;
+    }
+  } catch (error) {
+    // Se falhar, usar configuração padrão (fallback)
+    kanbanConfig.value = { enabled: true, boards: [] };
+  } finally {
+    isLoadingConfig.value = false;
+  }
+};
+
 const fetchConversations = async () => {
   isLoading.value = true;
   try {
@@ -92,9 +143,10 @@ const handleStageChange = async ({
   conversation,
 }) => {
   try {
+    const attrKey = customAttributeKey.value;
     const customAttributes = {
       ...conversation.custom_attributes,
-      sales_stage: newStage,
+      [attrKey]: newStage,
     };
 
     await store.dispatch('updateCustomAttributes', {
@@ -127,7 +179,8 @@ const toggleMetrics = () => {
 };
 
 // Lifecycle
-onMounted(() => {
+onMounted(async () => {
+  await loadKanbanConfig();
   fetchConversations();
   store.dispatch('inboxes/get');
   store.dispatch('agents/get');
@@ -149,9 +202,11 @@ watch([selectedInbox, selectedAssignee], () => {
           </div>
           <div>
             <h1 class="text-xl font-bold text-slate-900 leading-tight">
-              {{ t('KANBAN.TITLE') }}
+              {{ currentBoard?.name || t('KANBAN.TITLE') }}
             </h1>
-            <span class="text-xs font-medium text-slate-500 uppercase tracking-wider">Gestão de Funil</span>
+            <span class="text-xs font-medium text-slate-500 uppercase tracking-wider">
+              {{ currentBoard?.description || 'Gestão de Funil' }}
+            </span>
           </div>
         </div>
 
@@ -181,6 +236,24 @@ watch([selectedInbox, selectedAssignee], () => {
       </div>
 
       <div class="flex flex-col gap-3 md:flex-row md:items-center md:gap-6 pt-1">
+        <!-- Seletor de Board (se houver múltiplos) -->
+        <div
+          v-if="kanbanConfig && kanbanConfig.boards && kanbanConfig.boards.length > 1"
+          class="flex items-center gap-3"
+        >
+          <label class="text-xs font-bold text-slate-400 uppercase tracking-tight">
+            Board
+          </label>
+          <select
+            v-model="selectedBoardId"
+            class="min-w-[160px] rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm font-medium text-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
+          >
+            <option v-for="board in kanbanConfig.boards" :key="board.id" :value="board.id">
+              {{ board.name }}
+            </option>
+          </select>
+        </div>
+
         <div class="flex items-center gap-3">
           <label class="text-xs font-bold text-slate-400 uppercase tracking-tight">
             {{ t('KANBAN.FILTERS.INBOX') }}
