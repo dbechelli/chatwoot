@@ -176,6 +176,30 @@ const handleStageChange = async ({
       customAttributes,
     });
 
+    // Webhook Trigger
+    if (currentBoard.value?.webhook_url) {
+      try {
+        await window.axios.post(currentBoard.value.webhook_url, {
+          event: 'kanban_card_moved',
+          board_id: currentBoard.value.id,
+          conversation_id: conversationId,
+          new_stage: newStage,
+          previous_stage: conversation.custom_attributes?.[attrKey],
+          item: {
+            title: conversation.custom_attributes?.kanban_title,
+            value: conversation.custom_attributes?.deal_value,
+            priority: conversation.priority,
+            assignee: conversation.meta?.assignee,
+            contact: conversation.meta?.sender,
+          },
+          timestamp: new Date().toISOString(),
+        });
+      } catch (webhookError) {
+        console.error('Webhook trigger failed:', webhookError);
+        // Don't block the UI flow if webhook fails
+      }
+    }
+
     useAlert(t('KANBAN.STAGE_UPDATED'));
   } catch {
     useAlert(t('KANBAN.UPDATE_ERROR'));

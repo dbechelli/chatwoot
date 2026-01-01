@@ -296,6 +296,28 @@ const canSave = computed(() => {
               </button>
             </div>
 
+            <!-- Webhook Section -->
+            <div class="md:col-span-2 pt-4 border-t border-n-weak mt-2">
+              <h4 class="text-sm font-bold text-n-slate-12 mb-3 flex items-center gap-2">
+                <i class="i-lucide-webhook text-n-brand" />
+                Automação (Webhook)
+              </h4>
+              <div class="space-y-2">
+                <label class="block text-sm font-medium text-n-slate-12">
+                  URL do Webhook
+                </label>
+                <input
+                  v-model="localBoard.webhook_url"
+                  type="url"
+                  class="w-full px-3 py-2 border border-n-weak rounded-lg focus:border-n-brand focus:ring-2 focus:ring-n-brand/20 outline-none"
+                  placeholder="https://n8n.seu-dominio.com/webhook/..."
+                />
+                <p class="text-xs text-n-slate-11">
+                  Quando um card for movido, enviaremos um POST para esta URL com os dados do item.
+                </p>
+              </div>
+            </div>
+
             <div class="pt-7">
               <label class="flex items-center gap-2 cursor-pointer">
                 <input
