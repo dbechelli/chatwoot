@@ -165,7 +165,7 @@ onMounted(() => {
           </p>
         </div>
         <button
-          class="p-2 rounded-lg hover:bg-n-slate-3 transition-colors"
+          class="p-2 rounded-lg hover:bg-n-slate-3 transition-colors flex items-center justify-center"
           @click="closeModal"
         >
           <i class="i-lucide-x text-xl text-n-slate-11" />
@@ -205,9 +205,9 @@ onMounted(() => {
 
       <!-- Busca -->
       <div class="p-4 border-b border-n-weak">
-        <div class="relative">
+        <div class="relative flex items-center">
           <i
-            class="i-lucide-search absolute left-3 top-1/2 -translate-y-1/2 text-n-slate-11"
+            class="i-lucide-search absolute left-3 text-n-slate-11"
           />
           <input
             v-model="searchQuery"
@@ -259,7 +259,8 @@ onMounted(() => {
             <Avatar
               :username="contact.name"
               :src="contact.thumbnail"
-              size="24px"
+              :size="32"
+              class="flex-shrink-0"
             />
 
             <!-- Informações -->

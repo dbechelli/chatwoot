@@ -1,6 +1,7 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useStore } from 'vuex';
 import Modal from 'dashboard/components/Modal.vue';
 
 const props = defineProps({
@@ -13,8 +14,27 @@ const props = defineProps({
 const emit = defineEmits(['save', 'close']);
 
 const { t } = useI18n();
+const store = useStore();
 
-const localBoard = ref({ ...props.board });
+const localBoard = ref({
+  ...props.board,
+  agent_ids: props.board.agent_ids || [],
+});
+
+const agents = computed(() => store.getters['agents/getAgents']);
+
+onMounted(() => {
+  store.dispatch('agents/get');
+});
+
+const toggleAgent = agentId => {
+  const index = localBoard.value.agent_ids.indexOf(agentId);
+  if (index === -1) {
+    localBoard.value.agent_ids.push(agentId);
+  } else {
+    localBoard.value.agent_ids.splice(index, 1);
+  }
+};
 
 const colorPresets = [
   { color: '#3b82f6', name: 'Blue' },
@@ -145,6 +165,30 @@ const canSave = computed(() => {
               />
               <p class="text-xs text-n-slate-11 mt-1">
                 {{ $t('KANBAN_SETTINGS.CUSTOM_ATTRIBUTE_HELP') }}
+              </p>
+            </div>
+
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium text-n-slate-12 mb-2">
+                {{ $t('KANBAN_SETTINGS.AGENTS') }}
+              </label>
+              <div class="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-40 overflow-y-auto border border-n-weak rounded-lg p-2">
+                <label
+                  v-for="agent in agents"
+                  :key="agent.id"
+                  class="flex items-center gap-2 p-2 rounded hover:bg-n-alpha-1 cursor-pointer"
+                >
+                  <input
+                    type="checkbox"
+                    :checked="localBoard.agent_ids.includes(agent.id)"
+                    @change="toggleAgent(agent.id)"
+                    class="rounded border-n-weak text-n-brand focus:ring-n-brand"
+                  />
+                  <span class="text-sm text-n-slate-12">{{ agent.name }}</span>
+                </label>
+              </div>
+              <p class="text-xs text-n-slate-11 mt-1">
+                {{ $t('KANBAN_SETTINGS.AGENTS_HELP') }}
               </p>
             </div>
 

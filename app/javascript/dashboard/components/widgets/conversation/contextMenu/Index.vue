@@ -254,7 +254,30 @@ export default {
       assignableAgentsUiFlags: 'inboxAssignableAgents/getUIFlags',
       currentUser: 'getCurrentUser',
       currentAccountId: 'getCurrentAccountId',
+      kanbanBoards: 'kanban/getBoards',
     }),
+    filteredKanbanBoards() {
+      if (!this.kanbanBoards) return [];
+      return this.kanbanBoards.filter(board => {
+        if (!board.agent_ids || board.agent_ids.length === 0) return true;
+        return board.agent_ids.includes(this.currentUser.id);
+      });
+    },
+    salesStages() {
+      // Backward compatibility if no boards loaded or empty
+      if (!this.filteredKanbanBoards.length) {
+        return [
+          { key: 'novo_contato', label: this.$t('KANBAN.STAGES.NEW_CONTACT') || 'Novo Contato' },
+          { key: 'qualificacao', label: this.$t('KANBAN.STAGES.QUALIFICATION') || 'Qualificação' },
+          { key: 'agendamento_pendente', label: this.$t('KANBAN.STAGES.PENDING_APPOINTMENT') || 'Agendamento Pendente' },
+          { key: 'agendado', label: this.$t('KANBAN.STAGES.SCHEDULED') || 'Agendado' },
+          { key: 'pos_consulta', label: this.$t('KANBAN.STAGES.POST_CONSULT') || 'Pós-Consulta' },
+          { key: 'paciente_ativo', label: this.$t('KANBAN.STAGES.ACTIVE_PATIENT') || 'Paciente Ativo' },
+          { key: 'inativo', label: this.$t('KANBAN.STAGES.INACTIVE') || 'Inativo' },
+        ];
+      }
+      return this.filteredKanbanBoards;
+    },
     filteredAgentOnAvailability() {
       const agents = this.$store.getters[
         'inboxAssignableAgents/getAssignableAgents'
@@ -411,12 +434,29 @@ export default {
         :option="salesStageMenuConfig"
         :sub-menu-available="!!salesStages.length"
       >
-        <MenuItem
-          v-for="stage in salesStages"
-          :key="stage.key"
-          :option="generateMenuLabelConfig(stage, 'text')"
-          @click.stop="assignSalesStage(stage.key)"
-        />
+        <template v-if="salesStages[0] && salesStages[0].stages">
+           <MenuItemWithSubmenu
+              v-for="board in salesStages"
+              :key="board.id"
+              :option="{ label: board.name, icon: 'kanban-board' }"
+              :sub-menu-available="!!board.stages.length"
+           >
+              <MenuItem
+                  v-for="stage in board.stages"
+                  :key="stage.id"
+                  :option="{ label: stage.name, color: stage.color }"
+                  @click.stop="assignSalesStage({ board, stage })"
+              />
+           </MenuItemWithSubmenu>
+        </template>
+        <template v-else>
+          <MenuItem
+            v-for="stage in salesStages"
+            :key="stage.key"
+            :option="generateMenuLabelConfig(stage, 'text')"
+            @click.stop="assignSalesStage(stage.key)"
+          />
+        </template>
       </MenuItemWithSubmenu>
       <MenuItemWithSubmenu
         v-if="isAllowed([MENU.LABEL])"
@@ -459,14 +499,6 @@ export default {
           @click.stop="$emit('assignTeam', team)"
         />
       </MenuItemWithSubmenu>
-      <hr class="m-1 rounded border-b border-n-weak dark:border-n-weak" />
-    </template>
-    <template v-if="isAllowed([MENU.FORWARD_MESSAGE])">
-      <MenuItem
-        :option="forwardMessageOption"
-        variant="icon"
-        @click.stop="forwardMessage"
-      />
       <hr class="m-1 rounded border-b border-n-weak dark:border-n-weak" />
     </template>
     <template v-if="isAllowed([MENU.OPEN_NEW_TAB, MENU.COPY_LINK])">

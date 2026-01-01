@@ -246,7 +246,7 @@ watch([selectedInbox, selectedAssignee], () => {
 </script>
 
 <template>
-  <div class="flex h-screen flex-col bg-[#f8fafc]">
+  <div class="flex h-full flex-col bg-[#f8fafc]">
     <header
       class="z-20 flex flex-col gap-4 border-b border-slate-200 bg-white p-4 shadow-sm"
     >

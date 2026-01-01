@@ -49,6 +49,7 @@ class Api::V1::Accounts::KanbanSettingsController < Api::V1::Accounts::BaseContr
       :enabled,
       boards: [
         :id, :name, :description, :customAttributeKey, :valueAttributeKey, :isDefault,
+        { agent_ids: [] },
         stages: [:id, :name, :color, :order, :wipLimit]
       ]
     )
@@ -57,6 +58,7 @@ class Api::V1::Accounts::KanbanSettingsController < Api::V1::Accounts::BaseContr
   def board_params
     params.require(:board).permit(
       :name, :description, :customAttributeKey, :valueAttributeKey, :isDefault,
+      { agent_ids: [] },
       stages: [:id, :name, :color, :order, :wipLimit]
     )
   end

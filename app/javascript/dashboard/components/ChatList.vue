@@ -93,7 +93,7 @@ const conversationDynamicScroller = ref(null);
 
 provide('contextMenuElementTarget', conversationDynamicScroller);
 
-const activeAssigneeTab = ref(wootConstants.ASSIGNEE_TYPE.ME);
+const activeAssigneeTab = ref(wootConstants.ASSIGNEE_TYPE.ALL);
 const activeStatus = ref(wootConstants.STATUS_TYPE.OPEN);
 const activeSortBy = ref(wootConstants.SORT_BY_TYPE.LAST_ACTIVITY_AT_DESC);
 const showAdvancedFilters = ref(false);
@@ -811,14 +811,26 @@ const handleDelete = conversationId => {
   deleteConversationDialogRef.value.open();
 };
 
-const assignSalesStage = async (stage, conversationId) => {
+const assignSalesStage = async (stageData, conversationId) => {
   try {
-    await store.dispatch('updateCustomAttributes', {
-      conversationId,
-      customAttributes: {
-        sales_stage: stage,
-      },
-    });
+    const { board, stage } = stageData;
+    // If stageData is just a string (legacy/backward compatibility), handle it
+    if (typeof stageData === 'string') {
+      await store.dispatch('updateCustomAttributes', {
+        conversationId,
+        customAttributes: {
+          sales_stage: stageData,
+        },
+      });
+    } else {
+      // Dynamic board support
+      await store.dispatch('updateCustomAttributes', {
+        conversationId,
+        customAttributes: {
+          [board.customAttributeKey]: stage.id,
+        },
+      });
+    }
     useAlert(t('KANBAN.STAGE_UPDATED'));
   } catch {
     useAlert(t('KANBAN.UPDATE_ERROR'));
