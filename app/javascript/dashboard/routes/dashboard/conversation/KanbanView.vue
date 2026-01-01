@@ -7,6 +7,7 @@ import KanbanColumn from 'dashboard/components/KanbanBoard/KanbanColumn.vue';
 import KanbanMetrics from 'dashboard/components/KanbanBoard/KanbanMetrics.vue';
 import KanbanHelpModal from './KanbanHelpModal.vue';
 import KanbanItemModal from './KanbanItemModal.vue';
+import KanbanContextMenu from './KanbanContextMenu.vue';
 import wootConstants from 'dashboard/constants/globals';
 import { useAlert } from 'dashboard/composables';
 
@@ -18,10 +19,17 @@ const { t } = useI18n();
 const isLoading = ref(false);
 const showHelpModal = ref(false);
 const showItemModal = ref(false);
+const editingItem = ref(null); // Item being edited
 const selectedStageId = ref('');
 const selectedInbox = ref(null);
 const selectedAssignee = ref('all');
 const showMetrics = ref(true);
+
+// Context Menu State
+const showContextMenu = ref(false);
+const contextMenuX = ref(0);
+const contextMenuY = ref(0);
+const contextMenuItem = ref(null);
 
 // Kanban configuration
 const kanbanConfig = ref(null);
@@ -189,6 +197,7 @@ const handleRefresh = () => {
 };
 
 const openAddItemModal = (stageId = '') => {
+  editingItem.value = null;
   selectedStageId.value = stageId;
   showItemModal.value = true;
 };
@@ -196,6 +205,27 @@ const openAddItemModal = (stageId = '') => {
 const handleItemSaved = () => {
   fetchConversations();
   useAlert(t('KANBAN.ITEM_SAVED') || 'Item salvo com sucesso');
+};
+
+const handleCardContextmenu = ({ event, conversation }) => {
+  contextMenuX.value = event.clientX;
+  contextMenuY.value = event.clientY;
+  contextMenuItem.value = conversation;
+  showContextMenu.value = true;
+};
+
+const handleContextMenuAction = ({ action, item }) => {
+  if (action === 'edit') {
+    editingItem.value = item;
+    selectedStageId.value = item.custom_attributes?.[customAttributeKey.value];
+    showItemModal.value = true;
+  } else if (action === 'view_contact') {
+    if (item.meta?.sender?.id) {
+      router.push({ name: 'contact_profile', params: { contactId: item.meta.sender.id } });
+    }
+  } else if (action === 'open_conversation') {
+    router.push({ name: 'inbox_conversation', params: { inbox_id: item.inbox_id, conversation_id: item.id } });
+  }
 };
 
 const toggleMetrics = () => {
@@ -392,6 +422,7 @@ watch([selectedInbox, selectedAssignee], () => {
             class="shadow-sm border border-slate-200 rounded-xl"
             @stage-change="handleStageChange"
             @card-click="handleCardClick"
+            @card-contextmenu="handleCardContextmenu"
           />
         </div>
         <div class="w-4 flex-shrink-0" />
@@ -442,8 +473,18 @@ watch([selectedInbox, selectedAssignee], () => {
       :show="showItemModal"
       :board="currentBoard"
       :stage-id="selectedStageId"
+      :item="editingItem"
       @close="showItemModal = false"
       @save="handleItemSaved"
+    />
+
+    <KanbanContextMenu
+      :show="showContextMenu"
+      :x="contextMenuX"
+      :y="contextMenuY"
+      :item="contextMenuItem"
+      @close="showContextMenu = false"
+      @action="handleContextMenuAction"
     />
   </div>
 </template>

@@ -13,7 +13,7 @@ const props = defineProps({
   visibleAttributes: { type: Array, default: () => [] },
 });
 
-const emit = defineEmits(['update:conversations', 'stageChange', 'cardClick']);
+const emit = defineEmits(['update:conversations', 'stageChange', 'cardClick', 'cardContextmenu']);
 
 const { t } = useI18n();
 
@@ -119,6 +119,7 @@ const handleCardClick = conversation => {
           <KanbanCard 
             :conversation="element" 
             :visible-attributes="visibleAttributes"
+            @contextmenu="emit('cardContextmenu', $event)"
           />
         </div>
       </template>

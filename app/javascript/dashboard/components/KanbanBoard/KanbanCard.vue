@@ -69,6 +69,15 @@ const kanbanDescription = computed(() => {
   return props.conversation.custom_attributes?.kanban_description;
 });
 
+const checklistProgress = computed(() => {
+  const checklist = props.conversation.custom_attributes?.kanban_checklist || [];
+  if (!Array.isArray(checklist) || checklist.length === 0) return null;
+  
+  const total = checklist.length;
+  const done = checklist.filter(i => i.done).length;
+  return { done, total };
+});
+
 const formatCurrency = value => {
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
@@ -80,6 +89,7 @@ const formatCurrency = value => {
 <template>
   <div
     class="group relative flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-md hover:border-blue-300 cursor-pointer"
+    @contextmenu.prevent="$emit('contextmenu', { event: $event, conversation })"
   >
     <div 
       v-if="conversation.priority === 'urgent'" 
@@ -162,6 +172,16 @@ const formatCurrency = value => {
         >
           <i class="i-lucide-message-circle text-xs text-blue-500" />
           {{ inbox.name }}
+        </span>
+
+        <span
+          v-if="checklistProgress"
+          class="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200"
+          :class="{ 'bg-green-50 text-green-700 border-green-200': checklistProgress.done === checklistProgress.total }"
+          :title="`${checklistProgress.done}/${checklistProgress.total} itens concluídos`"
+        >
+          <i class="i-lucide-check-square text-xs" />
+          {{ checklistProgress.done }}/{{ checklistProgress.total }}
         </span>
 
         <span
