@@ -232,13 +232,13 @@ export default {
     },
     salesStages() {
       return [
-        { key: 'novo_contato', label: this.$t('KANBAN.STAGES.NEW_CONTACT') },
-        { key: 'qualificacao', label: this.$t('KANBAN.STAGES.QUALIFICATION') },
-        { key: 'agendamento_pendente', label: this.$t('KANBAN.STAGES.PENDING_APPOINTMENT') },
-        { key: 'agendado', label: this.$t('KANBAN.STAGES.SCHEDULED') },
-        { key: 'pos_consulta', label: this.$t('KANBAN.STAGES.POST_CONSULT') },
-        { key: 'paciente_ativo', label: this.$t('KANBAN.STAGES.ACTIVE_PATIENT') },
-        { key: 'inativo', label: this.$t('KANBAN.STAGES.INACTIVE') },
+        { key: 'novo_contato', label: this.$t('KANBAN.STAGES.NEW_CONTACT') || 'Novo Contato' },
+        { key: 'qualificacao', label: this.$t('KANBAN.STAGES.QUALIFICATION') || 'Qualificação' },
+        { key: 'agendamento_pendente', label: this.$t('KANBAN.STAGES.PENDING_APPOINTMENT') || 'Agendamento Pendente' },
+        { key: 'agendado', label: this.$t('KANBAN.STAGES.SCHEDULED') || 'Agendado' },
+        { key: 'pos_consulta', label: this.$t('KANBAN.STAGES.POST_CONSULT') || 'Pós-Consulta' },
+        { key: 'paciente_ativo', label: this.$t('KANBAN.STAGES.ACTIVE_PATIENT') || 'Paciente Ativo' },
+        { key: 'inativo', label: this.$t('KANBAN.STAGES.INACTIVE') || 'Inativo' },
       ];
     },
     forwardMessageOption() {
