@@ -146,9 +146,9 @@ export default {
       );
 
       if (hasLocaleWithVariation) {
-        this.$root.$i18n.locale = localeWithVariation;
+        this.$root.$i18n.locale.value = localeWithVariation;
       } else if (hasLocaleWithoutVariation) {
-        this.$root.$i18n.locale = localeWithoutVariation;
+        this.$root.$i18n.locale.value = localeWithoutVariation;
       }
     },
     registerUnreadEvents() {
