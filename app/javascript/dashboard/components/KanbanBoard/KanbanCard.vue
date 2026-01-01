@@ -10,6 +10,8 @@ const props = defineProps({
   visibleAttributes: { type: Array, default: () => [] },
 });
 
+const emit = defineEmits(['contextmenu']);
+
 const store = useStore();
 const { t } = useI18n();
 

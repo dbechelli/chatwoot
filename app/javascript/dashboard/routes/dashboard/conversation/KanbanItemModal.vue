@@ -326,7 +326,7 @@ const handleSave = async () => {
                 min="0"
                 placeholder="0.00"
                 :disabled="!form.hasValue"
-                class="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                class="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               />
             </div>
           </div>
@@ -342,7 +342,7 @@ const handleSave = async () => {
                 class="flex-1 py-2 rounded-lg text-xs font-bold border transition-all capitalize"
                 :class="form.priority === p ? getPriorityClasses(p) : 'border-slate-200 text-slate-500 hover:bg-slate-50'"
               >
-                {{ p }}
+                {{ $t(`KANBAN.MODAL.PRIORITY_LABEL.${p.toUpperCase()}`) }}
               </button>
             </div>
           </div>
@@ -438,7 +438,9 @@ const handleSave = async () => {
                 class="w-full text-left px-4 py-2 hover:bg-slate-50 flex items-center justify-between group"
               >
                 <div>
-                  <div class="font-medium text-slate-800 text-sm">#{{ conv.id }} - {{ conv.meta?.sender?.name || 'Sem nome' }}</div>
+                  <div class="font-medium text-slate-800 text-sm">
+                    #{{ conv.id }} - {{ conv.meta?.sender?.name || conv.contact?.name || 'Sem nome' }}
+                  </div>
                   <div class="text-xs text-slate-500">{{ conv.messages?.[0]?.content?.substring(0, 40) }}...</div>
                 </div>
                 <i class="i-lucide-link text-slate-300 group-hover:text-blue-500" />

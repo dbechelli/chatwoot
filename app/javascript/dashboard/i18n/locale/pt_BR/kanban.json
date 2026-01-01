@@ -21,6 +21,12 @@
       "DEAL_VALUE": "Valor do Deal",
       "ACTIVATE": "Ativar",
       "PRIORITY": "Prioridade",
+      "PRIORITY_LABEL": {
+        "LOW": "Baixa",
+        "MEDIUM": "Média",
+        "HIGH": "Alta",
+        "URGENT": "Urgente"
+      },
       "CHECKLIST": "Checklist",
       "ADD_CHECKLIST_ITEM": "Adicionar item ao checklist...",
       "ADD": "Adicionar",

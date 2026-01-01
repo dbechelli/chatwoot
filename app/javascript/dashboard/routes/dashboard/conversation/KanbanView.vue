@@ -231,7 +231,13 @@ const handleItemSaved = () => {
   useAlert(t('KANBAN.ITEM_SAVED') || 'Item salvo com sucesso');
 };
 
-const handleCardContextmenu = ({ event, conversation }) => {
+const handleCardContextmenu = (payload) => {
+  // Ensure payload is valid
+  if (!payload || !payload.event || !payload.conversation) {
+    console.warn('Invalid context menu payload', payload);
+    return;
+  }
+  const { event, conversation } = payload;
   contextMenuX.value = event.clientX;
   contextMenuY.value = event.clientY;
   contextMenuItem.value = conversation;
@@ -245,7 +251,7 @@ const handleContextMenuAction = async ({ action, item }) => {
     showItemModal.value = true;
   } else if (action === 'view_contact') {
     if (item.meta?.sender?.id) {
-      router.push({ name: 'contact_profile', params: { contactId: item.meta.sender.id } });
+      router.push({ name: 'contacts_edit', params: { contactId: item.meta.sender.id, accountId: store.getters.getCurrentAccountId } });
     }
   } else if (action === 'open_conversation') {
     router.push({ name: 'inbox_conversation', params: { inbox_id: item.inbox_id, conversation_id: item.id } });
