@@ -65,7 +65,13 @@ jobs:
         if: github.ref == 'refs/heads/claude/add-resolved-tab-hESJN'
         run: |
           if [ -n "${{ secrets.COOLIFY_WEBHOOK }}" ]; then
-            curl -X GET "${{ secrets.COOLIFY_WEBHOOK }}"
+            if [ -n "${{ secrets.COOLIFY_TOKEN }}" ]; then
+              echo "Triggering deployment with Authentication Token..."
+              curl -X GET "${{ secrets.COOLIFY_WEBHOOK }}" -H "Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}"
+            else
+              echo "Triggering deployment via Webhook URL..."
+              curl -X GET "${{ secrets.COOLIFY_WEBHOOK }}"
+            fi
             echo "Triggered Coolify deployment"
           else
             echo "COOLIFY_WEBHOOK secret not set, skipping deployment trigger"
