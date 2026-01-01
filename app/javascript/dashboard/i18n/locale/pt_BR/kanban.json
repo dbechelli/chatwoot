@@ -33,6 +33,13 @@
       "SAVE": "Salvar Item",
       "SAVING": "Salvando..."
     },
+    "CONTEXT_MENU": {
+      "EDIT": "Editar Item",
+      "VIEW_CONTACT": "Ver Contato",
+      "OPEN_CONVERSATION": "Ir para Conversa",
+      "DELETE": "Excluir"
+    },
+    "ITEM_REMOVED": "Item removido do Kanban",
     "BOARD": "Quadro",
     "LOADING": "Carregando...",
     "REFRESH": "Atualizar",

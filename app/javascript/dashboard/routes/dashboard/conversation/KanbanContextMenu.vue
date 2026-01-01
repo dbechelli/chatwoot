@@ -16,7 +16,7 @@
       class="w-full text-left px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-blue-600 flex items-center gap-2"
     >
       <i class="i-lucide-pencil text-xs" />
-      Editar Item
+      {{ t('KANBAN.CONTEXT_MENU.EDIT') }}
     </button>
 
     <button 
@@ -24,7 +24,7 @@
       class="w-full text-left px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-blue-600 flex items-center gap-2"
     >
       <i class="i-lucide-user text-xs" />
-      Ver Contato
+      {{ t('KANBAN.CONTEXT_MENU.VIEW_CONTACT') }}
     </button>
 
     <button 
@@ -32,23 +32,26 @@
       class="w-full text-left px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-blue-600 flex items-center gap-2"
     >
       <i class="i-lucide-message-circle text-xs" />
-      Ir para Conversa
+      {{ t('KANBAN.CONTEXT_MENU.OPEN_CONVERSATION') }}
     </button>
 
-    <div class="border-t border-slate-100 my-1"></div>
+    <div v-if="isAdmin" class="border-t border-slate-100 my-1"></div>
 
     <button 
+      v-if="isAdmin"
       @click="handleAction('delete')"
       class="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
     >
       <i class="i-lucide-trash-2 text-xs" />
-      Excluir
+      {{ t('KANBAN.CONTEXT_MENU.DELETE') }}
     </button>
   </div>
 </template>
 
 <script setup>
 import { onMounted, onUnmounted } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { useAdmin } from 'dashboard/composables/useAdmin';
 
 const props = defineProps({
   show: Boolean,
@@ -58,6 +61,8 @@ const props = defineProps({
 });
 
 const emit = defineEmits(['close', 'action']);
+const { t } = useI18n();
+const { isAdmin } = useAdmin();
 
 const close = () => emit('close');
 

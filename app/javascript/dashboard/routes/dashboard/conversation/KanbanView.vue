@@ -238,7 +238,7 @@ const handleCardContextmenu = ({ event, conversation }) => {
   showContextMenu.value = true;
 };
 
-const handleContextMenuAction = ({ action, item }) => {
+const handleContextMenuAction = async ({ action, item }) => {
   if (action === 'edit') {
     editingItem.value = item;
     selectedStageId.value = item.custom_attributes?.[customAttributeKey.value];
@@ -249,6 +249,24 @@ const handleContextMenuAction = ({ action, item }) => {
     }
   } else if (action === 'open_conversation') {
     router.push({ name: 'inbox_conversation', params: { inbox_id: item.inbox_id, conversation_id: item.id } });
+  } else if (action === 'delete') {
+    try {
+      const attrKey = customAttributeKey.value;
+      const customAttributes = {
+        ...item.custom_attributes,
+        [attrKey]: null, // Clear the stage to remove from board
+      };
+
+      await store.dispatch('updateCustomAttributes', {
+        conversationId: item.id,
+        customAttributes,
+      });
+      
+      useAlert(t('KANBAN.ITEM_REMOVED') || 'Item removido do Kanban');
+      fetchConversations();
+    } catch (error) {
+      useAlert(t('KANBAN.UPDATE_ERROR'));
+    }
   }
 };
 
