@@ -24,50 +24,7 @@ const selectedBoardId = ref(null);
 const isLoadingConfig = ref(true);
 
 // Fallback stages (se não houver config do backend)
-const defaultStages = [
-  {
-    id: 'novo_contato',
-    name: t('KANBAN.STAGES.NEW_CONTACT'),
-    color: '#3b82f6',
-    wipLimit: null,
-  },
-  {
-    id: 'qualificacao',
-    name: t('KANBAN.STAGES.QUALIFICATION'),
-    color: '#8b5cf6',
-    wipLimit: 30,
-  },
-  {
-    id: 'agendamento_pendente',
-    name: t('KANBAN.STAGES.PENDING_APPOINTMENT'),
-    color: '#f59e0b',
-    wipLimit: 20,
-  },
-  {
-    id: 'agendado',
-    name: t('KANBAN.STAGES.SCHEDULED'),
-    color: '#10b981',
-    wipLimit: null,
-  },
-  {
-    id: 'pos_consulta',
-    name: t('KANBAN.STAGES.POST_CONSULT'),
-    color: '#ec4899',
-    wipLimit: 15,
-  },
-  {
-    id: 'paciente_ativo',
-    name: t('KANBAN.STAGES.ACTIVE_PATIENT'),
-    color: '#6366f1',
-    wipLimit: null,
-  },
-  {
-    id: 'inativo',
-    name: t('KANBAN.STAGES.INACTIVE'),
-    color: '#64748b',
-    wipLimit: null,
-  },
-];
+const defaultStages = [];
 
 // Current board computed
 const currentBoard = computed(() => {
@@ -85,12 +42,7 @@ const salesStages = computed(() => {
       wipLimit: stage.wipLimit,
     }));
   }
-  return defaultStages.map(s => ({
-    stage: s.id,
-    title: s.name,
-    color: s.color,
-    wipLimit: s.wipLimit,
-  }));
+  return [];
 });
 
 // Custom attribute key from current board
@@ -389,7 +341,7 @@ watch([selectedInbox, selectedAssignee], () => {
       </div>
 
       <div
-        v-else
+        v-else-if="salesStages.length > 0"
         class="inline-flex h-full items-start gap-4 p-4 md:p-6 min-w-full"
       >
         <div
@@ -409,6 +361,30 @@ watch([selectedInbox, selectedAssignee], () => {
           />
         </div>
         <div class="w-4 flex-shrink-0" />
+      </div>
+
+      <div
+        v-else
+        class="flex h-full flex-col items-center justify-center gap-6 p-8 text-center"
+      >
+        <div class="rounded-full bg-slate-100 p-6">
+          <i class="i-lucide-kanban-square text-6xl text-slate-400" />
+        </div>
+        <div class="max-w-md space-y-2">
+          <h2 class="text-2xl font-bold text-slate-900">
+            {{ t('KANBAN.NO_BOARDS_TITLE') }}
+          </h2>
+          <p class="text-slate-500">
+            {{ t('KANBAN.NO_BOARDS_DESCRIPTION') }}
+          </p>
+        </div>
+        <router-link
+          :to="{ name: 'settings_kanban' }"
+          class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-6 py-3 text-sm font-semibold text-white transition-all hover:bg-blue-700 active:scale-95 shadow-md hover:shadow-lg"
+        >
+          <i class="i-lucide-plus-circle text-lg" />
+          {{ t('KANBAN.CREATE_FIRST_BOARD') }}
+        </router-link>
       </div>
     </main>
   </div>

@@ -1,6 +1,6 @@
 {
   "KANBAN": {
-    "TITLE": "Pipeline de Pacientes",
+    "TITLE": "Pipeline de Vendas",
     "BOARD": "Funil",
     "LOADING": "Carregando negócios...",
     "REFRESH": "Atualizar",
@@ -14,14 +14,15 @@
     "UNASSIGNED": "Não Atribuído",
     "EMPTY_COLUMN": "Nenhum negócio neste estágio",
     "WIP_LIMIT_EXCEEDED": "Limite de trabalho em andamento excedido!",
+    "NO_BOARDS_TITLE": "Nenhum quadro Kanban encontrado",
+    "NO_BOARDS_DESCRIPTION": "Crie seu primeiro quadro para começar a organizar seus processos de forma visual e eficiente.",
+    "CREATE_FIRST_BOARD": "Criar meu primeiro quadro",
     "STAGES": {
-      "NEW_CONTACT": "📥 Novo Contato",
-      "QUALIFICATION": "🔍 Qualificação",
-      "PENDING_APPOINTMENT": "📅 Agendamento Pendente",
-      "SCHEDULED": "✅ Agendado",
-      "POST_CONSULT": "🔄 Pós-Consulta",
-      "ACTIVE_PATIENT": "⭐ Paciente Ativo",
-      "INACTIVE": "❄️ Inativo"
+      "NEW": "📥 Novo",
+      "QUALIFYING": "🔍 Em Qualificação",
+      "NEGOTIATION": "💬 Em Negociação",
+      "WON": "✅ Ganho",
+      "LOST": "❌ Perdido"
     },
     "FILTERS": {
       "INBOX": "Caixa de Entrada",
