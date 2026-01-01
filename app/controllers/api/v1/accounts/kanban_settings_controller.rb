@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 
 class Api::V1::Accounts::KanbanSettingsController < Api::V1::Accounts::BaseController
-  before_action :check_administrator_authorization
+  before_action :check_administrator_authorization, except: [:show]
 
   # GET /api/v1/accounts/:account_id/kanban_settings
   def show
