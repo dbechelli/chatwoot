@@ -3,7 +3,6 @@ import { ref, computed, onMounted } from 'vue';
 import { useStore } from 'vuex';
 import { useI18n } from 'vue-i18n';
 import { useAlert } from 'dashboard/composables';
-import axios from 'axios';
 import SettingsLayout from '../SettingsLayout.vue';
 import KanbanBoardEditor from './KanbanBoardEditor.vue';
 
@@ -20,7 +19,7 @@ const accountId = computed(() => store.getters.getCurrentAccountId);
 const loadConfig = async () => {
   isLoading.value = true;
   try {
-    const response = await axios.get(
+    const response = await window.axios.get(
       `/api/v1/accounts/${accountId.value}/kanban_settings`
     );
     kanbanConfig.value = response.data;
@@ -60,14 +59,14 @@ const saveBoard = async boardData => {
   try {
     if (boardData.id) {
       // Update existing
-      await axios.put(
+      await window.axios.put(
         `/api/v1/accounts/${accountId.value}/kanban_settings/boards/${boardData.id}`,
         { board: boardData }
       );
       useAlert(t('KANBAN_SETTINGS.BOARD_UPDATED'));
     } else {
       // Create new
-      await axios.post(
+      await window.axios.post(
         `/api/v1/accounts/${accountId.value}/kanban_settings/boards`,
         { board: boardData }
       );

@@ -3,7 +3,6 @@ import { ref, computed, onMounted, watch } from 'vue';
 import { useStore } from 'vuex';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
-import axios from 'axios';
 import KanbanColumn from 'dashboard/components/KanbanBoard/KanbanColumn.vue';
 import KanbanMetrics from 'dashboard/components/KanbanBoard/KanbanMetrics.vue';
 import wootConstants from 'dashboard/constants/globals';
@@ -147,7 +146,7 @@ const loadKanbanConfig = async () => {
   isLoadingConfig.value = true;
   try {
     const accountId = store.getters.getCurrentAccountId;
-    const response = await axios.get(
+    const response = await window.axios.get(
       `/api/v1/accounts/${accountId}/kanban_settings`
     );
     kanbanConfig.value = response.data;
