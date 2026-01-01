@@ -41,6 +41,7 @@ import whatsappTemplates from './whatsappTemplates.json';
 import contentTemplates from './contentTemplates.json';
 import mfa from './mfa.json';
 import yearInReview from './yearInReview.json';
+import whatsappGroups from './whatsappGroups.json';
 
 export default {
   ...advancedFilters,
@@ -86,4 +87,5 @@ export default {
   ...contentTemplates,
   ...mfa,
   ...yearInReview,
+  ...whatsappGroups,
 };

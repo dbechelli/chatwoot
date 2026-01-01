@@ -2,7 +2,7 @@ version: '3'
 
 services:
   rails:
-    image: 'ghcr.io/fazer-ai/chatwoot:resolved-tab'
+    image: 'ghcr.io/dbechelli/chatwoot:resolved-tab'
     pull_policy: always
     volumes:
       - 'storage:/app/storage'
