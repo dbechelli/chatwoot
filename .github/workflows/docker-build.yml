@@ -60,3 +60,13 @@ jobs:
           echo "$TAGS"
         env:
           TAGS: ${{ steps.meta.outputs.tags }}
+
+      - name: Trigger Coolify Deployment
+        if: github.ref == 'refs/heads/claude/add-resolved-tab-hESJN'
+        run: |
+          if [ -n "${{ secrets.COOLIFY_WEBHOOK }}" ]; then
+            curl -X GET "${{ secrets.COOLIFY_WEBHOOK }}"
+            echo "Triggered Coolify deployment"
+          else
+            echo "COOLIFY_WEBHOOK secret not set, skipping deployment trigger"
+          fi
