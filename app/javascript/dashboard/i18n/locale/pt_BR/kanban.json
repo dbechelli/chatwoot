@@ -121,8 +121,5 @@
     "PROMOTE_ERROR": "Erro ao promover membro",
     "DEMOTE_ERROR": "Erro ao rebaixar administrador",
     "SYNC_ERROR": "Erro ao sincronizar membros"
-  },
-  "CONVERSATION": {
-    "WHATSAPP_GROUP_BADGE": "{count} participantes"
   }
 }

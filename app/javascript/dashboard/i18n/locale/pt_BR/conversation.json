@@ -1,5 +1,6 @@
 {
   "CONVERSATION": {
+    "WHATSAPP_GROUP_BADGE": "{count} participantes",
     "SELECT_A_CONVERSATION": "Por favor, selecione uma conversa no painel da esquerda",
     "CSAT_REPLY_MESSAGE": "Por favor, classifique a conversa",
     "404": "Desculpe, não conseguimos encontrar a conversa. Por favor, tente novamente",

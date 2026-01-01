@@ -120,8 +120,5 @@
     "PROMOTE_ERROR": "Failed to promote member",
     "DEMOTE_ERROR": "Failed to demote admin",
     "SYNC_ERROR": "Failed to sync members"
-  },
-  "CONVERSATION": {
-    "WHATSAPP_GROUP_BADGE": "{count} participants"
   }
 }
