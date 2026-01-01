@@ -1,7 +1,9 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useStore } from 'vuex';
 import { useI18n } from 'vue-i18n';
+import { emitter } from 'shared/helpers/mitt';
+import { CMD_OPEN_KANBAN_MODAL } from 'dashboard/helper/commandbar/events';
 import KanbanItemModal from './KanbanItemModal.vue';
 
 const props = defineProps({
@@ -72,13 +74,20 @@ const handleSave = () => {
 
 onMounted(() => {
   loadKanbanConfig();
+  emitter.on(CMD_OPEN_KANBAN_MODAL, () => {
+    showModal.value = true;
+  });
+});
+
+onUnmounted(() => {
+  emitter.off(CMD_OPEN_KANBAN_MODAL);
 });
 </script>
 
 <template>
   <div class="p-4 bg-white rounded-md border border-slate-100">
     <div v-if="!currentBoard">
-      <p class="text-xs text-slate-500">Nenhum quadro Kanban configurado.</p>
+      <p class="text-xs text-slate-500">{{ $t('KANBAN.SIDEBAR.NO_BOARD') }}</p>
     </div>
 
     <div v-else>
@@ -94,7 +103,7 @@ onMounted(() => {
             @click="showModal = true"
             class="text-xs text-blue-600 hover:underline font-medium"
           >
-            Editar
+            {{ $t('KANBAN.SIDEBAR.EDIT') }}
           </button>
         </div>
 
@@ -109,12 +118,12 @@ onMounted(() => {
       </div>
 
       <div v-else class="text-center py-2">
-        <p class="text-xs text-slate-500 mb-3">Esta conversa não está no Kanban.</p>
+        <p class="text-xs text-slate-500 mb-3">{{ $t('KANBAN.SIDEBAR.NOT_IN_KANBAN') }}</p>
         <button
           @click="showModal = true"
           class="w-full py-2 bg-blue-50 text-blue-600 rounded-md text-sm font-bold hover:bg-blue-100 transition-colors"
         >
-          Adicionar ao Kanban
+          {{ $t('KANBAN.SIDEBAR.ADD_TO_KANBAN') }}
         </button>
       </div>
     </div>

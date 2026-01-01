@@ -1,6 +1,38 @@
 {
   "KANBAN": {
     "TITLE": "Sales Pipeline",
+    "SIDEBAR_TITLE": "CRM / Kanban",
+    "SIDEBAR": {
+      "NO_BOARD": "No Kanban board configured.",
+      "NOT_IN_KANBAN": "This conversation is not in Kanban.",
+      "ADD_TO_KANBAN": "Add to Kanban",
+      "EDIT": "Edit"
+    },
+    "MODAL": {
+      "NEW_ITEM": "New Item",
+      "EDIT_ITEM": "Edit Item",
+      "CREATING_CARD": "Creating new card",
+      "TITLE": "Item Title",
+      "TITLE_PLACEHOLDER": "Ex: Negotiation Company X",
+      "DESCRIPTION": "Description",
+      "DESCRIPTION_PLACEHOLDER": "Details about this opportunity...",
+      "DEAL_VALUE": "Deal Value",
+      "ACTIVATE": "Activate",
+      "PRIORITY": "Priority",
+      "CHECKLIST": "Checklist",
+      "ADD_CHECKLIST_ITEM": "Add item to checklist...",
+      "ADD": "Add",
+      "NO_CHECKLIST_ITEMS": "No items in checklist",
+      "LINK_CONVERSATION": "Link Conversation",
+      "SEARCH_PLACEHOLDER": "Search by name, email or ID...",
+      "LINKED_CONVERSATION": "Linked Conversation",
+      "UNLINK": "Unlink",
+      "ASSIGNEE": "Assignee",
+      "NO_ASSIGNEE": "No assignee",
+      "CANCEL": "Cancel",
+      "SAVE": "Save Item",
+      "SAVING": "Saving..."
+    },
     "BOARD": "Board",
     "LOADING": "Loading deals...",
     "REFRESH": "Refresh",

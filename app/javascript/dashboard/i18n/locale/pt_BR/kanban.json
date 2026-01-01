@@ -1,6 +1,38 @@
 {
   "KANBAN": {
     "TITLE": "Kanban",
+    "SIDEBAR_TITLE": "CRM / Kanban",
+    "SIDEBAR": {
+      "NO_BOARD": "Nenhum quadro Kanban configurado.",
+      "NOT_IN_KANBAN": "Esta conversa não está no Kanban.",
+      "ADD_TO_KANBAN": "Adicionar ao Kanban",
+      "EDIT": "Editar"
+    },
+    "MODAL": {
+      "NEW_ITEM": "Novo Item",
+      "EDIT_ITEM": "Editar Item",
+      "CREATING_CARD": "Criando novo card",
+      "TITLE": "Título do Item",
+      "TITLE_PLACEHOLDER": "Ex: Negociação Empresa X",
+      "DESCRIPTION": "Descrição",
+      "DESCRIPTION_PLACEHOLDER": "Detalhes sobre esta oportunidade...",
+      "DEAL_VALUE": "Valor do Deal",
+      "ACTIVATE": "Ativar",
+      "PRIORITY": "Prioridade",
+      "CHECKLIST": "Checklist",
+      "ADD_CHECKLIST_ITEM": "Adicionar item ao checklist...",
+      "ADD": "Adicionar",
+      "NO_CHECKLIST_ITEMS": "Nenhum item no checklist",
+      "LINK_CONVERSATION": "Vincular Conversa",
+      "SEARCH_PLACEHOLDER": "Buscar por nome, email ou ID...",
+      "LINKED_CONVERSATION": "Conversa Vinculada",
+      "UNLINK": "Desvincular",
+      "ASSIGNEE": "Agente Responsável",
+      "NO_ASSIGNEE": "Sem agente",
+      "CANCEL": "Cancelar",
+      "SAVE": "Salvar Item",
+      "SAVING": "Salvando..."
+    },
     "BOARD": "Quadro",
     "LOADING": "Carregando...",
     "REFRESH": "Atualizar",

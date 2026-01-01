@@ -192,10 +192,10 @@ const handleSave = async () => {
           </div>
           <div>
             <h2 class="text-lg font-bold text-slate-800">
-              {{ form.conversation_id ? 'Editar Item' : 'Novo Item' }}
+              {{ form.conversation_id ? $t('KANBAN.MODAL.EDIT_ITEM') : $t('KANBAN.MODAL.NEW_ITEM') }}
             </h2>
             <p class="text-xs text-slate-500 font-medium">
-              {{ form.conversation_id ? `#${form.conversation_id}` : 'Criando novo card' }}
+              {{ form.conversation_id ? `#${form.conversation_id}` : $t('KANBAN.MODAL.CREATING_CARD') }}
             </p>
           </div>
         </div>
@@ -211,22 +211,22 @@ const handleSave = async () => {
       <div class="flex-1 overflow-y-auto p-6 space-y-6">
         <!-- Title -->
         <div class="space-y-1.5">
-          <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Título do Item</label>
+          <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">{{ $t('KANBAN.MODAL.TITLE') }}</label>
           <input
             v-model="form.title"
             type="text"
-            placeholder="Ex: Negociação Empresa X"
+            :placeholder="$t('KANBAN.MODAL.TITLE_PLACEHOLDER')"
             class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
           />
         </div>
 
         <!-- Description -->
         <div class="space-y-1.5">
-          <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Descrição</label>
+          <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">{{ $t('KANBAN.MODAL.DESCRIPTION') }}</label>
           <textarea
             v-model="form.description"
             rows="3"
-            placeholder="Detalhes sobre esta oportunidade..."
+            :placeholder="$t('KANBAN.MODAL.DESCRIPTION_PLACEHOLDER')"
             class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-none"
           />
         </div>
@@ -236,10 +236,10 @@ const handleSave = async () => {
           <!-- Value -->
           <div class="space-y-1.5">
             <div class="flex items-center justify-between">
-              <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Valor do Deal</label>
+              <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">{{ $t('KANBAN.MODAL.DEAL_VALUE') }}</label>
               <label class="flex items-center gap-2 cursor-pointer">
                 <input type="checkbox" v-model="form.hasValue" class="rounded border-slate-300 text-blue-600 focus:ring-blue-500 h-3 w-3" />
-                <span class="text-[10px] font-bold text-slate-500 uppercase">Ativar</span>
+                <span class="text-[10px] font-bold text-slate-500 uppercase">{{ $t('KANBAN.MODAL.ACTIVATE') }}</span>
               </label>
             </div>
             <div class="relative">
@@ -255,7 +255,7 @@ const handleSave = async () => {
 
           <!-- Priority -->
           <div class="space-y-1.5">
-            <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Prioridade</label>
+            <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">{{ $t('KANBAN.MODAL.PRIORITY') }}</label>
             <div class="flex gap-2">
               <button
                 v-for="p in ['low', 'medium', 'high', 'urgent']"
@@ -275,7 +275,7 @@ const handleSave = async () => {
           <div class="flex items-center justify-between">
             <label class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
               <i class="i-lucide-check-square text-slate-400" />
-              Checklist
+              {{ $t('KANBAN.MODAL.CHECKLIST') }}
             </label>
             <span class="text-xs font-medium text-slate-500">
               {{ checklistProgress }}
@@ -296,7 +296,7 @@ const handleSave = async () => {
               v-model="newChecklistItem"
               @keydown.enter.prevent="addChecklistItem"
               type="text"
-              placeholder="Adicionar item ao checklist..."
+              :placeholder="$t('KANBAN.MODAL.ADD_CHECKLIST_ITEM')"
               class="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-md text-sm focus:outline-none focus:border-blue-500"
             />
             <button 
@@ -304,7 +304,7 @@ const handleSave = async () => {
               :disabled="!newChecklistItem"
               class="px-4 py-2 bg-slate-100 text-slate-600 rounded-md text-sm font-bold hover:bg-slate-200 disabled:opacity-50"
             >
-              Adicionar
+              {{ $t('KANBAN.MODAL.ADD') }}
             </button>
           </div>
 
@@ -333,20 +333,20 @@ const handleSave = async () => {
               </button>
             </div>
             <div v-if="form.checklist.length === 0" class="text-center py-4 text-sm text-slate-400 italic">
-              Nenhum item no checklist
+              {{ $t('KANBAN.MODAL.NO_CHECKLIST_ITEMS') }}
             </div>
           </div>
         </div>
 
         <!-- Conversation Link -->
         <div class="space-y-1.5 pt-4 border-t border-slate-100">
-          <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Vincular Conversa</label>
+          <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">{{ $t('KANBAN.MODAL.LINK_CONVERSATION') }}</label>
           
           <div v-if="!form.conversation_id" class="relative">
             <i class="i-lucide-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
-              placeholder="Buscar por nome, email ou ID..."
+              :placeholder="$t('KANBAN.MODAL.SEARCH_PLACEHOLDER')"
               class="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
               @input="e => searchConversations(e.target.value)"
             />
@@ -374,7 +374,7 @@ const handleSave = async () => {
                 #{{ form.conversation_id }}
               </div>
               <div>
-                <div class="text-sm font-bold text-slate-800">Conversa Vinculada</div>
+                <div class="text-sm font-bold text-slate-800">{{ $t('KANBAN.MODAL.LINKED_CONVERSATION') }}</div>
                 <div class="text-xs text-slate-500">Clique em salvar para confirmar as alterações</div>
               </div>
             </div>
@@ -382,19 +382,19 @@ const handleSave = async () => {
               @click="form.conversation_id = null"
               class="text-xs font-bold text-red-500 hover:text-red-600 hover:underline"
             >
-              Desvincular
+              {{ $t('KANBAN.MODAL.UNLINK') }}
             </button>
           </div>
         </div>
 
         <!-- Agent -->
         <div class="space-y-1.5">
-          <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Agente Responsável</label>
+          <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">{{ $t('KANBAN.MODAL.ASSIGNEE') }}</label>
           <select
             v-model="form.assignee_id"
             class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
           >
-            <option :value="null">Sem agente</option>
+            <option :value="null">{{ $t('KANBAN.MODAL.NO_ASSIGNEE') }}</option>
             <option v-for="agent in agents" :key="agent.id" :value="agent.id">
               {{ agent.name }}
             </option>
@@ -408,7 +408,7 @@ const handleSave = async () => {
           @click="emit('close')"
           class="px-4 py-2 text-sm font-bold text-slate-600 hover:text-slate-800 hover:bg-slate-200 rounded-lg transition-colors"
         >
-          Cancelar
+          {{ $t('KANBAN.MODAL.CANCEL') }}
         </button>
         <button
           @click="handleSave"
@@ -416,7 +416,7 @@ const handleSave = async () => {
           class="px-6 py-2 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm shadow-blue-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
         >
           <i v-if="isLoading" class="i-lucide-loader-2 animate-spin" />
-          {{ isLoading ? 'Salvando...' : 'Salvar Item' }}
+          {{ isLoading ? $t('KANBAN.MODAL.SAVING') : $t('KANBAN.MODAL.SAVE') }}
         </button>
       </div>
     </div>
