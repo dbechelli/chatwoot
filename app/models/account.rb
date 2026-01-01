@@ -61,9 +61,6 @@ class Account < ApplicationRecord
   store_accessor :settings, :auto_resolve_after, :auto_resolve_message, :auto_resolve_ignore_waiting
   store_accessor :settings, :audio_transcriptions, :auto_resolve_label, :conversation_required_attributes
 
-  # Kanban configuration accessors
-  store_accessor :kanban_config, :kanban_enabled, :kanban_boards
-
   has_many :account_users, dependent: :destroy_async
   has_many :agent_bot_inboxes, dependent: :destroy_async
   has_many :agent_bots, dependent: :destroy_async
@@ -169,10 +166,14 @@ class Account < ApplicationRecord
 
   # Kanban configuration helper methods
   def kanban_enabled?
+    return false if kanban_config.nil?
+
     kanban_config['enabled'] == true
   end
 
   def kanban_boards
+    return [] if kanban_config.nil?
+
     kanban_config['boards'] || []
   end
 
@@ -185,6 +186,7 @@ class Account < ApplicationRecord
   end
 
   def add_kanban_board(board_data)
+    ensure_kanban_config
     board = board_data.merge('id' => SecureRandom.uuid)
     boards = kanban_boards
     boards << board
@@ -193,6 +195,8 @@ class Account < ApplicationRecord
   end
 
   def update_kanban_board(board_id, board_data)
+    return nil if kanban_config.nil?
+
     boards = kanban_boards
     board_index = boards.find_index { |b| b['id'] == board_id }
     return nil if board_index.nil?
@@ -203,11 +207,19 @@ class Account < ApplicationRecord
   end
 
   def delete_kanban_board(board_id)
+    return if kanban_config.nil?
+
     boards = kanban_boards.reject { |b| b['id'] == board_id }
     update!(kanban_config: kanban_config.merge('boards' => boards))
   end
 
   private
+
+  def ensure_kanban_config
+    return if kanban_config.present?
+
+    update!(kanban_config: { 'enabled' => false, 'boards' => [] })
+  end
 
   def notify_creation
     Rails.configuration.dispatcher.dispatch(ACCOUNT_CREATED, Time.zone.now, account: self)
