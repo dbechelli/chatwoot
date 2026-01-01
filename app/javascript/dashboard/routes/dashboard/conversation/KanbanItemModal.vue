@@ -24,6 +24,7 @@ const newChecklistItem = ref('');
 const form = ref({
   title: '',
   description: '',
+  notes: '',
   value: 0,
   hasValue: false,
   priority: 'medium',
@@ -31,14 +32,23 @@ const form = ref({
   conversation_id: null,
   stage_id: props.stageId,
   checklist: [],
+  custom_attributes: {},
 });
 
 // Initialize form when item prop changes or modal opens
 watch(() => props.item, (newItem) => {
   if (newItem) {
+    // Extract dynamic custom attributes
+    const itemAttributes = newItem.custom_attributes || {};
+    const dynamicAttributes = {};
+    customAttributes.value.forEach(attr => {
+      dynamicAttributes[attr.attribute_key] = itemAttributes[attr.attribute_key] || '';
+    });
+
     form.value = {
       title: newItem.custom_attributes?.kanban_title || '',
       description: newItem.custom_attributes?.kanban_description || '',
+      notes: newItem.custom_attributes?.kanban_notes || '',
       value: Number(newItem.custom_attributes?.deal_value) || 0,
       hasValue: !!newItem.custom_attributes?.deal_value,
       priority: newItem.priority || 'medium',
@@ -46,12 +56,19 @@ watch(() => props.item, (newItem) => {
       conversation_id: newItem.id,
       stage_id: props.stageId,
       checklist: newItem.custom_attributes?.kanban_checklist || [],
+      custom_attributes: dynamicAttributes,
     };
   } else {
     // Reset form for new item
+    const dynamicAttributes = {};
+    customAttributes.value.forEach(attr => {
+      dynamicAttributes[attr.attribute_key] = '';
+    });
+
     form.value = {
       title: '',
       description: '',
+      notes: '',
       value: 0,
       hasValue: false,
       priority: 'medium',
@@ -59,6 +76,7 @@ watch(() => props.item, (newItem) => {
       conversation_id: null,
       stage_id: props.stageId,
       checklist: [],
+      custom_attributes: dynamicAttributes,
     };
   }
 }, { immediate: true });
@@ -69,6 +87,12 @@ watch(() => props.stageId, (newVal) => {
 });
 
 const agents = computed(() => store.getters['agents/getAgents']);
+
+const customAttributes = computed(() => {
+  const allAttributes = store.getters['attributes/getAttributesByModel']('conversation_attribute');
+  const ignoredKeys = ['kanban_title', 'kanban_description', 'kanban_notes', 'deal_value', 'kanban_checklist'];
+  return allAttributes.filter(attr => !ignoredKeys.includes(attr.attribute_key));
+});
 
 const checklistProgress = computed(() => {
   const total = form.value.checklist.length;
@@ -144,9 +168,11 @@ const handleSave = async () => {
     const customAttributes = {
       kanban_title: form.value.title,
       kanban_description: form.value.description,
+      kanban_notes: form.value.notes,
       deal_value: form.value.hasValue ? form.value.value : 0,
       kanban_checklist: form.value.checklist, // Save checklist
       [props.board.customAttributeKey]: form.value.stage_id,
+      ...form.value.custom_attributes,
     };
 
     await store.dispatch('updateCustomAttributes', {
@@ -182,7 +208,7 @@ const handleSave = async () => {
 </script>
 
 <template>
-  <Modal :show="show" :on-close="() => emit('close')" size="lg">
+  <Modal :show="show" :on-close="() => emit('close')" size="lg" :show-close-button="false">
     <div class="flex flex-col h-[80vh] bg-white rounded-lg shadow-xl overflow-hidden">
       <!-- Header -->
       <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
@@ -231,6 +257,55 @@ const handleSave = async () => {
           />
         </div>
 
+        <!-- Notes -->
+        <div class="space-y-1.5">
+          <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">{{ $t('KANBAN.MODAL.NOTES') }}</label>
+          <textarea
+            v-model="form.notes"
+            rows="3"
+            :placeholder="$t('KANBAN.MODAL.NOTES_PLACEHOLDER')"
+            class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-none"
+          />
+        </div>
+
+        <!-- Custom Attributes -->
+        <div v-if="customAttributes.length > 0" class="space-y-3 pt-2 border-t border-slate-100">
+          <div v-for="attr in customAttributes" :key="attr.id" class="space-y-1.5">
+            <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">{{ attr.attribute_display_name }}</label>
+            
+            <!-- Text / Link / Number / Date -->
+            <input
+              v-if="['text', 'link', 'number', 'date'].includes(attr.attribute_display_type)"
+              v-model="form.custom_attributes[attr.attribute_key]"
+              :type="attr.attribute_display_type === 'link' ? 'url' : attr.attribute_display_type"
+              :placeholder="attr.attribute_display_name"
+              class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+            />
+
+            <!-- List -->
+            <select
+              v-else-if="attr.attribute_display_type === 'list'"
+              v-model="form.custom_attributes[attr.attribute_key]"
+              class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+            >
+              <option value="">Selecione...</option>
+              <option v-for="opt in attr.attribute_values" :key="opt" :value="opt">
+                {{ opt }}
+              </option>
+            </select>
+
+            <!-- Checkbox -->
+            <label v-else-if="attr.attribute_display_type === 'checkbox'" class="flex items-center gap-2 cursor-pointer">
+              <input 
+                type="checkbox" 
+                v-model="form.custom_attributes[attr.attribute_key]" 
+                class="rounded border-slate-300 text-blue-600 focus:ring-blue-500 h-4 w-4" 
+              />
+              <span class="text-sm text-slate-600">{{ attr.attribute_display_name }}</span>
+            </label>
+          </div>
+        </div>
+
         <!-- Value & Priority Row -->
         <div class="grid grid-cols-2 gap-6">
           <!-- Value -->
@@ -243,10 +318,13 @@ const handleSave = async () => {
               </label>
             </div>
             <div class="relative">
-              <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-bold">R$</span>
+              <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-bold pointer-events-none">R$</span>
               <input
                 v-model="form.value"
                 type="number"
+                step="0.01"
+                min="0"
+                placeholder="0.00"
                 :disabled="!form.hasValue"
                 class="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               />

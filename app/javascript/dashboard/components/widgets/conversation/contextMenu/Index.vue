@@ -293,6 +293,9 @@ export default {
   },
   mounted() {
     this.$store.dispatch('inboxAssignableAgents/fetch', [this.inboxId]);
+    if (!this.kanbanBoards.length) {
+      this.$store.dispatch('kanban/fetch');
+    }
   },
   methods: {
     isAllowed(keys) {

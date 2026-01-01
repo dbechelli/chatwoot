@@ -16,6 +16,8 @@
       "TITLE_PLACEHOLDER": "Ex: Negociação Empresa X",
       "DESCRIPTION": "Descrição",
       "DESCRIPTION_PLACEHOLDER": "Detalhes sobre esta oportunidade...",
+      "NOTES": "Notas Internas",
+      "NOTES_PLACEHOLDER": "Anotações privadas para a equipe...",
       "DEAL_VALUE": "Valor do Deal",
       "ACTIVATE": "Ativar",
       "PRIORITY": "Prioridade",
