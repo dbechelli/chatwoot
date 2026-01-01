@@ -244,13 +244,13 @@ const canSave = computed(() => {
 
             <div class="md:col-span-2">
               <label class="block text-sm font-medium text-n-slate-12 mb-2">
-                {{ $t('KANBAN_SETTINGS.DESCRIPTION') }}
+                {{ $t('KANBAN_SETTINGS.BOARD_DESCRIPTION') }}
               </label>
               <textarea
                 v-model="localBoard.description"
                 rows="2"
                 class="w-full px-3 py-2 border border-n-weak rounded-lg focus:border-n-brand focus:ring-2 focus:ring-n-brand/20 outline-none resize-none"
-                :placeholder="$t('KANBAN_SETTINGS.DESCRIPTION_PLACEHOLDER')"
+                :placeholder="$t('KANBAN_SETTINGS.BOARD_DESCRIPTION_PLACEHOLDER')"
               />
             </div>
 
