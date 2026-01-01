@@ -1028,6 +1028,7 @@ watch(conversationFilters, (newVal, oldVal) => {
       @close="selectedConversationId = null"
     />
     <ForwardMessageModal
+      v-if="showForwardModal"
       :show="showForwardModal"
       :conversation-id="forwardConversationId"
       @close="handleForwardModalClose"
