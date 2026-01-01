@@ -7,6 +7,7 @@ import { ptBR } from 'date-fns/locale'; // Opcional: para forçar o tempo em por
 
 const props = defineProps({
   conversation: { type: Object, required: true },
+  visibleAttributes: { type: Array, default: () => [] },
 });
 
 const store = useStore();
@@ -17,6 +18,24 @@ const assignee = computed(() => props.conversation.meta?.assignee);
 const inbox = computed(() =>
   store.getters['inboxes/getInbox'](props.conversation.inbox_id)
 );
+const allAttributes = computed(() => store.getters['attributes/getConversationAttributes']);
+
+const displayAttributes = computed(() => {
+  if (!props.visibleAttributes.length) return [];
+  const attributes = props.conversation.custom_attributes || {};
+  
+  return props.visibleAttributes.map(key => {
+    const def = allAttributes.value.find(a => a.attributeKey === key);
+    const value = attributes[key];
+    if (value === undefined || value === null || value === '') return null;
+    
+    return {
+      key,
+      label: def ? def.attributeDisplayName : key,
+      value,
+    };
+  }).filter(Boolean);
+});
 
 const timeAgo = computed(() => {
   return formatDistanceToNow(
@@ -42,6 +61,14 @@ const dealValue = computed(() => {
   return props.conversation.custom_attributes?.deal_value || 0;
 });
 
+const kanbanTitle = computed(() => {
+  return props.conversation.custom_attributes?.kanban_title || contact.value?.name || t('KANBAN.UNKNOWN_CONTACT');
+});
+
+const kanbanDescription = computed(() => {
+  return props.conversation.custom_attributes?.kanban_description;
+});
+
 const formatCurrency = value => {
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
@@ -62,7 +89,7 @@ const formatCurrency = value => {
     <div class="flex items-start justify-between gap-2">
       <div class="flex-1 min-w-0">
         <h4 class="truncate text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
-          {{ contact?.name || t('KANBAN.UNKNOWN_CONTACT') }}
+          {{ kanbanTitle }}
         </h4>
         <div class="flex items-center gap-1 mt-0.5">
           <i class="i-lucide-phone text-[10px] text-slate-400" v-if="contact?.phone_number" />
@@ -77,6 +104,24 @@ const formatCurrency = value => {
         class="flex-shrink-0 rounded-lg bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700 border border-emerald-100 shadow-sm"
       >
         {{ formatCurrency(dealValue) }}
+      </div>
+    </div>
+
+    <div v-if="kanbanDescription" class="text-xs text-slate-600 line-clamp-2">
+      {{ kanbanDescription }}
+    </div>
+
+    <!-- Custom Attributes -->
+    <div v-if="displayAttributes.length > 0" class="flex flex-col gap-1.5">
+      <div 
+        v-for="attr in displayAttributes" 
+        :key="attr.key"
+        class="flex items-center justify-between text-xs"
+      >
+        <span class="text-slate-500 font-medium">{{ attr.label }}:</span>
+        <span class="text-slate-700 font-semibold truncate max-w-[120px]" :title="attr.value">
+          {{ attr.value }}
+        </span>
       </div>
     </div>
 

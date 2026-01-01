@@ -50,6 +50,7 @@ class Api::V1::Accounts::KanbanSettingsController < Api::V1::Accounts::BaseContr
       boards: [
         :id, :name, :description, :customAttributeKey, :valueAttributeKey, :isDefault,
         { agent_ids: [] },
+        { visible_attributes: [] },
         stages: [:id, :name, :color, :order, :wipLimit]
       ]
     )
@@ -59,6 +60,7 @@ class Api::V1::Accounts::KanbanSettingsController < Api::V1::Accounts::BaseContr
     params.require(:board).permit(
       :name, :description, :customAttributeKey, :valueAttributeKey, :isDefault,
       { agent_ids: [] },
+      { visible_attributes: [] },
       stages: [:id, :name, :color, :order, :wipLimit]
     )
   end

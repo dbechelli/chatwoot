@@ -5,6 +5,8 @@ import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import KanbanColumn from 'dashboard/components/KanbanBoard/KanbanColumn.vue';
 import KanbanMetrics from 'dashboard/components/KanbanBoard/KanbanMetrics.vue';
+import KanbanHelpModal from './KanbanHelpModal.vue';
+import KanbanItemModal from './KanbanItemModal.vue';
 import wootConstants from 'dashboard/constants/globals';
 import { useAlert } from 'dashboard/composables';
 
@@ -14,6 +16,9 @@ const { t } = useI18n();
 
 // Estado local
 const isLoading = ref(false);
+const showHelpModal = ref(false);
+const showItemModal = ref(false);
+const selectedStageId = ref('');
 const selectedInbox = ref(null);
 const selectedAssignee = ref('all');
 const showMetrics = ref(true);
@@ -48,6 +53,11 @@ const salesStages = computed(() => {
 // Custom attribute key from current board
 const customAttributeKey = computed(() => {
   return currentBoard.value?.customAttributeKey || 'sales_stage';
+});
+
+// Visible attributes from current board
+const visibleAttributes = computed(() => {
+  return currentBoard.value?.visible_attributes || [];
 });
 
 // Getters
@@ -178,6 +188,16 @@ const handleRefresh = () => {
   fetchConversations();
 };
 
+const openAddItemModal = (stageId = '') => {
+  selectedStageId.value = stageId;
+  showItemModal.value = true;
+};
+
+const handleItemSaved = () => {
+  fetchConversations();
+  useAlert(t('KANBAN.ITEM_SAVED') || 'Item salvo com sucesso');
+};
+
 const toggleMetrics = () => {
   showMetrics.value = !showMetrics.value;
 };
@@ -188,6 +208,7 @@ onMounted(async () => {
   fetchConversations();
   store.dispatch('inboxes/get');
   store.dispatch('agents/get');
+  store.dispatch('attributes/get');
 });
 
 // Watchers
@@ -199,6 +220,7 @@ watch([selectedInbox, selectedAssignee], () => {
 <template>
   <div class="flex h-full flex-col bg-[#f8fafc]">
     <header
+      v-if="salesStages.length > 0"
       class="z-20 flex flex-col gap-4 border-b border-slate-200 bg-white p-4 shadow-sm"
     >
       <div
@@ -234,6 +256,14 @@ watch([selectedInbox, selectedAssignee], () => {
             <span class="hidden sm:inline">{{
               showMetrics ? t('KANBAN.HIDE_METRICS') : t('KANBAN.SHOW_METRICS')
             }}</span>
+          </button>
+
+          <button
+            class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-blue-700 active:scale-95 shadow-sm shadow-blue-200"
+            @click="openAddItemModal()"
+          >
+            <i class="i-lucide-plus" />
+            <span class="hidden sm:inline">{{ t('KANBAN.ADD_ITEM') || 'Novo Item' }}</span>
           </button>
 
           <button
@@ -319,7 +349,10 @@ watch([selectedInbox, selectedAssignee], () => {
     </header>
 
     <Transition name="fade">
-      <div v-if="showMetrics" class="border-b border-slate-200 bg-white/50 p-4">
+      <div
+        v-if="showMetrics && salesStages.length > 0"
+        class="border-b border-slate-200 bg-white/50 p-4"
+      >
         <KanbanMetrics
           :conversations="filteredConversations"
           :stages="salesStages"
@@ -355,6 +388,7 @@ watch([selectedInbox, selectedAssignee], () => {
             :color="stage.color"
             :conversations="conversationsByStage[stage.stage] || []"
             :wip-limit="stage.wipLimit"
+            :visible-attributes="visibleAttributes"
             class="shadow-sm border border-slate-200 rounded-xl"
             @stage-change="handleStageChange"
             @card-click="handleCardClick"
@@ -378,15 +412,39 @@ watch([selectedInbox, selectedAssignee], () => {
             {{ t('KANBAN.NO_BOARDS_DESCRIPTION') }}
           </p>
         </div>
-        <router-link
-          :to="{ name: 'settings_kanban' }"
-          class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-6 py-3 text-sm font-semibold text-white transition-all hover:bg-blue-700 active:scale-95 shadow-md hover:shadow-lg"
-        >
-          <i class="i-lucide-plus-circle text-lg" />
-          {{ t('KANBAN.CREATE_FIRST_BOARD') }}
-        </router-link>
+        <div class="flex items-center gap-3">
+          <router-link
+            :to="{ name: 'settings_kanban' }"
+            class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-6 py-3 text-sm font-semibold text-white transition-all hover:bg-blue-700 active:scale-95 shadow-md hover:shadow-lg"
+          >
+            <i class="i-lucide-plus-circle text-lg" />
+            {{ t('KANBAN.CREATE_FIRST_BOARD') }}
+          </router-link>
+          <button
+            @click="showHelpModal = true"
+            class="inline-flex items-center gap-2 rounded-lg bg-white border border-slate-200 px-6 py-3 text-sm font-semibold text-slate-700 transition-all hover:bg-slate-50 hover:border-slate-300 active:scale-95 shadow-sm hover:shadow-md"
+          >
+            <i class="i-lucide-book-open text-lg text-blue-600" />
+            Ver Exemplos de Uso
+          </button>
+        </div>
       </div>
     </main>
+
+    <KanbanHelpModal 
+      v-if="showHelpModal" 
+      :show="showHelpModal" 
+      @close="showHelpModal = false" 
+    />
+
+    <KanbanItemModal
+      v-if="showItemModal && currentBoard"
+      :show="showItemModal"
+      :board="currentBoard"
+      :stage-id="selectedStageId"
+      @close="showItemModal = false"
+      @save="handleItemSaved"
+    />
   </div>
 </template>
 

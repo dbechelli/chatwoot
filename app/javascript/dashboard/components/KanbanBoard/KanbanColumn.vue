@@ -10,6 +10,7 @@ const props = defineProps({
   color: { type: String, default: '#3b82f6' },
   conversations: { type: Array, required: true },
   wipLimit: { type: Number, default: null },
+  visibleAttributes: { type: Array, default: () => [] },
 });
 
 const emit = defineEmits(['update:conversations', 'stageChange', 'cardClick']);
@@ -115,7 +116,10 @@ const handleCardClick = conversation => {
     >
       <template #item="{ element }">
         <div @click="handleCardClick(element)" class="transform transition-transform active:scale-95">
-          <KanbanCard :conversation="element" />
+          <KanbanCard 
+            :conversation="element" 
+            :visible-attributes="visibleAttributes"
+          />
         </div>
       </template>
 

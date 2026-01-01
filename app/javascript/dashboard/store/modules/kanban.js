@@ -1,5 +1,4 @@
 import * as types from '../mutation-types';
-import axios from 'axios';
 
 const state = {
   records: [],
@@ -21,7 +20,7 @@ const actions = {
   fetch: async ({ commit }) => {
     commit(types.default.SET_KANBAN_UI_FLAG, { isFetching: true });
     try {
-      const response = await axios.get(
+      const response = await window.axios.get(
         `/api/v1/accounts/${window.chatwootConfig.accountId}/kanban_settings`
       );
       commit(types.default.SET_KANBAN_BOARDS, response.data.boards || []);
@@ -35,7 +34,7 @@ const actions = {
   create: async ({ commit }, boardData) => {
     commit(types.default.SET_KANBAN_UI_FLAG, { isCreating: true });
     try {
-      const response = await axios.post(
+      const response = await window.axios.post(
         `/api/v1/accounts/${window.chatwootConfig.accountId}/kanban_settings/boards`,
         { board: boardData }
       );

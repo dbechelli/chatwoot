@@ -230,17 +230,6 @@ export default {
         label: this.$t('CONVERSATION.CARD_CONTEXT_MENU.ASSIGN_STAGE'),
       };
     },
-    salesStages() {
-      return [
-        { key: 'novo_contato', label: this.$t('KANBAN.STAGES.NEW_CONTACT') || 'Novo Contato' },
-        { key: 'qualificacao', label: this.$t('KANBAN.STAGES.QUALIFICATION') || 'Qualificação' },
-        { key: 'agendamento_pendente', label: this.$t('KANBAN.STAGES.PENDING_APPOINTMENT') || 'Agendamento Pendente' },
-        { key: 'agendado', label: this.$t('KANBAN.STAGES.SCHEDULED') || 'Agendado' },
-        { key: 'pos_consulta', label: this.$t('KANBAN.STAGES.POST_CONSULT') || 'Pós-Consulta' },
-        { key: 'paciente_ativo', label: this.$t('KANBAN.STAGES.ACTIVE_PATIENT') || 'Paciente Ativo' },
-        { key: 'inativo', label: this.$t('KANBAN.STAGES.INACTIVE') || 'Inativo' },
-      ];
-    },
     forwardMessageOption() {
       return {
         key: MENU.FORWARD_MESSAGE,
@@ -266,15 +255,7 @@ export default {
     salesStages() {
       // Backward compatibility if no boards loaded or empty
       if (!this.filteredKanbanBoards.length) {
-        return [
-          { key: 'novo_contato', label: this.$t('KANBAN.STAGES.NEW_CONTACT') || 'Novo Contato' },
-          { key: 'qualificacao', label: this.$t('KANBAN.STAGES.QUALIFICATION') || 'Qualificação' },
-          { key: 'agendamento_pendente', label: this.$t('KANBAN.STAGES.PENDING_APPOINTMENT') || 'Agendamento Pendente' },
-          { key: 'agendado', label: this.$t('KANBAN.STAGES.SCHEDULED') || 'Agendado' },
-          { key: 'pos_consulta', label: this.$t('KANBAN.STAGES.POST_CONSULT') || 'Pós-Consulta' },
-          { key: 'paciente_ativo', label: this.$t('KANBAN.STAGES.ACTIVE_PATIENT') || 'Paciente Ativo' },
-          { key: 'inativo', label: this.$t('KANBAN.STAGES.INACTIVE') || 'Inativo' },
-        ];
+        return [];
       }
       return this.filteredKanbanBoards;
     },
@@ -430,7 +411,7 @@ export default {
         />
       </MenuItemWithSubmenu>
       <MenuItemWithSubmenu
-        v-if="isAllowed([MENU.SALES_STAGE])"
+        v-if="isAllowed([MENU.SALES_STAGE]) && salesStages.length > 0"
         :option="salesStageMenuConfig"
         :sub-menu-available="!!salesStages.length"
       >

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useStore } from 'vuex';
 import Modal from 'dashboard/components/Modal.vue';
@@ -19,12 +19,35 @@ const store = useStore();
 const localBoard = ref({
   ...props.board,
   agent_ids: props.board.agent_ids || [],
+  visible_attributes: props.board.visible_attributes || [],
+});
+
+const showAdvanced = ref(false);
+const enableValue = ref(!!props.board.valueAttributeKey);
+
+// Auto-generate key for new boards
+watch(() => localBoard.value.name, (newName) => {
+  if (!props.board.id && !showAdvanced.value && newName) {
+    const slug = newName.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+    localBoard.value.customAttributeKey = slug ? `${slug}_status` : '';
+  }
+});
+
+// Handle value tracking toggle
+watch(enableValue, (enabled) => {
+  if (!enabled) {
+    localBoard.value.valueAttributeKey = '';
+  } else if (!localBoard.value.valueAttributeKey) {
+    localBoard.value.valueAttributeKey = 'deal_value';
+  }
 });
 
 const agents = computed(() => store.getters['agents/getAgents']);
+const conversationAttributes = computed(() => store.getters['attributes/getConversationAttributes']);
 
 onMounted(() => {
   store.dispatch('agents/get');
+  store.dispatch('attributes/get');
 });
 
 const toggleAgent = agentId => {
@@ -33,6 +56,15 @@ const toggleAgent = agentId => {
     localBoard.value.agent_ids.push(agentId);
   } else {
     localBoard.value.agent_ids.splice(index, 1);
+  }
+};
+
+const toggleAttribute = key => {
+  const index = localBoard.value.visible_attributes.indexOf(key);
+  if (index === -1) {
+    localBoard.value.visible_attributes.push(key);
+  } else {
+    localBoard.value.visible_attributes.splice(index, 1);
   }
 };
 
@@ -122,12 +154,6 @@ const canSave = computed(() => {
             {{ $t('KANBAN_SETTINGS.BOARD_EDITOR_DESCRIPTION') }}
           </p>
         </div>
-        <button
-          class="p-2 rounded-lg hover:bg-n-slate-3 transition-colors"
-          @click="$emit('close')"
-        >
-          <i class="i-lucide-x text-xl text-n-slate-11" />
-        </button>
       </div>
 
       <!-- Content -->
@@ -152,7 +178,7 @@ const canSave = computed(() => {
               />
             </div>
 
-            <div>
+            <div v-if="showAdvanced">
               <label class="block text-sm font-medium text-n-slate-12 mb-2">
                 {{ $t('KANBAN_SETTINGS.CUSTOM_ATTRIBUTE_KEY') }}
                 <span class="text-red-500">*</span>
@@ -192,6 +218,30 @@ const canSave = computed(() => {
               </p>
             </div>
 
+            <div class="md:col-span-2" v-if="conversationAttributes.length > 0">
+              <label class="block text-sm font-medium text-n-slate-12 mb-2">
+                {{ $t('KANBAN_SETTINGS.VISIBLE_ATTRIBUTES') }}
+              </label>
+              <div class="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-40 overflow-y-auto border border-n-weak rounded-lg p-2">
+                <label
+                  v-for="attr in conversationAttributes"
+                  :key="attr.attributeKey"
+                  class="flex items-center gap-2 p-2 rounded hover:bg-n-alpha-1 cursor-pointer"
+                >
+                  <input
+                    type="checkbox"
+                    :checked="localBoard.visible_attributes.includes(attr.attributeKey)"
+                    @change="toggleAttribute(attr.attributeKey)"
+                    class="rounded border-n-weak text-n-brand focus:ring-n-brand"
+                  />
+                  <span class="text-sm text-n-slate-12">{{ attr.attributeDisplayName }}</span>
+                </label>
+              </div>
+              <p class="text-xs text-n-slate-11 mt-1">
+                {{ $t('KANBAN_SETTINGS.VISIBLE_ATTRIBUTES_HELP') }}
+              </p>
+            </div>
+
             <div class="md:col-span-2">
               <label class="block text-sm font-medium text-n-slate-12 mb-2">
                 {{ $t('KANBAN_SETTINGS.DESCRIPTION') }}
@@ -204,22 +254,49 @@ const canSave = computed(() => {
               />
             </div>
 
-            <div>
-              <label class="block text-sm font-medium text-n-slate-12 mb-2">
-                {{ $t('KANBAN_SETTINGS.VALUE_ATTRIBUTE_KEY') }}
+            <div class="md:col-span-2 space-y-4">
+              <label class="flex items-center gap-2 cursor-pointer">
+                <input
+                  v-model="enableValue"
+                  type="checkbox"
+                  class="w-4 h-4 rounded border-n-slate-6 text-n-brand focus:ring-n-brand"
+                />
+                <span class="text-sm font-medium text-n-slate-12">
+                  {{ $t('KANBAN_SETTINGS.ENABLE_VALUE') }}
+                </span>
               </label>
-              <input
-                v-model="localBoard.valueAttributeKey"
-                type="text"
-                class="w-full px-3 py-2 border border-n-weak rounded-lg focus:border-n-brand focus:ring-2 focus:ring-n-brand/20 outline-none"
-                placeholder="deal_value"
-              />
-              <p class="text-xs text-n-slate-11 mt-1">
-                {{ $t('KANBAN_SETTINGS.VALUE_ATTRIBUTE_HELP') }}
+              <p class="text-xs text-n-slate-11 ml-6 -mt-3">
+                {{ $t('KANBAN_SETTINGS.ENABLE_VALUE_HELP') }}
               </p>
+
+              <div v-if="showAdvanced && enableValue">
+                <label class="block text-sm font-medium text-n-slate-12 mb-2">
+                  {{ $t('KANBAN_SETTINGS.VALUE_ATTRIBUTE_KEY') }}
+                </label>
+                <input
+                  v-model="localBoard.valueAttributeKey"
+                  type="text"
+                  class="w-full px-3 py-2 border border-n-weak rounded-lg focus:border-n-brand focus:ring-2 focus:ring-n-brand/20 outline-none"
+                  placeholder="deal_value"
+                />
+                <p class="text-xs text-n-slate-11 mt-1">
+                  {{ $t('KANBAN_SETTINGS.VALUE_ATTRIBUTE_HELP') }}
+                </p>
+              </div>
             </div>
 
-            <div class="flex items-center">
+            <div class="md:col-span-2 pt-2">
+              <button
+                type="button"
+                class="text-sm text-n-brand hover:underline flex items-center gap-1"
+                @click="showAdvanced = !showAdvanced"
+              >
+                <i :class="showAdvanced ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'" />
+                {{ $t('KANBAN_SETTINGS.ADVANCED_CONFIG') }}
+              </button>
+            </div>
+
+            <div class="pt-7">
               <label class="flex items-center gap-2 cursor-pointer">
                 <input
                   v-model="localBoard.isDefault"
