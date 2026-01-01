@@ -5,9 +5,9 @@ export default {
   components: {
     Hotkey,
   },
-  data() {
-    return {
-      keyShortcuts: [
+  computed: {
+    keyShortcuts() {
+      return [
         {
           key: 'K',
           description: this.$t('CONVERSATION.EMPTY_STATE.CMD_BAR'),
@@ -16,8 +16,8 @@ export default {
           key: '/',
           description: this.$t('CONVERSATION.EMPTY_STATE.KEYBOARD_SHORTCUTS'),
         },
-      ],
-    };
+      ];
+    },
   },
 };
 </script>

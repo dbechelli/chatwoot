@@ -83,19 +83,51 @@ export default {
       isAdmin,
     };
   },
+  computed: {
+    readOption() {
+      return {
+        label: this.$t('CONVERSATION.CARD_CONTEXT_MENU.MARK_AS_READ'),
+        icon: 'mail',
+      };
+    },
+    unreadOption() {
+      return {
+        label: this.$t('CONVERSATION.CARD_CONTEXT_MENU.MARK_AS_UNREAD'),
+        icon: 'mail-unread',
+      };
+    },
+    menuItems() {
+      return [
+        {
+          key: MENU.ASSIGN_AGENT,
+          label: this.$t('CONVERSATION.CARD_CONTEXT_MENU.ASSIGN_AGENT'),
+          icon: 'person-add',
+          disabled: !this.isAdmin,
+        },
+        {
+          key: MENU.ASSIGN_TEAM,
+          label: this.$t('CONVERSATION.CARD_CONTEXT_MENU.ASSIGN_TEAM'),
+          icon: 'people-team-add',
+          disabled: !this.isAdmin,
+        },
+        {
+          key: MENU.ASSIGN_LABEL,
+          label: this.$t('CONVERSATION.CARD_CONTEXT_MENU.ASSIGN_LABEL'),
+          icon: 'tag',
+          disabled: !this.isAdmin,
+        },
+      ];
+    },
+  },
   data() {
     return {
       MENU,
       STATUS_TYPE: wootConstants.STATUS_TYPE,
-      readOption: {
-        label: this.$t('CONVERSATION.CARD_CONTEXT_MENU.MARK_AS_READ'),
-        icon: 'mail',
-      },
-      unreadOption: {
-        label: this.$t('CONVERSATION.CARD_CONTEXT_MENU.MARK_AS_UNREAD'),
-        icon: 'mail-unread',
-      },
-      statusMenuConfig: [
+    };
+  },
+  computed: {
+    statusMenuConfig() {
+      return [
         {
           key: wootConstants.STATUS_TYPE.RESOLVED,
           label: this.$t('CONVERSATION.CARD_CONTEXT_MENU.RESOLVED'),
@@ -111,13 +143,17 @@ export default {
           label: this.$t('CONVERSATION.CARD_CONTEXT_MENU.PENDING'),
           icon: 'book-clock',
         },
-      ],
-      snoozeOption: {
+      ];
+    },
+    snoozeOption() {
+      return {
         key: wootConstants.STATUS_TYPE.SNOOZED,
         label: this.$t('CONVERSATION.CARD_CONTEXT_MENU.SNOOZE.TITLE'),
         icon: 'snooze',
-      },
-      priorityConfig: {
+      };
+    },
+    priorityConfig() {
+      return {
         key: MENU.PRIORITY,
         label: this.$t('CONVERSATION.PRIORITY.TITLE'),
         icon: 'warning',
@@ -143,43 +179,59 @@ export default {
             key: 'low',
           },
         ].filter(item => item.key !== this.priority),
-      },
-      labelMenuConfig: {
+      };
+    },
+    labelMenuConfig() {
+      return {
         key: MENU.LABEL,
         icon: 'tag',
         label: this.$t('CONVERSATION.CARD_CONTEXT_MENU.ASSIGN_LABEL'),
-      },
-      agentMenuConfig: {
+      };
+    },
+    agentMenuConfig() {
+      return {
         key: MENU.AGENT,
         icon: 'person-add',
         label: this.$t('CONVERSATION.CARD_CONTEXT_MENU.ASSIGN_AGENT'),
-      },
-      teamMenuConfig: {
+      };
+    },
+    teamMenuConfig() {
+      return {
         key: MENU.TEAM,
         icon: 'people-team-add',
         label: this.$t('CONVERSATION.CARD_CONTEXT_MENU.ASSIGN_TEAM'),
-      },
-      deleteOption: {
+      };
+    },
+    deleteOption() {
+      return {
         key: MENU.DELETE,
         icon: 'delete',
         label: this.$t('CONVERSATION.CARD_CONTEXT_MENU.DELETE'),
-      },
-      openInNewTabOption: {
+      };
+    },
+    openInNewTabOption() {
+      return {
         key: MENU.OPEN_NEW_TAB,
         icon: 'open',
         label: this.$t('CONVERSATION.CARD_CONTEXT_MENU.OPEN_IN_NEW_TAB'),
-      },
-      copyLinkOption: {
+      };
+    },
+    copyLinkOption() {
+      return {
         key: MENU.COPY_LINK,
         icon: 'copy',
         label: this.$t('CONVERSATION.CARD_CONTEXT_MENU.COPY_LINK'),
-      },
-      salesStageMenuConfig: {
+      };
+    },
+    salesStageMenuConfig() {
+      return {
         key: MENU.SALES_STAGE,
         icon: 'kanban-square',
         label: this.$t('CONVERSATION.CARD_CONTEXT_MENU.ASSIGN_STAGE'),
-      },
-      salesStages: [
+      };
+    },
+    salesStages() {
+      return [
         { key: 'novo_contato', label: this.$t('KANBAN.STAGES.NEW_CONTACT') },
         { key: 'qualificacao', label: this.$t('KANBAN.STAGES.QUALIFICATION') },
         { key: 'agendamento_pendente', label: this.$t('KANBAN.STAGES.PENDING_APPOINTMENT') },
@@ -187,15 +239,15 @@ export default {
         { key: 'pos_consulta', label: this.$t('KANBAN.STAGES.POST_CONSULT') },
         { key: 'paciente_ativo', label: this.$t('KANBAN.STAGES.ACTIVE_PATIENT') },
         { key: 'inativo', label: this.$t('KANBAN.STAGES.INACTIVE') },
-      ],
-      forwardMessageOption: {
+      ];
+    },
+    forwardMessageOption() {
+      return {
         key: MENU.FORWARD_MESSAGE,
         icon: 'arrow-reply',
         label: this.$t('CONVERSATION.CARD_CONTEXT_MENU.FORWARD_MESSAGE'),
-      },
-    };
-  },
-  computed: {
+      };
+    },
     ...mapGetters({
       labels: 'labels/getLabels',
       teams: 'teams/getTeams',
