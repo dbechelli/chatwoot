@@ -19,6 +19,7 @@ import {
 } from './helper/pushHelper';
 import ReconnectService from 'dashboard/helper/ReconnectService';
 import { useUISettings } from 'dashboard/composables/useUISettings';
+import { useI18n } from 'vue-i18n';
 
 export default {
   name: 'App',
@@ -38,6 +39,7 @@ export default {
     // Use the font size composable (it automatically sets up the watcher)
     const { currentFontSize } = useFontSize();
     const { uiSettings } = useUISettings();
+    const { locale } = useI18n();
 
     return {
       router,
@@ -45,6 +47,7 @@ export default {
       currentAccountId: accountId,
       currentFontSize,
       uiSettings,
+      i18nLocale: locale,
     };
   },
   data() {
@@ -98,7 +101,7 @@ export default {
       mql.onchange = e => setColorTheme(e.matches);
     },
     setLocale(locale) {
-      this.$root.$i18n.locale.value = locale;
+      this.i18nLocale = locale;
     },
     async initializeAccount() {
       await this.$store.dispatch('accounts/get');

@@ -1,8 +1,13 @@
 <script>
 import SnackbarContainer from './components/SnackBar/Container.vue';
+import { useI18n } from 'vue-i18n';
 
 export default {
   components: { SnackbarContainer },
+  setup() {
+    const { locale } = useI18n();
+    return { i18nLocale: locale };
+  },
   data() {
     return { theme: 'light' };
   },
@@ -35,7 +40,7 @@ export default {
       };
     },
     setLocale(locale) {
-      this.$root.$i18n.locale.value = locale;
+      this.i18nLocale = locale;
     },
   },
 };
