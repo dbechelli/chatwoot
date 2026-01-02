@@ -124,6 +124,7 @@ Rails.application.routes.draw do
                 member do
                   post :translate
                   post :retry
+                  post :forward
                 end
                 resources :attachments, only: [:update]
               end
@@ -132,6 +133,15 @@ Rails.application.routes.draw do
               resource :participants, only: [:show, :create, :update, :destroy]
               resource :direct_uploads, only: [:create]
               resource :draft_messages, only: [:show, :update, :destroy]
+              resource :whatsapp_groups, only: [:show] do
+                post :update_name
+                post :update_description
+                post :add_member
+                post :remove_member
+                post :promote_admin
+                post :demote_admin
+                post :sync_members
+              end
             end
             member do
               post :mute
@@ -199,6 +209,11 @@ Rails.application.routes.draw do
           resources :reporting_events, only: [:index] if ChatwootApp.enterprise?
           resources :custom_attribute_definitions, only: [:index, :show, :create, :update, :destroy]
           resources :custom_filters, only: [:index, :show, :create, :update, :destroy]
+          resource :kanban_settings, only: [:show, :update] do
+            post 'boards', to: 'kanban_settings#create_board'
+            put 'boards/:id', to: 'kanban_settings#update_board'
+            delete 'boards/:id', to: 'kanban_settings#destroy_board'
+          end
           resources :inboxes, only: [:index, :show, :create, :update, :destroy] do
             get :assignable_agents, on: :member
             get :campaigns, on: :member

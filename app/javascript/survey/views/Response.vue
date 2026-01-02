@@ -7,6 +7,7 @@ import Feedback from 'survey/components/Feedback.vue';
 import Banner from 'survey/components/Banner.vue';
 import StarRating from 'shared/components/StarRating.vue';
 import { getSurveyDetails, updateSurvey } from 'survey/api/survey';
+import { useI18n } from 'vue-i18n';
 
 import { CSAT_DISPLAY_TYPES } from 'shared/constants/messages';
 
@@ -19,6 +20,10 @@ export default {
     Banner,
     Feedback,
     StarRating,
+  },
+  setup() {
+    const { locale } = useI18n();
+    return { i18nLocale: locale };
   },
   data() {
     return {
@@ -136,7 +141,7 @@ export default {
       }
     },
     setLocale(locale) {
-      this.$root.$i18n.locale = locale || 'en';
+      this.i18nLocale = locale || 'en';
     },
   },
 };

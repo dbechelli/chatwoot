@@ -10,6 +10,8 @@ export default {
     'assignAgent',
     'assignTeam',
     'assignLabels',
+    'assignSalesStage',
+    'forwardMessage',
     'updateConversationStatus',
     'toggleContextMenu',
     'markAsUnread',
@@ -63,6 +65,8 @@ export default {
     @assign-agent="assignAgent"
     @assign-team="assignTeam"
     @assign-label="assignLabels"
+    @assign-sales-stage="assignSalesStage"
+    @forward-message="forwardMessage"
     @update-conversation-status="updateConversationStatus"
     @context-menu-toggle="toggleContextMenu"
     @mark-as-unread="markAsUnread"

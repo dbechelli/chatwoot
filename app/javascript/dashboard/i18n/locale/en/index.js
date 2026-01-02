@@ -24,6 +24,7 @@ import inbox from './inbox.json';
 import inboxMgmt from './inboxMgmt.json';
 import integrationApps from './integrationApps.json';
 import integrations from './integrations.json';
+import kanban from './kanban.json';
 import labelsMgmt from './labelsMgmt.json';
 import login from './login.json';
 import macros from './macros.json';
@@ -35,10 +36,12 @@ import settings from './settings.json';
 import signup from './signup.json';
 import sla from './sla.json';
 import teamsSettings from './teamsSettings.json';
+import webhooks from './webhooks.json';
 import whatsappTemplates from './whatsappTemplates.json';
 import contentTemplates from './contentTemplates.json';
 import mfa from './mfa.json';
 import yearInReview from './yearInReview.json';
+import whatsappGroups from './whatsappGroups.json';
 
 export default {
   ...advancedFilters,
@@ -67,6 +70,7 @@ export default {
   ...inboxMgmt,
   ...integrationApps,
   ...integrations,
+  ...kanban,
   ...labelsMgmt,
   ...login,
   ...macros,
@@ -78,8 +82,10 @@ export default {
   ...signup,
   ...sla,
   ...teamsSettings,
+  ...webhooks,
   ...whatsappTemplates,
   ...contentTemplates,
   ...mfa,
   ...yearInReview,
+  ...whatsappGroups,
 };

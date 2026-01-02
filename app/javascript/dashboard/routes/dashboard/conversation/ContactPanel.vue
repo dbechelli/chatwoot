@@ -17,6 +17,7 @@ import ContactInfo from './contact/ContactInfo.vue';
 import ContactNotes from './contact/ContactNotes.vue';
 import ConversationInfo from './ConversationInfo.vue';
 import CustomAttributes from './customAttributes/CustomAttributes.vue';
+import KanbanPanel from './KanbanPanel.vue';
 import Draggable from 'vuedraggable';
 import MacrosList from './Macros/List.vue';
 import ShopifyOrdersList from 'dashboard/components/widgets/conversation/ShopifyOrdersList.vue';
@@ -138,6 +139,17 @@ onMounted(() => {
     />
     <ContactInfo :contact="contact" :channel-type="channelType" />
     <div class="px-2 pb-8 list-group">
+      
+      <!-- Kanban CRM Panel -->
+      <div class="mb-3 conversation--actions">
+        <AccordionItem
+          :title="$t('KANBAN.SIDEBAR_TITLE') || 'CRM / Kanban'"
+          :is-open="true"
+        >
+          <KanbanPanel :conversation-id="conversationId" />
+        </AccordionItem>
+      </div>
+
       <Draggable
         :list="conversationSidebarItems"
         animation="200"

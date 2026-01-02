@@ -22,6 +22,7 @@ import { useRouter } from 'vue-router';
 import { useAvailability } from 'widget/composables/useAvailability';
 import { SDK_SET_BUBBLE_VISIBILITY } from '../shared/constants/sharedFrameEvents';
 import { emitter } from 'shared/helpers/mitt';
+import { useI18n } from 'vue-i18n';
 
 export default {
   name: 'App',
@@ -33,8 +34,9 @@ export default {
     const { prefersDarkMode } = useDarkMode();
     const router = useRouter();
     const { isInWorkingHours } = useAvailability();
+    const { locale } = useI18n();
 
-    return { prefersDarkMode, router, isInWorkingHours };
+    return { prefersDarkMode, router, isInWorkingHours, i18nLocale: locale };
   },
   data() {
     return {
@@ -62,8 +64,8 @@ export default {
       return RNHelper.isRNWebView();
     },
     isRTL() {
-      return this.$root.$i18n.locale
-        ? getLanguageDirection(this.$root.$i18n.locale)
+      return this.i18nLocale
+        ? getLanguageDirection(this.i18nLocale)
         : false;
     },
   },
@@ -146,9 +148,9 @@ export default {
       );
 
       if (hasLocaleWithVariation) {
-        this.$root.$i18n.locale = localeWithVariation;
+        this.i18nLocale = localeWithVariation;
       } else if (hasLocaleWithoutVariation) {
-        this.$root.$i18n.locale = localeWithoutVariation;
+        this.i18nLocale = localeWithoutVariation;
       }
     },
     registerUnreadEvents() {

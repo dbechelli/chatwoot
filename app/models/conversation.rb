@@ -333,6 +333,43 @@ class Conversation < ApplicationRecord
     self['additional_attributes']['referer'] = nil unless url_valid?(additional_attributes['referer'])
   end
 
+  # WhatsApp Group support
+  has_many :whatsapp_group_members, dependent: :destroy
+
+  def whatsapp_group?
+    additional_attributes&.dig('is_whatsapp_group') == true
+  end
+
+  def whatsapp_group_id
+    additional_attributes&.dig('whatsapp_group_id')
+  end
+
+  def whatsapp_group_name
+    additional_attributes&.dig('whatsapp_group_name')
+  end
+
+  def whatsapp_group_participants_count
+    additional_attributes&.dig('whatsapp_group_participants_count')
+  end
+
+  def update_whatsapp_group_info(group_data)
+    self.additional_attributes ||= {}
+    self.additional_attributes['is_whatsapp_group'] = true
+    self.additional_attributes['whatsapp_group_id'] = group_data[:id]
+    self.additional_attributes['whatsapp_group_name'] = group_data[:name]
+    self.additional_attributes['whatsapp_group_description'] = group_data[:description]
+    self.additional_attributes['whatsapp_group_participants_count'] = group_data[:participants]&.length || 0
+    save!
+  end
+
+  def add_whatsapp_group_member(phone_number, name: nil, is_admin: false)
+    whatsapp_group_members.find_or_create_by!(phone_number: phone_number) do |member|
+      member.name = name
+      member.is_admin = is_admin
+      member.joined_at = Time.current
+    end
+  end
+
   # creating db triggers
   trigger.before(:insert).for_each(:row) do
     "NEW.display_id := nextval('conv_dpid_seq_' || NEW.account_id);"

@@ -117,6 +117,14 @@ class Contact < ApplicationRecord
     )
   }
 
+  # WhatsApp Group scopes
+  scope :whatsapp_groups, -> { where(is_whatsapp_group: true) }
+  scope :individuals, -> { where(is_whatsapp_group: false) }
+
+  def whatsapp_group?
+    is_whatsapp_group == true
+  end
+
   scope :order_on_name, lambda { |direction|
     order(
       Arel::Nodes::SqlLiteral.new(

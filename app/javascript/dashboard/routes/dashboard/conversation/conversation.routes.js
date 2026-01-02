@@ -1,6 +1,7 @@
 /* eslint arrow-body-style: 0 */
 import { frontendURL } from '../../../helper/URLHelper';
 import ConversationView from './ConversationView.vue';
+import KanbanView from './KanbanView.vue';
 
 const CONVERSATION_PERMISSIONS = [
   'administrator',
@@ -22,6 +23,14 @@ export default {
       props: () => {
         return { inboxId: 0 };
       },
+    },
+    {
+      path: frontendURL('accounts/:accountId/kanban'),
+      name: 'kanban',
+      meta: {
+        permissions: CONVERSATION_PERMISSIONS,
+      },
+      component: KanbanView,
     },
     {
       path: frontendURL('accounts/:accountId/conversations/:conversation_id'),

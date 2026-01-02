@@ -11,6 +11,7 @@ import {
 } from './helpers/actionHelpers';
 import messageReadActions from './actions/messageReadActions';
 import messageTranslateActions from './actions/messageTranslateActions';
+import messageForwardActions from './actions/messageForwardActions';
 import * as Sentry from '@sentry/vue';
 import {
   handleVoiceCallCreated,
@@ -52,7 +53,7 @@ const actions = {
         { commit, dispatch },
         params,
         data,
-        params.assigneeType
+        params.tabType || params.assigneeType
       );
     } catch (error) {
       // Handle error
@@ -516,6 +517,7 @@ const actions = {
 
   ...messageReadActions,
   ...messageTranslateActions,
+  ...messageForwardActions,
 };
 
 export default actions;

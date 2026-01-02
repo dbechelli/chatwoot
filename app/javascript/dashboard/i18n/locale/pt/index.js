@@ -8,6 +8,7 @@ import bulkActions from './bulkActions.json';
 import campaign from './campaign.json';
 import cannedMgmt from './cannedMgmt.json';
 import chatlist from './chatlist.json';
+import companies from './companies.json';
 import components from './components.json';
 import contact from './contact.json';
 import contactFilters from './contactFilters.json';
@@ -34,7 +35,11 @@ import settings from './settings.json';
 import signup from './signup.json';
 import sla from './sla.json';
 import teamsSettings from './teamsSettings.json';
+import webhooks from './webhooks.json';
 import whatsappTemplates from './whatsappTemplates.json';
+import contentTemplates from './contentTemplates.json';
+import mfa from './mfa.json';
+import yearInReview from './yearInReview.json';
 
 export default {
   ...advancedFilters,
@@ -47,6 +52,7 @@ export default {
   ...campaign,
   ...cannedMgmt,
   ...chatlist,
+  ...companies,
   ...components,
   ...contact,
   ...contactFilters,
@@ -73,5 +79,9 @@ export default {
   ...signup,
   ...sla,
   ...teamsSettings,
+  ...webhooks,
   ...whatsappTemplates,
+  ...contentTemplates,
+  ...mfa,
+  ...yearInReview,
 };

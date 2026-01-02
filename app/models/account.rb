@@ -164,7 +164,62 @@ class Account < ApplicationRecord
     ISO_639.find(account_locale)&.english_name&.downcase || 'english'
   end
 
+  # Kanban configuration helper methods
+  def kanban_enabled?
+    return false if kanban_config.nil?
+
+    kanban_config['enabled'] == true
+  end
+
+  def kanban_boards
+    return [] if kanban_config.nil?
+
+    kanban_config['boards'] || []
+  end
+
+  def default_kanban_board
+    kanban_boards.find { |b| b['isDefault'] } || kanban_boards.first
+  end
+
+  def find_kanban_board(board_id)
+    kanban_boards.find { |b| b['id'] == board_id }
+  end
+
+  def add_kanban_board(board_data)
+    ensure_kanban_config
+    board = board_data.merge('id' => SecureRandom.uuid)
+    boards = kanban_boards
+    boards << board
+    update!(kanban_config: kanban_config.merge('boards' => boards))
+    board
+  end
+
+  def update_kanban_board(board_id, board_data)
+    return nil if kanban_config.nil?
+
+    boards = kanban_boards
+    board_index = boards.find_index { |b| b['id'] == board_id }
+    return nil if board_index.nil?
+
+    boards[board_index] = boards[board_index].merge(board_data)
+    update!(kanban_config: kanban_config.merge('boards' => boards))
+    boards[board_index]
+  end
+
+  def delete_kanban_board(board_id)
+    return if kanban_config.nil?
+
+    boards = kanban_boards.reject { |b| b['id'] == board_id }
+    update!(kanban_config: kanban_config.merge('boards' => boards))
+  end
+
   private
+
+  def ensure_kanban_config
+    return if kanban_config.present?
+
+    update!(kanban_config: { 'enabled' => false, 'boards' => [] })
+  end
 
   def notify_creation
     Rails.configuration.dispatcher.dispatch(ACCOUNT_CREATED, Time.zone.now, account: self)

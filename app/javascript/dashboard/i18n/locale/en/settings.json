@@ -319,6 +319,7 @@
     "SWITCH": "Switch",
     "INBOX_VIEW": "Inbox View",
     "CONVERSATIONS": "Conversations",
+    "KANBAN": "Sales Pipeline",
     "INBOX": "My Inbox",
     "ALL_CONVERSATIONS": "All Conversations",
     "MENTIONED_CONVERSATIONS": "Mentions",
@@ -400,7 +401,8 @@
       "INFO_SHORT": "Automatically mark offline when you aren't using the app."
     },
     "DOCS": "Read docs",
-    "SECURITY": "Security"
+    "SECURITY": "Security",
+    "KANBAN_SETTINGS": "Kanban Settings"
   },
   "BILLING_SETTINGS": {
     "TITLE": "Billing",

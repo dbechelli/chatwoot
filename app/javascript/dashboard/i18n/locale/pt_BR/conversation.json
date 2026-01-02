@@ -1,5 +1,6 @@
 {
   "CONVERSATION": {
+    "WHATSAPP_GROUP_BADGE": "{count} participantes",
     "SELECT_A_CONVERSATION": "Por favor, selecione uma conversa no painel da esquerda",
     "CSAT_REPLY_MESSAGE": "Por favor, classifique a conversa",
     "404": "Desculpe, não conseguimos encontrar a conversa. Por favor, tente novamente",
@@ -161,6 +162,8 @@
       "ASSIGN_LABEL": "Atribuir etiqueta",
       "AGENTS_LOADING": "Carregando agentes...",
       "ASSIGN_TEAM": "Atribuir time",
+      "ASSIGN_STAGE": "Atribuir estágio de vendas",
+      "FORWARD_MESSAGE": "Encaminhar mensagem",
       "DELETE": "Excluir conversa",
       "OPEN_IN_NEW_TAB": "Abrir em nova aba",
       "COPY_LINK": "Copiar link da conversa",
@@ -264,6 +267,7 @@
       "DELETE": "Excluir",
       "CREATE_A_CANNED_RESPONSE": "Adicionar às respostas prontas",
       "TRANSLATE": "Traduzir",
+      "FORWARD": "Encaminhar mensagem",
       "COPY_PERMALINK": "Copiar link para a mensagem",
       "LINK_COPIED": "URL da mensagem copiada para a área de transferência",
       "DELETE_CONFIRMATION": {
@@ -434,5 +438,23 @@
   },
   "GALLERY_VIEW": {
     "ERROR_DOWNLOADING": "Não foi possível baixar o anexo. Por favor, tente novamente"
+  },
+  "FORWARD_MESSAGE": {
+    "TITLE": "Encaminhar mensagem",
+    "DESCRIPTION": "Selecione os contatos para encaminhar esta mensagem",
+    "SEARCH_PLACEHOLDER": "Buscar contatos por nome, email ou telefone...",
+    "NO_CONTACTS": "Nenhum contato encontrado",
+    "UNKNOWN_CONTACT": "Contato desconhecido",
+    "SELECTED_COUNT": "{count} selecionado(s)",
+    "NO_SELECTION": "Nenhum contato selecionado",
+    "INCLUDE_ATTACHMENTS": "Incluir anexos",
+    "FORWARD": "Encaminhar",
+    "CANCEL": "Cancelar",
+    "SUCCESS": "Mensagem encaminhada para {count} contato(s)",
+    "ERROR": "Falha ao encaminhar mensagem",
+    "PARTIAL_ERROR": "Falha ao encaminhar para {count} contato(s)",
+    "NO_MESSAGES": "Nenhuma mensagem para encaminhar",
+    "LOADING_CONTACTS": "Carregando contatos...",
+    "SELECT_AT_LEAST_ONE": "Selecione pelo menos um contato"
   }
 }

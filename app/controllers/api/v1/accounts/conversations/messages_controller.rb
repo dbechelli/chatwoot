@@ -58,6 +58,31 @@ class Api::V1::Accounts::Conversations::MessagesController < Api::V1::Accounts::
     render json: { content: translated_content }
   end
 
+  def forward
+    contact_ids = forward_params[:contact_ids]
+    return render json: { error: 'No contacts provided' }, status: :unprocessable_entity if contact_ids.blank?
+
+    # Only WhatsApp Baileys provider supports forward
+    channel = @conversation.inbox.channel
+    unless channel.is_a?(Channel::Whatsapp) && channel.provider == 'baileys'
+      return render json: { error: 'Forward is only supported for WhatsApp Baileys channels' }, status: :unprocessable_entity
+    end
+
+    # Get contacts and their identifiers
+    contacts = Current.account.contacts.where(id: contact_ids)
+    destination_jids = contacts.map(&:identifier).compact
+
+    return render json: { error: 'No valid contacts found' }, status: :unprocessable_entity if destination_jids.empty?
+
+    # Forward the message using the Baileys service
+    service = Whatsapp::Providers::WhatsappBaileysService.new(whatsapp_channel: channel)
+    results = service.forward_message(message, destination_jids)
+
+    render json: { results: results }
+  rescue StandardError => e
+    render json: { error: e.message }, status: :internal_server_error
+  end
+
   private
 
   def message
@@ -70,6 +95,10 @@ class Api::V1::Accounts::Conversations::MessagesController < Api::V1::Accounts::
 
   def permitted_params
     params.permit(:id, :target_language, :status, :external_error)
+  end
+
+  def forward_params
+    params.permit(contact_ids: [])
   end
 
   def already_translated_content_available?

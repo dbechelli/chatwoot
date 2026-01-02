@@ -241,6 +241,29 @@ class Whatsapp::Providers::WhatsappBaileysService < Whatsapp::Providers::BaseSer
     response.parsed_response&.first || { 'jid' => remote_jid, 'exists' => false }
   end
 
+  def forward_message(message, destination_jids)
+    # Build the WAMessage object from the Chatwoot message
+    wa_message = build_wa_message_from_message(message)
+
+    # Convert destination JIDs to WhatsApp format
+    formatted_jids = destination_jids.map do |jid|
+      jid.ends_with?('@lid') ? jid : "#{jid.delete('+')}@s.whatsapp.net"
+    end
+
+    response = HTTParty.post(
+      "#{provider_url}/connections/#{whatsapp_channel.phone_number}/forward-message",
+      headers: api_headers,
+      body: {
+        message: wa_message,
+        destinationJids: formatted_jids
+      }.to_json
+    )
+
+    raise ProviderUnavailableError unless process_response(response)
+
+    response.parsed_response.dig('data', 'results')
+  end
+
   private
 
   def provider_url
@@ -314,6 +337,54 @@ class Whatsapp::Providers::WhatsappBaileysService < Whatsapp::Providers::BaseSer
     "#{@recipient_id.delete('+')}@s.whatsapp.net"
   end
 
+  def build_wa_message_from_message(message)
+    # Build the key object
+    source_id = message.source_id || message.id.to_s
+    remote_jid = if message.conversation.contact.identifier.ends_with?('@lid')
+                   message.conversation.contact.identifier
+                 else
+                   "#{message.conversation.contact.identifier.delete('+')}@s.whatsapp.net"
+                 end
+
+    key = {
+      id: source_id,
+      remoteJid: remote_jid,
+      fromMe: message.message_type == 'outgoing'
+    }
+
+    # Build the message content
+    message_content = build_message_content_from_message(message)
+
+    {
+      key: key,
+      message: message_content
+    }
+  end
+
+  def build_message_content_from_message(message)
+    if message.attachments.present?
+      # For messages with attachments, we need to include the media reference
+      # Note: Baileys will handle downloading the media using the URL
+      attachment = message.attachments.first
+      case attachment.file_type
+      when 'image'
+        { imageMessage: { caption: message.content } }
+      when 'video'
+        { videoMessage: { caption: message.content } }
+      when 'audio'
+        { audioMessage: {} }
+      when 'file', 'sticker'
+        { documentMessage: { caption: message.content } }
+      else
+        { conversation: message.content }
+      end
+    elsif message.content.present?
+      { conversation: message.content }
+    else
+      { conversation: '' }
+    end
+  end
+
   def update_external_created_at(response)
     timestamp = response.parsed_response.dig('data', 'messageTimestamp')
     return unless timestamp
@@ -354,6 +425,125 @@ class Whatsapp::Providers::WhatsappBaileysService < Whatsapp::Providers::BaseSer
     end
   end
 
+  # WhatsApp Group Management Methods
+
+  def get_group_info(group_id)
+    response = HTTParty.get(
+      "#{provider_url}/connections/#{whatsapp_channel.phone_number}/group-metadata",
+      headers: api_headers,
+      query: { jid: ensure_group_jid(group_id) }
+    )
+
+    raise ProviderUnavailableError unless process_response(response)
+
+    response.parsed_response
+  end
+
+  def update_group_name(group_id, new_name)
+    response = HTTParty.patch(
+      "#{provider_url}/connections/#{whatsapp_channel.phone_number}/update-group-subject",
+      headers: api_headers,
+      body: {
+        jid: ensure_group_jid(group_id),
+        subject: new_name
+      }.to_json
+    )
+
+    raise ProviderUnavailableError unless process_response(response)
+
+    true
+  end
+
+  def update_group_description(group_id, new_description)
+    response = HTTParty.patch(
+      "#{provider_url}/connections/#{whatsapp_channel.phone_number}/update-group-description",
+      headers: api_headers,
+      body: {
+        jid: ensure_group_jid(group_id),
+        description: new_description
+      }.to_json
+    )
+
+    raise ProviderUnavailableError unless process_response(response)
+
+    true
+  end
+
+  def add_group_participant(group_id, phone_number)
+    response = HTTParty.patch(
+      "#{provider_url}/connections/#{whatsapp_channel.phone_number}/modify-group-participants",
+      headers: api_headers,
+      body: {
+        jid: ensure_group_jid(group_id),
+        participants: [format_phone_to_jid(phone_number)],
+        action: 'add'
+      }.to_json
+    )
+
+    raise ProviderUnavailableError unless process_response(response)
+
+    true
+  end
+
+  def remove_group_participant(group_id, phone_number)
+    response = HTTParty.patch(
+      "#{provider_url}/connections/#{whatsapp_channel.phone_number}/modify-group-participants",
+      headers: api_headers,
+      body: {
+        jid: ensure_group_jid(group_id),
+        participants: [format_phone_to_jid(phone_number)],
+        action: 'remove'
+      }.to_json
+    )
+
+    raise ProviderUnavailableError unless process_response(response)
+
+    true
+  end
+
+  def promote_group_admin(group_id, phone_number)
+    response = HTTParty.patch(
+      "#{provider_url}/connections/#{whatsapp_channel.phone_number}/modify-group-participants",
+      headers: api_headers,
+      body: {
+        jid: ensure_group_jid(group_id),
+        participants: [format_phone_to_jid(phone_number)],
+        action: 'promote'
+      }.to_json
+    )
+
+    raise ProviderUnavailableError unless process_response(response)
+
+    true
+  end
+
+  def demote_group_admin(group_id, phone_number)
+    response = HTTParty.patch(
+      "#{provider_url}/connections/#{whatsapp_channel.phone_number}/modify-group-participants",
+      headers: api_headers,
+      body: {
+        jid: ensure_group_jid(group_id),
+        participants: [format_phone_to_jid(phone_number)],
+        action: 'demote'
+      }.to_json
+    )
+
+    raise ProviderUnavailableError unless process_response(response)
+
+    true
+  end
+
+  def ensure_group_jid(group_id)
+    return group_id if group_id.ends_with?('@g.us')
+
+    "#{group_id}@g.us"
+  end
+
+  def format_phone_to_jid(phone_number)
+    clean_phone = phone_number.delete('+')
+    "#{clean_phone}@s.whatsapp.net"
+  end
+
   with_error_handling :setup_channel_provider,
                       :disconnect_channel_provider,
                       :send_message,
@@ -362,5 +552,12 @@ class Whatsapp::Providers::WhatsappBaileysService < Whatsapp::Providers::BaseSer
                       :read_messages,
                       :unread_message,
                       :received_messages,
-                      :on_whatsapp
+                      :on_whatsapp,
+                      :get_group_info,
+                      :update_group_name,
+                      :update_group_description,
+                      :add_group_participant,
+                      :remove_group_participant,
+                      :promote_group_admin,
+                      :demote_group_admin
 end

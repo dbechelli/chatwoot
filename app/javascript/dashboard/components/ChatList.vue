@@ -32,6 +32,7 @@ import ConversationBulkActions from './widgets/conversation/conversationBulkActi
 import IntersectionObserver from './IntersectionObserver.vue';
 import TeleportWithDirection from 'dashboard/components-next/TeleportWithDirection.vue';
 import Spinner from 'dashboard/components-next/spinner/Spinner.vue';
+import ForwardMessageModal from './widgets/conversation/ForwardMessageModal.vue';
 
 import { useUISettings } from 'dashboard/composables/useUISettings';
 import { useAlert } from 'dashboard/composables';
@@ -92,7 +93,7 @@ const conversationDynamicScroller = ref(null);
 
 provide('contextMenuElementTarget', conversationDynamicScroller);
 
-const activeAssigneeTab = ref(wootConstants.ASSIGNEE_TYPE.ME);
+const activeAssigneeTab = ref(wootConstants.ASSIGNEE_TYPE.ALL);
 const activeStatus = ref(wootConstants.STATUS_TYPE.OPEN);
 const activeSortBy = ref(wootConstants.SORT_BY_TYPE.LAST_ACTIVITY_AT_DESC);
 const showAdvancedFilters = ref(false);
@@ -268,16 +269,30 @@ const conversationListPagination = computed(() => {
   return currentPage.value + 1;
 });
 
+const isResolvedTab = computed(() => {
+  return activeAssigneeTab.value === wootConstants.ASSIGNEE_TYPE.RESOLVED;
+});
+
 const conversationFilters = computed(() => {
+  // Para a aba resolved, filtramos por status=resolved com assignee_type=all
+  const assigneeType = isResolvedTab.value
+    ? wootConstants.ASSIGNEE_TYPE.ALL
+    : activeAssigneeTab.value;
+  const status = isResolvedTab.value
+    ? wootConstants.STATUS_TYPE.RESOLVED
+    : activeStatus.value;
+
   return {
     inboxId: props.conversationInbox ? props.conversationInbox : undefined,
-    assigneeType: activeAssigneeTab.value,
-    status: activeStatus.value,
+    assigneeType,
+    status,
     sortBy: activeSortBy.value,
     page: conversationListPagination.value,
     labels: props.label ? [props.label] : undefined,
     teamId: props.teamId || undefined,
     conversationType: props.conversationType || undefined,
+    // Rastreia a aba real para o estado de paginação
+    tabType: activeAssigneeTab.value,
   };
 });
 
@@ -776,6 +791,8 @@ onMounted(() => {
 
 const deleteConversationDialogRef = ref(null);
 const selectedConversationId = ref(null);
+const showForwardModal = ref(false);
+const forwardConversationId = ref(null);
 
 async function deleteConversation() {
   try {
@@ -794,11 +811,49 @@ const handleDelete = conversationId => {
   deleteConversationDialogRef.value.open();
 };
 
+const assignSalesStage = async (stageData, conversationId) => {
+  try {
+    const { board, stage } = stageData;
+    // If stageData is just a string (legacy/backward compatibility), handle it
+    if (typeof stageData === 'string') {
+      await store.dispatch('updateCustomAttributes', {
+        conversationId,
+        customAttributes: {
+          sales_stage: stageData,
+        },
+      });
+    } else {
+      // Dynamic board support
+      await store.dispatch('updateCustomAttributes', {
+        conversationId,
+        customAttributes: {
+          [board.customAttributeKey]: stage.id,
+        },
+      });
+    }
+    useAlert(t('KANBAN.STAGE_UPDATED'));
+  } catch {
+    useAlert(t('KANBAN.UPDATE_ERROR'));
+  }
+};
+
+const forwardMessage = conversationId => {
+  forwardConversationId.value = conversationId;
+  showForwardModal.value = true;
+};
+
+const handleForwardModalClose = () => {
+  showForwardModal.value = false;
+  forwardConversationId.value = null;
+};
+
 provide('selectConversation', selectConversation);
 provide('deSelectConversation', deSelectConversation);
 provide('assignAgent', onAssignAgent);
 provide('assignTeam', onAssignTeam);
 provide('assignLabels', onAssignLabels);
+provide('assignSalesStage', assignSalesStage);
+provide('forwardMessage', forwardMessage);
 provide('updateConversationStatus', toggleConversationStatus);
 provide('toggleContextMenu', onContextMenuToggle);
 provide('markAsUnread', markAsUnread);
@@ -983,6 +1038,12 @@ watch(conversationFilters, (newVal, oldVal) => {
       :confirm-button-label="$t('CONVERSATION.DELETE_CONVERSATION.CONFIRM')"
       @confirm="deleteConversation"
       @close="selectedConversationId = null"
+    />
+    <ForwardMessageModal
+      v-if="showForwardModal"
+      :show="showForwardModal"
+      :conversation-id="forwardConversationId"
+      @close="handleForwardModalClose"
     />
     <TeleportWithDirection
       v-if="showAdvancedFilters"

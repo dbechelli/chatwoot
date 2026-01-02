@@ -35,6 +35,8 @@ const emit = defineEmits([
   'assignAgent',
   'assignLabel',
   'assignTeam',
+  'assignSalesStage',
+  'forwardMessage',
   'markAsUnread',
   'markAsRead',
   'assignPriority',
@@ -230,6 +232,16 @@ const deleteConversation = () => {
   emit('deleteConversation', props.chat.id);
   closeContextMenu();
 };
+
+const assignSalesStage = stage => {
+  emit('assignSalesStage', stage, props.chat.id);
+  closeContextMenu();
+};
+
+const forwardMessage = () => {
+  emit('forwardMessage', props.chat.id);
+  closeContextMenu();
+};
 </script>
 
 <template>
@@ -386,6 +398,8 @@ const deleteConversation = () => {
         @assign-agent="onAssignAgent"
         @assign-label="onAssignLabel"
         @assign-team="onAssignTeam"
+        @assign-sales-stage="assignSalesStage"
+        @forward-message="forwardMessage"
         @mark-as-unread="markAsUnread"
         @mark-as-read="markAsRead"
         @assign-priority="assignPriority"

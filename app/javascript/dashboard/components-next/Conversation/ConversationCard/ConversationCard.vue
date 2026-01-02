@@ -64,6 +64,17 @@ const showMessagePreviewWithoutMeta = computed(() => {
   );
 });
 
+const isWhatsappGroup = computed(() => {
+  return props.conversation?.additional_attributes?.is_whatsapp_group === true;
+});
+
+const groupParticipantCount = computed(() => {
+  return (
+    props.conversation?.additional_attributes
+      ?.whatsapp_group_participant_count || 0
+  );
+});
+
 const onCardClick = e => {
   const path = frontendURL(
     conversationUrl({
@@ -99,9 +110,23 @@ const onCardClick = e => {
     />
     <div class="flex flex-col w-full gap-1 min-w-0">
       <div class="flex items-center justify-between h-6 gap-2">
-        <h4 class="text-base font-medium truncate text-n-slate-12">
-          {{ currentContactName }}
-        </h4>
+        <div class="flex items-center gap-2 min-w-0">
+          <h4 class="text-base font-medium truncate text-n-slate-12">
+            {{ currentContactName }}
+          </h4>
+          <div
+            v-if="isWhatsappGroup"
+            v-tooltip.top="
+              $t('CONVERSATION.WHATSAPP_GROUP_BADGE', {
+                count: groupParticipantCount,
+              })
+            "
+            class="flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded-full bg-green-100 text-green-800 whitespace-nowrap"
+          >
+            <Icon icon="users" class="size-3" />
+            <span>{{ groupParticipantCount }}</span>
+          </div>
+        </div>
         <div class="flex items-center gap-2">
           <CardPriorityIcon :priority="conversation.priority || null" />
           <div

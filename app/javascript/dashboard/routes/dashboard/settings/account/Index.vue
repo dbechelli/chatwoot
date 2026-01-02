@@ -7,6 +7,7 @@ import { useUISettings } from 'dashboard/composables/useUISettings';
 import { useConfig } from 'dashboard/composables/useConfig';
 import { useAccount } from 'dashboard/composables/useAccount';
 import { FEATURE_FLAGS } from '../../../../featureFlags';
+import { useI18n } from 'vue-i18n';
 import WithLabel from 'v3/components/Form/WithLabel.vue';
 import NextInput from 'next/input/Input.vue';
 import BaseSettingsHeader from '../components/BaseSettingsHeader.vue';
@@ -36,8 +37,9 @@ export default {
     const { enabledLanguages } = useConfig();
     const { accountId } = useAccount();
     const v$ = useVuelidate();
+    const { locale } = useI18n();
 
-    return { updateUISettings, uiSettings, v$, enabledLanguages, accountId };
+    return { updateUISettings, uiSettings, v$, enabledLanguages, accountId, i18nLocale: locale };
   },
   data() {
     return {
@@ -111,7 +113,7 @@ export default {
         const { name, locale, id, domain, support_email, features } =
           this.getAccount(this.accountId);
 
-        this.$root.$i18n.locale = this.uiSettings?.locale || locale;
+        this.i18nLocale = this.uiSettings?.locale || locale;
         this.name = name;
         this.locale = locale;
         this.id = id;
@@ -138,10 +140,10 @@ export default {
         });
         // If user locale is set, update the locale with user locale
         if (this.uiSettings?.locale) {
-          this.$root.$i18n.locale = this.uiSettings?.locale;
+          this.i18nLocale = this.uiSettings?.locale;
         } else {
           // If user locale is not set, update the locale with account locale
-          this.$root.$i18n.locale = this.locale;
+          this.i18nLocale = this.locale;
         }
         this.getAccount(this.id).locale = this.locale;
         useAlert(this.$t('GENERAL_SETTINGS.UPDATE.SUCCESS'));

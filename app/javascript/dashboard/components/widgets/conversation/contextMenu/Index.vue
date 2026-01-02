@@ -21,6 +21,8 @@ const MENU = {
   AGENT: 'agent',
   TEAM: 'team',
   LABEL: 'label',
+  SALES_STAGE: 'sales-stage',
+  FORWARD_MESSAGE: 'forward-message',
   DELETE: 'delete',
   OPEN_NEW_TAB: 'open-new-tab',
   COPY_LINK: 'copy-link',
@@ -70,6 +72,8 @@ export default {
     'assignAgent',
     'assignTeam',
     'assignLabel',
+    'assignSalesStage',
+    'forwardMessage',
     'deleteConversation',
     'close',
   ],
@@ -79,19 +83,51 @@ export default {
       isAdmin,
     };
   },
+  computed: {
+    readOption() {
+      return {
+        label: this.$t('CONVERSATION.CARD_CONTEXT_MENU.MARK_AS_READ'),
+        icon: 'mail',
+      };
+    },
+    unreadOption() {
+      return {
+        label: this.$t('CONVERSATION.CARD_CONTEXT_MENU.MARK_AS_UNREAD'),
+        icon: 'mail-unread',
+      };
+    },
+    menuItems() {
+      return [
+        {
+          key: MENU.ASSIGN_AGENT,
+          label: this.$t('CONVERSATION.CARD_CONTEXT_MENU.ASSIGN_AGENT'),
+          icon: 'person-add',
+          disabled: !this.isAdmin,
+        },
+        {
+          key: MENU.ASSIGN_TEAM,
+          label: this.$t('CONVERSATION.CARD_CONTEXT_MENU.ASSIGN_TEAM'),
+          icon: 'people-team-add',
+          disabled: !this.isAdmin,
+        },
+        {
+          key: MENU.ASSIGN_LABEL,
+          label: this.$t('CONVERSATION.CARD_CONTEXT_MENU.ASSIGN_LABEL'),
+          icon: 'tag',
+          disabled: !this.isAdmin,
+        },
+      ];
+    },
+  },
   data() {
     return {
       MENU,
       STATUS_TYPE: wootConstants.STATUS_TYPE,
-      readOption: {
-        label: this.$t('CONVERSATION.CARD_CONTEXT_MENU.MARK_AS_READ'),
-        icon: 'mail',
-      },
-      unreadOption: {
-        label: this.$t('CONVERSATION.CARD_CONTEXT_MENU.MARK_AS_UNREAD'),
-        icon: 'mail-unread',
-      },
-      statusMenuConfig: [
+    };
+  },
+  computed: {
+    statusMenuConfig() {
+      return [
         {
           key: wootConstants.STATUS_TYPE.RESOLVED,
           label: this.$t('CONVERSATION.CARD_CONTEXT_MENU.RESOLVED'),
@@ -107,13 +143,17 @@ export default {
           label: this.$t('CONVERSATION.CARD_CONTEXT_MENU.PENDING'),
           icon: 'book-clock',
         },
-      ],
-      snoozeOption: {
+      ];
+    },
+    snoozeOption() {
+      return {
         key: wootConstants.STATUS_TYPE.SNOOZED,
         label: this.$t('CONVERSATION.CARD_CONTEXT_MENU.SNOOZE.TITLE'),
         icon: 'snooze',
-      },
-      priorityConfig: {
+      };
+    },
+    priorityConfig() {
+      return {
         key: MENU.PRIORITY,
         label: this.$t('CONVERSATION.PRIORITY.TITLE'),
         icon: 'warning',
@@ -139,47 +179,86 @@ export default {
             key: 'low',
           },
         ].filter(item => item.key !== this.priority),
-      },
-      labelMenuConfig: {
+      };
+    },
+    labelMenuConfig() {
+      return {
         key: MENU.LABEL,
         icon: 'tag',
         label: this.$t('CONVERSATION.CARD_CONTEXT_MENU.ASSIGN_LABEL'),
-      },
-      agentMenuConfig: {
+      };
+    },
+    agentMenuConfig() {
+      return {
         key: MENU.AGENT,
         icon: 'person-add',
         label: this.$t('CONVERSATION.CARD_CONTEXT_MENU.ASSIGN_AGENT'),
-      },
-      teamMenuConfig: {
+      };
+    },
+    teamMenuConfig() {
+      return {
         key: MENU.TEAM,
         icon: 'people-team-add',
         label: this.$t('CONVERSATION.CARD_CONTEXT_MENU.ASSIGN_TEAM'),
-      },
-      deleteOption: {
+      };
+    },
+    deleteOption() {
+      return {
         key: MENU.DELETE,
         icon: 'delete',
         label: this.$t('CONVERSATION.CARD_CONTEXT_MENU.DELETE'),
-      },
-      openInNewTabOption: {
+      };
+    },
+    openInNewTabOption() {
+      return {
         key: MENU.OPEN_NEW_TAB,
         icon: 'open',
         label: this.$t('CONVERSATION.CARD_CONTEXT_MENU.OPEN_IN_NEW_TAB'),
-      },
-      copyLinkOption: {
+      };
+    },
+    copyLinkOption() {
+      return {
         key: MENU.COPY_LINK,
         icon: 'copy',
         label: this.$t('CONVERSATION.CARD_CONTEXT_MENU.COPY_LINK'),
-      },
-    };
-  },
-  computed: {
+      };
+    },
+    salesStageMenuConfig() {
+      return {
+        key: MENU.SALES_STAGE,
+        icon: 'kanban-square',
+        label: this.$t('CONVERSATION.CARD_CONTEXT_MENU.ASSIGN_STAGE'),
+      };
+    },
+    forwardMessageOption() {
+      return {
+        key: MENU.FORWARD_MESSAGE,
+        icon: 'arrow-reply',
+        label: this.$t('CONVERSATION.CARD_CONTEXT_MENU.FORWARD_MESSAGE'),
+      };
+    },
     ...mapGetters({
       labels: 'labels/getLabels',
       teams: 'teams/getTeams',
       assignableAgentsUiFlags: 'inboxAssignableAgents/getUIFlags',
       currentUser: 'getCurrentUser',
       currentAccountId: 'getCurrentAccountId',
+      kanbanBoards: 'kanban/getBoards',
     }),
+    filteredKanbanBoards() {
+      if (!this.kanbanBoards) return [];
+      return this.kanbanBoards.filter(board => {
+        if (!board.agent_ids || board.agent_ids.length === 0) return true;
+        return board.agent_ids.includes(this.currentUser.id);
+      });
+    },
+    salesStages() {
+      // Backward compatibility if no boards loaded or empty
+      if (!this.filteredKanbanBoards.length) {
+        return [];
+      }
+      return this.filteredKanbanBoards;
+    },
     filteredAgentOnAvailability() {
       const agents = this.$store.getters[
         'inboxAssignableAgents/getAssignableAgents'
@@ -214,6 +293,9 @@ export default {
   },
   mounted() {
     this.$store.dispatch('inboxAssignableAgents/fetch', [this.inboxId]);
+    if (!this.kanbanBoards.length) {
+      this.$store.dispatch('kanban/fetch');
+    }
   },
   methods: {
     isAllowed(keys) {
@@ -259,7 +341,7 @@ export default {
     },
     generateMenuLabelConfig(option, type = 'text') {
       return {
-        key: option.id,
+        key: option.id || option.key,
         ...(type === 'icon' && { icon: option.icon }),
         ...(type === 'label' && { color: option.color }),
         ...(type === 'agent' && { thumbnail: option.thumbnail }),
@@ -269,6 +351,12 @@ export default {
         ...(type === 'agent' && { label: option.name }),
         ...(type === 'team' && { label: option.name }),
       };
+    },
+    assignSalesStage(stage) {
+      this.$emit('assignSalesStage', stage);
+    },
+    forwardMessage() {
+      this.$emit('forwardMessage');
     },
   },
 };
@@ -312,7 +400,7 @@ export default {
       <hr class="m-1 rounded border-b border-n-weak dark:border-n-weak" />
     </template>
     <template
-      v-if="isAllowed([MENU.PRIORITY, MENU.LABEL, MENU.AGENT, MENU.TEAM])"
+      v-if="isAllowed([MENU.PRIORITY, MENU.LABEL, MENU.AGENT, MENU.TEAM, MENU.SALES_STAGE])"
     >
       <MenuItemWithSubmenu
         v-if="isAllowed([MENU.PRIORITY])"
@@ -324,6 +412,35 @@ export default {
           :option="option"
           @click.stop="assignPriority(option.key)"
         />
+      </MenuItemWithSubmenu>
+      <MenuItemWithSubmenu
+        v-if="isAllowed([MENU.SALES_STAGE]) && salesStages.length > 0"
+        :option="salesStageMenuConfig"
+        :sub-menu-available="!!salesStages.length"
+      >
+        <template v-if="salesStages[0] && salesStages[0].stages">
+           <MenuItemWithSubmenu
+              v-for="board in salesStages"
+              :key="board.id"
+              :option="{ label: board.name, icon: 'kanban-board' }"
+              :sub-menu-available="!!board.stages.length"
+           >
+              <MenuItem
+                  v-for="stage in board.stages"
+                  :key="stage.id"
+                  :option="{ label: stage.name, color: stage.color }"
+                  @click.stop="assignSalesStage({ board, stage })"
+              />
+           </MenuItemWithSubmenu>
+        </template>
+        <template v-else>
+          <MenuItem
+            v-for="stage in salesStages"
+            :key="stage.key"
+            :option="generateMenuLabelConfig(stage, 'text')"
+            @click.stop="assignSalesStage(stage.key)"
+          />
+        </template>
       </MenuItemWithSubmenu>
       <MenuItemWithSubmenu
         v-if="isAllowed([MENU.LABEL])"

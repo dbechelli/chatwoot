@@ -268,6 +268,18 @@ const shouldShowAvatar = computed(() => {
   return true;
 });
 
+const groupSenderInfo = computed(() => {
+  return props.contentAttributes?.whatsapp_group_sender || null;
+});
+
+const shouldShowGroupSender = computed(() => {
+  return (
+    groupSenderInfo.value &&
+    props.messageType === MESSAGE_TYPES.INCOMING &&
+    orientation.value === ORIENTATION.LEFT
+  );
+});
+
 const componentToRender = computed(() => {
   if (props.isEmailInbox && !props.private) {
     const emailInboxTypes = [MESSAGE_TYPES.INCOMING, MESSAGE_TYPES.OUTGOING];
@@ -367,6 +379,7 @@ const contextMenuEnabledOptions = computed(() => {
     cannedResponse: isOutgoing && hasText && !isMessageDeleted.value,
     copyLink: !isFailedOrProcessing,
     translate: !isFailedOrProcessing && !isMessageDeleted.value && hasText,
+    forward: !isFailedOrProcessing && !isMessageDeleted.value,
     replyTo:
       !props.private &&
       props.inboxSupportsReplyTo.outgoing &&
@@ -518,7 +531,7 @@ provideMessageContext({
         <Avatar v-bind="avatarInfo" :size="24" />
       </div>
       <div
-        class="[grid-area:bubble] flex"
+        class="[grid-area:bubble] flex flex-col"
         :class="{
           'ltr:ml-8 rtl:mr-8 justify-end': orientation === ORIENTATION.RIGHT,
           'ltr:mr-8 rtl:ml-8': orientation === ORIENTATION.LEFT,
@@ -526,6 +539,12 @@ provideMessageContext({
         }"
         @contextmenu="openContextMenu($event)"
       >
+        <div
+          v-if="shouldShowGroupSender"
+          class="mb-1 text-xs font-medium text-green-700"
+        >
+          {{ groupSenderInfo.name || groupSenderInfo.phone }}
+        </div>
         <Component :is="componentToRender" />
       </div>
       <MessageError
