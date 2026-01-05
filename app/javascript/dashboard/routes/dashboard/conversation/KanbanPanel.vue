@@ -39,7 +39,7 @@ const currentBoard = computed(() => {
   
   // Try to find a board where the conversation has a stage
   const boardWithStage = kanbanConfig.value.boards.find(board => {
-    const stageId = conversation.value.custom_attributes?.[board.customAttributeKey];
+    const stageId = conversation.value?.custom_attributes?.[board.customAttributeKey];
     return !!stageId;
   });
 
