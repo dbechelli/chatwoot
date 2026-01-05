@@ -18,7 +18,7 @@ const emit = defineEmits(['close']);
       <div class="flex items-center justify-between p-6 border-b border-slate-100 bg-slate-50/50">
         <div>
           <h2 class="text-2xl font-bold text-slate-800 flex items-center gap-2">
-            <i class="i-lucide-book-open text-blue-600" />
+            <i class="i-lucide-book-open text-woot-600" />
             Guia Prático de Uso do Kanban
           </h2>
           <p class="text-sm text-slate-500 mt-1">
@@ -37,9 +37,9 @@ const emit = defineEmits(['close']);
       <div class="flex-1 overflow-y-auto p-8 space-y-8 custom-scrollbar">
         
         <!-- Intro -->
-        <div class="bg-blue-50 p-6 rounded-xl border border-blue-100">
-          <h3 class="text-lg font-semibold text-blue-900 mb-2">O que é o Kanban?</h3>
-          <p class="text-blue-800 leading-relaxed">
+        <div class="bg-woot-50 p-6 rounded-xl border border-woot-100">
+          <h3 class="text-lg font-semibold text-woot-900 mb-2">O que é o Kanban?</h3>
+          <p class="text-woot-800 leading-relaxed">
             O Kanban é um método visual para gerenciar o trabalho. Imagine um quadro com colunas onde cada coluna representa uma etapa do seu processo. Os "cartões" (seus clientes) movem-se da esquerda para a direita à medida que progridem.
           </p>
         </div>

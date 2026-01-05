@@ -199,7 +199,7 @@ const selectConversation = (conv) => {
 const getPriorityClasses = (p) => {
   const map = {
     low: 'bg-slate-100 text-slate-600 border-slate-200',
-    medium: 'bg-blue-50 text-blue-600 border-blue-200',
+    medium: 'bg-woot-50 text-woot-600 border-woot-200',
     high: 'bg-orange-50 text-orange-600 border-orange-200',
     urgent: 'bg-red-50 text-red-600 border-red-200',
   };
@@ -281,7 +281,7 @@ const handleSave = async () => {
       <!-- Header -->
       <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
         <div class="flex items-center gap-3">
-          <div class="h-8 w-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
+          <div class="h-8 w-8 rounded-full bg-woot-50 flex items-center justify-center text-woot-600">
             <i class="i-lucide-trello text-lg" />
           </div>
           <div>
@@ -310,7 +310,7 @@ const handleSave = async () => {
             v-model="form.title"
             type="text"
             :placeholder="$t('KANBAN.MODAL.TITLE_PLACEHOLDER')"
-            class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+            class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-woot-500/20 focus:border-woot-500 transition-all"
           />
         </div>
 
@@ -321,7 +321,7 @@ const handleSave = async () => {
             v-model="form.description"
             rows="3"
             :placeholder="$t('KANBAN.MODAL.DESCRIPTION_PLACEHOLDER')"
-            class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-none"
+            class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-woot-500/20 focus:border-woot-500 transition-all resize-none"
           />
         </div>
 
@@ -332,7 +332,7 @@ const handleSave = async () => {
             v-model="form.notes"
             rows="3"
             :placeholder="$t('KANBAN.MODAL.NOTES_PLACEHOLDER')"
-            class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-none"
+            class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-woot-500/20 focus:border-woot-500 transition-all resize-none"
           />
         </div>
 
@@ -347,14 +347,14 @@ const handleSave = async () => {
               v-model="form.custom_attributes[attr.attribute_key]"
               :type="attr.attribute_display_type === 'link' ? 'url' : attr.attribute_display_type"
               :placeholder="attr.attribute_display_name"
-              class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+              class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-woot-500/20 focus:border-woot-500 transition-all"
             />
 
             <!-- List -->
             <select
               v-else-if="attr.attribute_display_type === 'list'"
               v-model="form.custom_attributes[attr.attribute_key]"
-              class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+              class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-woot-500/20 focus:border-woot-500 transition-all"
             >
               <option value="">Selecione...</option>
               <option v-for="opt in attr.attribute_values" :key="opt" :value="opt">
@@ -367,7 +367,7 @@ const handleSave = async () => {
               <input 
                 type="checkbox" 
                 v-model="form.custom_attributes[attr.attribute_key]" 
-                class="rounded border-slate-300 text-blue-600 focus:ring-blue-500 h-4 w-4" 
+                class="rounded border-slate-300 text-woot-600 focus:ring-woot-500 h-4 w-4" 
               />
               <span class="text-sm text-slate-600">{{ attr.attribute_display_name }}</span>
             </label>
@@ -379,7 +379,7 @@ const handleSave = async () => {
           <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">{{ $t('KANBAN.MODAL.STAGE') || 'Estágio' }}</label>
           <select
             v-model="form.stage_id"
-            class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+            class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-woot-500/20 focus:border-woot-500 transition-all"
           >
             <option v-for="stage in board.stages" :key="stage.id" :value="stage.id">
               {{ stage.name }}
@@ -394,11 +394,11 @@ const handleSave = async () => {
             <div class="flex items-center justify-between">
               <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">{{ $t('KANBAN.MODAL.DEAL_VALUE') }}</label>
               <label class="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" v-model="form.hasValue" class="rounded border-slate-300 text-blue-600 focus:ring-blue-500 h-3 w-3" />
+                <input type="checkbox" v-model="form.hasValue" class="rounded border-slate-300 text-woot-600 focus:ring-woot-500 h-3 w-3" />
                 <span class="text-[10px] font-bold text-slate-500 uppercase">{{ $t('KANBAN.MODAL.ACTIVATE') }}</span>
               </label>
             </div>
-            <div class="flex rounded-lg border border-slate-300 overflow-hidden focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500 transition-all bg-white">
+            <div class="flex rounded-lg border border-slate-300 overflow-hidden focus-within:ring-2 focus-within:ring-woot-500/20 focus-within:border-woot-500 transition-all bg-white">
               <div class="bg-slate-50 px-3 py-2.5 border-r border-slate-200 text-slate-500 text-sm font-bold flex items-center">
                 R$
               </div>
@@ -446,7 +446,7 @@ const handleSave = async () => {
           <!-- Progress Bar -->
           <div class="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
             <div 
-              class="h-full bg-blue-500 transition-all duration-500 ease-out"
+              class="h-full bg-woot-500 transition-all duration-500 ease-out"
               :style="{ width: checklistPercentage + '%' }"
             />
           </div>
@@ -458,7 +458,7 @@ const handleSave = async () => {
               @keydown.enter.prevent="addChecklistItem"
               type="text"
               :placeholder="$t('KANBAN.MODAL.ADD_CHECKLIST_ITEM')"
-              class="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-md text-sm focus:outline-none focus:border-blue-500"
+              class="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-md text-sm focus:outline-none focus:border-woot-500"
             />
             <button 
               @click="addChecklistItem"
@@ -479,7 +479,7 @@ const handleSave = async () => {
               <input 
                 type="checkbox" 
                 v-model="item.done"
-                class="rounded border-slate-300 text-blue-600 focus:ring-blue-500 h-4 w-4 cursor-pointer"
+                class="rounded border-slate-300 text-woot-600 focus:ring-woot-500 h-4 w-4 cursor-pointer"
               />
               <input
                 v-model="item.text"
@@ -508,7 +508,7 @@ const handleSave = async () => {
             <input
               type="text"
               :placeholder="$t('KANBAN.MODAL.SEARCH_PLACEHOLDER')"
-              class="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+              class="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-woot-500/20 focus:border-woot-500"
               @input="e => searchConversations(e.target.value)"
             />
             
@@ -526,14 +526,14 @@ const handleSave = async () => {
                   </div>
                   <div class="text-xs text-slate-500">{{ conv.messages?.[0]?.content?.substring(0, 40) }}...</div>
                 </div>
-                <i class="i-lucide-link text-slate-300 group-hover:text-blue-500" />
+                <i class="i-lucide-link text-slate-300 group-hover:text-woot-500" />
               </button>
             </div>
           </div>
 
-          <div v-else class="flex items-center justify-between p-3 bg-blue-50 border border-blue-100 rounded-lg">
+          <div v-else class="flex items-center justify-between p-3 bg-woot-50 border border-woot-100 rounded-lg">
             <div class="flex items-center gap-3">
-              <div class="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-xs">
+              <div class="h-8 w-8 rounded-full bg-woot-100 flex items-center justify-center text-woot-600 font-bold text-xs">
                 #{{ form.conversation_id }}
               </div>
               <div>
@@ -555,7 +555,7 @@ const handleSave = async () => {
           <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">{{ $t('KANBAN.MODAL.ASSIGNEE') }}</label>
           <select
             v-model="form.assignee_id"
-            class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+            class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-woot-500/20 focus:border-woot-500"
           >
             <option :value="null">{{ $t('KANBAN.MODAL.NO_ASSIGNEE') }}</option>
             <option v-for="agent in agents" :key="agent.id" :value="agent.id">

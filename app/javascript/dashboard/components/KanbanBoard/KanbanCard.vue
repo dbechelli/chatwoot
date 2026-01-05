@@ -52,8 +52,8 @@ const timeAgo = computed(() => {
 const priorityColor = computed(() => {
   const colors = {
     urgent: 'bg-red-50 text-red-700 border-red-200',
-    high: 'bg-orange-50 text-orange-700 border-orange-200',
-    medium: 'bg-blue-50 text-blue-700 border-blue-200',
+    high: 'bg-yellow-50 text-yellow-700 border-yellow-200',
+    medium: 'bg-woot-50 text-woot-700 border-woot-200',
     low: 'bg-green-50 text-green-700 border-green-200',
   };
   return colors[props.conversation.priority] || 'bg-slate-50 text-slate-600 border-slate-200';
@@ -90,7 +90,7 @@ const formatCurrency = value => {
 
 <template>
   <div
-    class="group relative flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-md hover:border-blue-300 cursor-pointer"
+    class="group relative flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-md hover:border-woot-300 cursor-pointer"
     @contextmenu.prevent="$emit('contextmenu', { event: $event, conversation })"
   >
     <div 

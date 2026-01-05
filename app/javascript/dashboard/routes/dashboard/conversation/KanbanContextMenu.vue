@@ -13,7 +13,7 @@
 
     <button 
       @click="handleAction('edit')"
-      class="w-full text-left px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-blue-600 flex items-center gap-2"
+      class="w-full text-left px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-woot-600 flex items-center gap-2"
     >
       <i class="i-lucide-pencil text-xs" />
       {{ t('KANBAN.CONTEXT_MENU.EDIT') }}
@@ -21,7 +21,7 @@
 
     <button 
       @click="handleAction('view_contact')"
-      class="w-full text-left px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-blue-600 flex items-center gap-2"
+      class="w-full text-left px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-woot-600 flex items-center gap-2"
     >
       <i class="i-lucide-user text-xs" />
       {{ t('KANBAN.CONTEXT_MENU.VIEW_CONTACT') }}
@@ -29,7 +29,7 @@
 
     <button 
       @click="handleAction('open_conversation')"
-      class="w-full text-left px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-blue-600 flex items-center gap-2"
+      class="w-full text-left px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-woot-600 flex items-center gap-2"
     >
       <i class="i-lucide-message-circle text-xs" />
       {{ t('KANBAN.CONTEXT_MENU.OPEN_CONVERSATION') }}
