@@ -16,6 +16,7 @@ const props = defineProps({
   activeOn: { type: Array, default: () => [] },
   children: { type: Array, default: undefined },
   getterKeys: { type: Object, default: () => ({}) },
+  onClick: { type: Function, default: null },
 });
 
 const {
@@ -110,6 +111,11 @@ const hasActiveChild = computed(() => {
 });
 
 const toggleTrigger = () => {
+  if (props.onClick) {
+    props.onClick();
+    return;
+  }
+
   if (
     hasAccessibleChildren.value &&
     !isExpanded.value &&
@@ -140,10 +146,10 @@ onMounted(async () => {
     class="grid gap-1 text-sm cursor-pointer select-none"
   >
     <SidebarGroupHeader
-      :icon
-      :name
-      :label
-      :to
+      :icon="icon"
+      :name="name"
+      :label="label"
+      :to="to"
       :getter-keys="getterKeys"
       :is-active="isActive"
       :has-active-child="hasActiveChild"

@@ -1,7 +1,9 @@
 <script setup>
 import { h, ref, computed, onMounted } from 'vue';
+import axios from 'axios';
 import { provideSidebarContext } from './provider';
 import { useAccount } from 'dashboard/composables/useAccount';
+import { useAlert } from 'dashboard/composables';
 import { useKbd } from 'dashboard/composables/utils/useKbd';
 import { useMapGetter } from 'dashboard/composables/store';
 import { useStore } from 'vuex';
@@ -146,6 +148,33 @@ const newReportRoutes = () => [
 
 const reportRoutes = computed(() => newReportRoutes());
 
+const { pushAlert } = useAlert();
+
+const syncWhatsappGroups = async () => {
+  const whatsappInboxes = inboxes.value.filter(inbox => inbox.channel_type === 'Channel::Whatsapp');
+  
+  if (whatsappInboxes.length === 0) {
+    pushAlert({ message: 'Nenhuma caixa de entrada do WhatsApp encontrada', type: 'error' });
+    return;
+  }
+
+  let successCount = 0;
+  for (const inbox of whatsappInboxes) {
+    try {
+      await axios.post(`/api/v1/accounts/${inbox.account_id}/inboxes/${inbox.id}/sync_whatsapp_groups`);
+      successCount++;
+    } catch (error) {
+      console.error(error);
+    }
+  }
+  
+  if (successCount > 0) {
+    pushAlert({ message: 'Grupos sincronizados com sucesso!', type: 'success' });
+  } else {
+    pushAlert({ message: 'Falha ao sincronizar grupos.', type: 'error' });
+  }
+};
+
 const menuItems = computed(() => {
   const items = [
     {
@@ -257,6 +286,12 @@ const menuItems = computed(() => {
               icon: 'i-lucide-kanban-square',
             }))
           : undefined,
+    },
+    {
+      name: 'WhatsApp Groups',
+      label: 'Sincronizar Grupos',
+      icon: 'i-lucide-users',
+      onClick: syncWhatsappGroups,
     },
     {
       name: 'Contacts',

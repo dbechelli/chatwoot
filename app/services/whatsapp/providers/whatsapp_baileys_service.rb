@@ -427,6 +427,17 @@ class Whatsapp::Providers::WhatsappBaileysService < Whatsapp::Providers::BaseSer
 
   # WhatsApp Group Management Methods
 
+  def fetch_all_groups
+    response = HTTParty.get(
+      "#{provider_url}/connections/#{whatsapp_channel.phone_number}/groups",
+      headers: api_headers
+    )
+
+    raise ProviderUnavailableError unless process_response(response)
+
+    response.parsed_response
+  end
+
   def get_group_info(group_id)
     response = HTTParty.get(
       "#{provider_url}/connections/#{whatsapp_channel.phone_number}/group-metadata",

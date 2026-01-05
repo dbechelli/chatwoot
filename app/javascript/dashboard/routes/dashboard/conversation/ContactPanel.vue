@@ -98,7 +98,27 @@ const contactAdditionalAttributes = computed(
 );
 
 const isWhatsappGroup = computed(() => {
-  return currentChat.value?.additional_attributes?.is_whatsapp_group;
+  const chat = currentChat.value;
+  if (!chat) return false;
+
+  // 1. Check conversation attributes
+  const chatAttrs = chat.additional_attributes || {};
+  if (chatAttrs.is_whatsapp_group || chatAttrs.type === 'group' || chatAttrs.chat_type === 'group') return true;
+
+  // 2. Check contact attributes
+  const c = contact.value;
+  if (c) {
+    const contactAttrs = c.additional_attributes || {};
+    if (c.is_whatsapp_group || contactAttrs.is_whatsapp_group || contactAttrs.is_group) return true;
+    
+    // 3. Check Source ID / Identifier (Standard for WhatsApp Groups: ends in @g.us)
+    if (c.identifier && String(c.identifier).includes('@g.us')) return true;
+  }
+
+  // 4. Check Sender Meta in Conversation
+  if (chat.meta?.sender?.source_id && String(chat.meta.sender.source_id).includes('@g.us')) return true;
+
+  return false;
 });
 
 const getContactDetails = () => {

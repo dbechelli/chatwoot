@@ -125,6 +125,15 @@ class Api::V1::Accounts::InboxesController < Api::V1::Accounts::BaseController #
     render json: response, status: :ok
   end
 
+  def sync_whatsapp_groups
+    return render status: :unprocessable_entity, json: { error: 'Group sync is only available for WhatsApp channels' } unless whatsapp_channel?
+
+    Whatsapp::SyncGroupsService.new(@inbox).perform
+    head :ok
+  rescue StandardError => e
+    render json: { error: e.message }, status: :unprocessable_entity
+  end
+
   private
 
   def fetch_inbox

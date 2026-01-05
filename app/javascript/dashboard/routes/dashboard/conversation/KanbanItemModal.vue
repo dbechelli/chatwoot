@@ -1,7 +1,9 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue';
-import { useStore } from 'vuex';
+import { useStore } from 'dashboard/composables/store';
 import { useI18n } from 'vue-i18n';
+import { useAlert } from 'dashboard/composables';
+import axios from 'axios';
 import Modal from 'dashboard/components/Modal.vue';
 
 const props = defineProps({
@@ -36,28 +38,57 @@ const form = ref({
   custom_attributes: {},
 });
 
+
+
+const agents = computed(() => store.getters['agents/getAgents']);
+
+const boardCustomAttributeKey = computed(() => props.board.customAttributeKey || 'sales_stage');
+
+const customAttributes = computed(() => {
+  const allAttributes = store.getters['attributes/getAttributesByModel']('conversation_attribute') || [];
+  const ignoredKeys = ['kanban_title', 'kanban_description', 'kanban_notes', 'deal_value', 'kanban_checklist'];
+  return allAttributes.filter(attr => !ignoredKeys.includes(attr.attribute_key));
+});
+
+const checklistProgress = computed(() => {
+  const total = form.value.checklist.length;
+  if (total === 0) return '0/0';
+  const done = form.value.checklist.filter(i => i.done).length;
+  return `${done}/${total}`;
+});
+
+const checklistPercentage = computed(() => {
+  const total = form.value.checklist.length;
+  if (total === 0) return 0;
+  const done = form.value.checklist.filter(i => i.done).length;
+  return Math.round((done / total) * 100);
+});
+
 // Initialize form when item prop changes or modal opens
 watch(() => props.item, (newItem) => {
   selectedConversation.value = null;
-  if (newItem && newItem.id) {
+  // Check if newItem exists and has an ID (it might be a Proxy, so we check properties)
+  if (newItem && (newItem.id || newItem.display_id)) {
+    const conversationId = newItem.id || newItem.display_id;
+    
     // Extract dynamic custom attributes
     const itemAttributes = newItem.custom_attributes || {};
     const dynamicAttributes = {};
-    if (customAttributes.value.length) {
+    if (customAttributes.value && customAttributes.value.length) {
       customAttributes.value.forEach(attr => {
         dynamicAttributes[attr.attribute_key] = itemAttributes[attr.attribute_key] || '';
       });
     }
 
     form.value = {
-      title: newItem.custom_attributes?.kanban_title || newItem.meta?.sender?.name || `Conversa #${newItem.id}`,
+      title: newItem.custom_attributes?.kanban_title || newItem.meta?.sender?.name || `Conversa #${conversationId}`,
       description: newItem.custom_attributes?.kanban_description || '',
       notes: newItem.custom_attributes?.kanban_notes || '',
       value: Number(newItem.custom_attributes?.deal_value) || 0,
       hasValue: !!newItem.custom_attributes?.deal_value,
       priority: newItem.priority || 'medium',
       assignee_id: newItem.meta?.assignee?.id || null,
-      conversation_id: newItem.id,
+      conversation_id: conversationId,
       stage_id: props.stageId,
       checklist: newItem.custom_attributes?.kanban_checklist || [],
       custom_attributes: dynamicAttributes,
@@ -65,7 +96,7 @@ watch(() => props.item, (newItem) => {
   } else {
     // Reset form for new item
     const dynamicAttributes = {};
-    if (customAttributes.value.length) {
+    if (customAttributes.value && customAttributes.value.length) {
       customAttributes.value.forEach(attr => {
         dynamicAttributes[attr.attribute_key] = '';
       });
@@ -92,30 +123,6 @@ watch(() => props.stageId, (newVal) => {
   if (newVal && !props.item) form.value.stage_id = newVal;
 });
 
-const agents = computed(() => store.getters['agents/getAgents']);
-
-const boardCustomAttributeKey = computed(() => props.board.customAttributeKey || 'sales_stage');
-
-const customAttributes = computed(() => {
-  const allAttributes = store.getters['attributes/getAttributesByModel']('conversation_attribute') || [];
-  const ignoredKeys = ['kanban_title', 'kanban_description', 'kanban_notes', 'deal_value', 'kanban_checklist'];
-  return allAttributes.filter(attr => !ignoredKeys.includes(attr.attribute_key));
-});
-
-const checklistProgress = computed(() => {
-  const total = form.value.checklist.length;
-  if (total === 0) return '0/0';
-  const done = form.value.checklist.filter(i => i.done).length;
-  return `${done}/${total}`;
-});
-
-const checklistPercentage = computed(() => {
-  const total = form.value.checklist.length;
-  if (total === 0) return 0;
-  const done = form.value.checklist.filter(i => i.done).length;
-  return Math.round((done / total) * 100);
-});
-
 const addChecklistItem = () => {
   if (!newChecklistItem.value.trim()) return;
   form.value.checklist.push({
@@ -133,7 +140,7 @@ const searchConversations = async (query) => {
   if (!query) return;
   isSearching.value = true;
   try {
-    const { data } = await window.axios.get(`/api/v1/accounts/${store.getters.getCurrentAccountId}/conversations/search`, {
+    const { data } = await axios.get(`/api/v1/accounts/${store.getters.getCurrentAccountId}/conversations/search`, {
       params: { q: query }
     });
     searchResults.value = data.payload;
@@ -148,26 +155,32 @@ const selectConversation = (conv) => {
   selectedConversation.value = conv;
   form.value.conversation_id = conv.id;
   
-  // Auto-fill title if empty
-  if (!form.value.title) {
-    form.value.title = conv.custom_attributes?.kanban_title || `Negociação #${conv.id}`;
+  const attrs = conv.custom_attributes || {};
+
+  // Title: Use existing kanban title, or keep current form title, or default to contact name/ID
+  form.value.title = attrs.kanban_title || form.value.title || conv.meta?.sender?.name || `Conversa #${conv.id}`;
+
+  // Description & Notes: Use existing if present, else keep form, else empty
+  form.value.description = attrs.kanban_description || form.value.description || '';
+  form.value.notes = attrs.kanban_notes || form.value.notes || '';
+
+  // Value
+  if (attrs.deal_value) {
+    form.value.value = Number(attrs.deal_value);
+    form.value.hasValue = true;
   }
 
-  // Populate other fields if available
-  if (conv.custom_attributes) {
-    if (!form.value.description) form.value.description = conv.custom_attributes.kanban_description || '';
-    if (!form.value.notes) form.value.notes = conv.custom_attributes.kanban_notes || '';
-    if (!form.value.value) form.value.value = Number(conv.custom_attributes.deal_value) || 0;
-    if (!form.value.hasValue) form.value.hasValue = !!conv.custom_attributes.deal_value;
-    if (form.value.checklist.length === 0) form.value.checklist = conv.custom_attributes.kanban_checklist || [];
-
-    // Dynamic attributes
-    customAttributes.value.forEach(attr => {
-      if (conv.custom_attributes[attr.attribute_key]) {
-        form.value.custom_attributes[attr.attribute_key] = conv.custom_attributes[attr.attribute_key];
-      }
-    });
+  // Checklist
+  if (attrs.kanban_checklist && attrs.kanban_checklist.length > 0) {
+    form.value.checklist = attrs.kanban_checklist;
   }
+
+  // Dynamic attributes
+  customAttributes.value.forEach(attr => {
+    if (attrs[attr.attribute_key]) {
+      form.value.custom_attributes[attr.attribute_key] = attrs[attr.attribute_key];
+    }
+  });
 
   searchResults.value = [];
 };
@@ -183,7 +196,13 @@ const getPriorityClasses = (p) => {
 };
 
 const handleSave = async () => {
+  // Fallback: if form.conversation_id is missing but we have an item, use it
+  if (!form.value.conversation_id && props.item?.id) {
+    form.value.conversation_id = props.item.id;
+  }
+
   if (!form.value.conversation_id) {
+    useAlert(t('KANBAN.MODAL.NO_CONVERSATION_SELECTED') || 'Selecione uma conversa para continuar');
     return;
   }
 
@@ -232,10 +251,12 @@ const handleSave = async () => {
       });
     }
 
+    useAlert(t('KANBAN.MODAL.SUCCESS_MESSAGE') || 'Item salvo com sucesso');
     emit('save');
     emit('close');
   } catch (error) {
     console.error(error);
+    useAlert(t('KANBAN.MODAL.ERROR_MESSAGE') || 'Erro ao salvar item');
   } finally {
     isLoading.value = false;
   }
@@ -519,21 +540,26 @@ const handleSave = async () => {
       </div>
 
       <!-- Footer -->
-      <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex justify-end gap-3">
-        <button
-          @click="emit('close')"
-          class="px-4 py-2 text-sm font-bold text-slate-600 hover:text-slate-800 hover:bg-slate-200 rounded-lg transition-colors"
-        >
-          {{ $t('KANBAN.MODAL.CANCEL') }}
-        </button>
-        <button
-          @click="handleSave"
-          :disabled="isLoading || !form.conversation_id"
-          class="px-6 py-2 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-lg shadow-sm shadow-blue-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-        >
-          <i v-if="isLoading" class="i-lucide-loader-2 animate-spin" />
-          {{ isLoading ? $t('KANBAN.MODAL.SAVING') : $t('KANBAN.MODAL.SAVE') }}
-        </button>
+      <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex justify-between items-center gap-3">
+        <div class="text-xs text-slate-400 font-mono">
+          {{ form.conversation_id ? `#${form.conversation_id}` : 'Novo Item' }}
+        </div>
+        <div class="flex gap-3">
+          <button
+            @click="emit('close')"
+            class="px-4 py-2 text-sm font-bold text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-lg transition-colors shadow-sm"
+          >
+            {{ $t('KANBAN.MODAL.CANCEL') }}
+          </button>
+          <button
+            @click="handleSave"
+            :disabled="isLoading"
+            class="px-6 py-2 text-sm font-bold text-white bg-green-600 hover:bg-green-700 rounded-lg shadow-sm shadow-green-200 transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            <i v-if="isLoading" class="i-lucide-loader-2 animate-spin" />
+            {{ isLoading ? $t('KANBAN.MODAL.SAVING') : $t('KANBAN.MODAL.SAVE') }}
+          </button>
+        </div>
       </div>
     </div>
   </Modal>

@@ -225,6 +225,7 @@ Rails.application.routes.draw do
             post :sync_templates, on: :member
             get :health, on: :member
             post :on_whatsapp, on: :member
+            post :sync_whatsapp_groups, on: :member
             if ChatwootApp.enterprise?
               resource :conference, only: %i[create destroy], controller: 'conference' do
                 get :token, on: :member
