@@ -7,18 +7,22 @@ class Whatsapp::SyncGroupsService
   def perform
     return unless @channel.is_a?(Channel::Whatsapp)
     
-    # Only for Baileys for now, as other providers might have different APIs
-    # But the user context implies Baileys/Evolution
+    # Only for Baileys for now
     service = @channel.provider_service
-    return unless service.class.name == 'Whatsapp::Providers::WhatsappBaileysService'
+    return unless service.class.name.include?('WhatsappBaileysService')
 
-    groups = service.fetch_all_groups
-    
-    # Ensure groups is an array
-    return unless groups.is_a?(Array)
+    begin
+      groups = service.fetch_all_groups
+      
+      return unless groups.is_a?(Array)
 
-    groups.each do |group|
-      process_group(group)
+      groups.each do |group|
+        process_group(group)
+      end
+    rescue StandardError => e
+      Rails.logger.error "[Whatsapp::SyncGroupsService] Error: #{e.message}"
+      Rails.logger.error e.backtrace.join("\n")
+      raise e
     end
   end
 
@@ -37,15 +41,17 @@ class Whatsapp::SyncGroupsService
       contact_attributes: {
         name: group_name,
         identifier: group_jid,
-        is_whatsapp_group: true
+        additional_attributes: { is_whatsapp_group: true }
       }
     ).perform
 
+    return unless contact_inbox
+
     contact = contact_inbox.contact
     
+    return unless contact
+
     # Ensure conversation exists
-    # We want to ensure a conversation exists so it shows up in the sidebar.
-    # If there is no open conversation, create one.
     conversation = contact_inbox.conversations.where.not(status: :resolved).last
     
     unless conversation
