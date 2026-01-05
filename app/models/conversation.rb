@@ -337,7 +337,19 @@ class Conversation < ApplicationRecord
   has_many :whatsapp_group_members, dependent: :destroy
 
   def whatsapp_group?
-    additional_attributes&.dig('is_whatsapp_group') == true
+    return true if additional_attributes&.dig('is_whatsapp_group') == true
+    return true if additional_attributes&.dig('type') == 'group'
+    
+    # Fallback: Check contact identifier
+    if contact&.identifier&.to_s&.include?('@g.us')
+      # Auto-fix: Set the attribute if it's missing but clearly a group
+      self.additional_attributes ||= {}
+      self.additional_attributes['is_whatsapp_group'] = true
+      self.save(validate: false) if persisted?
+      return true
+    end
+
+    false
   end
 
   def whatsapp_group_id
