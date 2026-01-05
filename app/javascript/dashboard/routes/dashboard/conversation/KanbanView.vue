@@ -307,7 +307,7 @@ watch([selectedInbox, selectedAssignee], () => {
       >
         <div class="flex items-center gap-3">
           <div
-            class="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600 text-white shadow-md"
+            class="flex h-10 w-10 items-center justify-center rounded-lg bg-woot-600 text-white shadow-md"
           >
             <i class="i-lucide-kanban-square text-2xl" />
           </div>
@@ -338,7 +338,7 @@ watch([selectedInbox, selectedAssignee], () => {
           </button>
 
           <button
-            class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-blue-700 active:scale-95 shadow-sm shadow-blue-200"
+            class="inline-flex items-center gap-2 rounded-lg bg-woot-600 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-woot-700 active:scale-95 shadow-sm shadow-woot-200"
             @click="openAddItemModal()"
           >
             <i class="i-lucide-plus" />
@@ -378,7 +378,7 @@ watch([selectedInbox, selectedAssignee], () => {
           </label>
           <select
             v-model="selectedBoardId"
-            class="min-w-[160px] rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm font-medium text-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
+            class="min-w-[160px] rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm font-medium text-slate-700 focus:border-woot-500 focus:ring-2 focus:ring-woot-100 outline-none transition-all"
           >
             <option
               v-for="board in kanbanConfig.boards"
@@ -398,7 +398,7 @@ watch([selectedInbox, selectedAssignee], () => {
           </label>
           <select
             v-model="selectedInbox"
-            class="min-w-[160px] rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm font-medium text-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
+            class="min-w-[160px] rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm font-medium text-slate-700 focus:border-woot-500 focus:ring-2 focus:ring-woot-100 outline-none transition-all"
           >
             <option :value="null">{{ t('KANBAN.FILTERS.ALL_INBOXES') }}</option>
             <option v-for="inbox in inboxes" :key="inbox.id" :value="inbox.id">
@@ -415,7 +415,7 @@ watch([selectedInbox, selectedAssignee], () => {
           </label>
           <select
             v-model="selectedAssignee"
-            class="min-w-[160px] rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm font-medium text-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition-all"
+            class="min-w-[160px] rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm font-medium text-slate-700 focus:border-woot-500 focus:ring-2 focus:ring-woot-100 outline-none transition-all"
           >
             <option value="all">{{ t('KANBAN.FILTERS.ALL_AGENTS') }}</option>
             <option value="me">{{ t('KANBAN.FILTERS.MY_DEALS') }}</option>
@@ -445,7 +445,7 @@ watch([selectedInbox, selectedAssignee], () => {
         class="flex h-full items-center justify-center"
       >
         <div class="flex flex-col items-center gap-4">
-          <i class="i-lucide-loader-2 animate-spin text-5xl text-blue-600" />
+          <i class="i-lucide-loader-2 animate-spin text-5xl text-woot-600" />
           <p class="text-sm font-semibold text-slate-500">
             {{ t('KANBAN.LOADING') }}
           </p>
@@ -495,7 +495,7 @@ watch([selectedInbox, selectedAssignee], () => {
         <div class="flex items-center gap-3">
           <router-link
             :to="{ name: 'settings_kanban' }"
-            class="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-6 py-3 text-sm font-semibold text-white transition-all hover:bg-blue-700 active:scale-95 shadow-md hover:shadow-lg"
+            class="inline-flex items-center gap-2 rounded-lg bg-woot-600 px-6 py-3 text-sm font-semibold text-white transition-all hover:bg-woot-700 active:scale-95 shadow-md hover:shadow-lg"
           >
             <i class="i-lucide-plus-circle text-lg" />
             {{ t('KANBAN.CREATE_FIRST_BOARD') }}
@@ -504,7 +504,7 @@ watch([selectedInbox, selectedAssignee], () => {
             @click="showHelpModal = true"
             class="inline-flex items-center gap-2 rounded-lg bg-white border border-slate-200 px-6 py-3 text-sm font-semibold text-slate-700 transition-all hover:bg-slate-50 hover:border-slate-300 active:scale-95 shadow-sm hover:shadow-md"
           >
-            <i class="i-lucide-book-open text-lg text-blue-600" />
+            <i class="i-lucide-book-open text-lg text-woot-600" />
             Ver Exemplos de Uso
           </button>
         </div>
