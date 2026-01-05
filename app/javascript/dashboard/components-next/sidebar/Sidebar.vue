@@ -1,6 +1,5 @@
 <script setup>
 import { h, ref, computed, onMounted } from 'vue';
-import axios from 'axios';
 import { provideSidebarContext } from './provider';
 import { useAccount } from 'dashboard/composables/useAccount';
 import { useAlert } from 'dashboard/composables';
@@ -161,7 +160,7 @@ const syncWhatsappGroups = async () => {
   let successCount = 0;
   for (const inbox of whatsappInboxes) {
     try {
-      await axios.post(`/api/v1/accounts/${accountId}/inboxes/${inbox.id}/sync_whatsapp_groups`);
+      await window.axios.post(`/api/v1/accounts/${accountId}/inboxes/${inbox.id}/sync_whatsapp_groups`);
       successCount++;
     } catch (error) {
       console.error(error);
