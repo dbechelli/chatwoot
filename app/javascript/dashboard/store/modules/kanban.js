@@ -17,11 +17,13 @@ const getters = {
 };
 
 const actions = {
-  fetch: async ({ commit }) => {
+  fetch: async ({ commit, rootGetters }) => {
     commit(types.default.SET_KANBAN_UI_FLAG, { isFetching: true });
     try {
+      const accountId = rootGetters.getCurrentAccountId;
+      if (!accountId) return;
       const response = await window.axios.get(
-        `/api/v1/accounts/${window.chatwootConfig.accountId}/kanban_settings`
+        `/api/v1/accounts/${accountId}/kanban_settings`
       );
       commit(types.default.SET_KANBAN_BOARDS, response.data.boards || []);
     } catch (error) {
@@ -31,11 +33,12 @@ const actions = {
     }
   },
 
-  create: async ({ commit }, boardData) => {
+  create: async ({ commit, rootGetters }, boardData) => {
     commit(types.default.SET_KANBAN_UI_FLAG, { isCreating: true });
     try {
+      const accountId = rootGetters.getCurrentAccountId;
       const response = await window.axios.post(
-        `/api/v1/accounts/${window.chatwootConfig.accountId}/kanban_settings/boards`,
+        `/api/v1/accounts/${accountId}/kanban_settings/boards`,
         { board: boardData }
       );
       commit(types.default.ADD_KANBAN_BOARD, response.data);
@@ -47,11 +50,12 @@ const actions = {
     }
   },
 
-  update: async ({ commit }, { id, ...boardData }) => {
+  update: async ({ commit, rootGetters }, { id, ...boardData }) => {
     commit(types.default.SET_KANBAN_UI_FLAG, { isUpdating: true });
     try {
+      const accountId = rootGetters.getCurrentAccountId;
       const response = await axios.put(
-        `/api/v1/accounts/${window.chatwootConfig.accountId}/kanban_settings/boards/${id}`,
+        `/api/v1/accounts/${accountId}/kanban_settings/boards/${id}`,
         { board: boardData }
       );
       commit(types.default.UPDATE_KANBAN_BOARD, response.data);
@@ -63,11 +67,12 @@ const actions = {
     }
   },
 
-  delete: async ({ commit }, id) => {
+  delete: async ({ commit, rootGetters }, id) => {
     commit(types.default.SET_KANBAN_UI_FLAG, { isDeleting: true });
     try {
+      const accountId = rootGetters.getCurrentAccountId;
       await axios.delete(
-        `/api/v1/accounts/${window.chatwootConfig.accountId}/kanban_settings/boards/${id}`
+        `/api/v1/accounts/${accountId}/kanban_settings/boards/${id}`
       );
       commit(types.default.DELETE_KANBAN_BOARD, id);
     } catch (error) {

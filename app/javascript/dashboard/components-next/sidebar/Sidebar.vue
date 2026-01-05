@@ -148,13 +148,11 @@ const newReportRoutes = () => [
 
 const reportRoutes = computed(() => newReportRoutes());
 
-const { pushAlert } = useAlert();
-
 const syncWhatsappGroups = async () => {
   const whatsappInboxes = inboxes.value.filter(inbox => inbox.channel_type === 'Channel::Whatsapp');
   
   if (whatsappInboxes.length === 0) {
-    pushAlert({ message: 'Nenhuma caixa de entrada do WhatsApp encontrada', type: 'error' });
+    useAlert('Nenhuma caixa de entrada do WhatsApp encontrada');
     return;
   }
 
@@ -169,9 +167,9 @@ const syncWhatsappGroups = async () => {
   }
   
   if (successCount > 0) {
-    pushAlert({ message: 'Grupos sincronizados com sucesso!', type: 'success' });
+    useAlert('Grupos sincronizados com sucesso!');
   } else {
-    pushAlert({ message: 'Falha ao sincronizar grupos.', type: 'error' });
+    useAlert('Falha ao sincronizar grupos.');
   }
 };
 
