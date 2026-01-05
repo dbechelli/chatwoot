@@ -116,6 +116,7 @@ const loadKanbanConfig = async () => {
   isLoadingConfig.value = true;
   try {
     const accountId = store.getters.getCurrentAccountId;
+    if (!accountId) return;
     const response = await window.axios.get(
       `/api/v1/accounts/${accountId}/kanban_settings`
     );
@@ -341,7 +342,7 @@ watch([selectedInbox, selectedAssignee], () => {
             @click="openAddItemModal()"
           >
             <i class="i-lucide-plus" />
-            <span class="hidden sm:inline">{{ t('KANBAN.ADD_ITEM') || 'Novo Item' }}</span>
+            <span class="hidden sm:inline">{{ t('KANBAN.MODAL.NEW_ITEM') }}</span>
           </button>
 
           <button

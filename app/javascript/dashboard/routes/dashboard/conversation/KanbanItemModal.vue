@@ -398,8 +398,10 @@ const handleSave = async () => {
                 <span class="text-[10px] font-bold text-slate-500 uppercase">{{ $t('KANBAN.MODAL.ACTIVATE') }}</span>
               </label>
             </div>
-            <div class="relative">
-              <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm font-bold pointer-events-none">R$</span>
+            <div class="flex rounded-lg border border-slate-300 overflow-hidden focus-within:ring-2 focus-within:ring-blue-500/20 focus-within:border-blue-500 transition-all bg-white">
+              <div class="bg-slate-50 px-3 py-2.5 border-r border-slate-200 text-slate-500 text-sm font-bold flex items-center">
+                R$
+              </div>
               <input
                 v-model="form.value"
                 type="number"
@@ -407,7 +409,7 @@ const handleSave = async () => {
                 min="0"
                 placeholder="0.00"
                 :disabled="!form.hasValue"
-                class="w-full pl-9 pr-3 py-2.5 bg-white border border-slate-300 rounded-lg text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed"
+                class="flex-1 px-3 py-2.5 bg-transparent text-sm font-bold text-slate-800 focus:outline-none disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed"
               />
             </div>
           </div>
@@ -511,7 +513,7 @@ const handleSave = async () => {
             />
             
             <!-- Search Results -->
-            <div v-if="searchResults.length > 0" class="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+            <div v-if="searchResults.length > 0" class="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-xl max-h-60 overflow-y-auto">
               <button
                 v-for="conv in searchResults"
                 :key="conv.id"

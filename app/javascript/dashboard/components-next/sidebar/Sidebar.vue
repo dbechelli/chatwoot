@@ -156,10 +156,12 @@ const syncWhatsappGroups = async () => {
     return;
   }
 
+  const accountId = store.getters.getCurrentAccountId;
+
   let successCount = 0;
   for (const inbox of whatsappInboxes) {
     try {
-      await axios.post(`/api/v1/accounts/${inbox.account_id}/inboxes/${inbox.id}/sync_whatsapp_groups`);
+      await axios.post(`/api/v1/accounts/${accountId}/inboxes/${inbox.id}/sync_whatsapp_groups`);
       successCount++;
     } catch (error) {
       console.error(error);

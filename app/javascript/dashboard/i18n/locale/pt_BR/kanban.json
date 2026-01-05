@@ -39,7 +39,10 @@
       "NO_ASSIGNEE": "Sem agente",
       "CANCEL": "Cancelar",
       "SAVE": "Salvar Item",
-      "SAVING": "Salvando..."
+      "SAVING": "Salvando...",
+      "NO_CONVERSATION_SELECTED": "Selecione uma conversa para continuar",
+      "SUCCESS_MESSAGE": "Item salvo com sucesso",
+      "ERROR_MESSAGE": "Erro ao salvar item"
     },
     "CONTEXT_MENU": {
       "EDIT": "Editar Item",
