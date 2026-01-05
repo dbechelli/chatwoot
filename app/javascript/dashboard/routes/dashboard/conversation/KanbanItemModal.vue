@@ -11,6 +11,7 @@ const props = defineProps({
   stageId: { type: String, default: '' },
   board: { type: Object, required: true },
   item: { type: Object, default: null }, // If editing existing item
+  conversationId: { type: [Number, String], default: null }, // Context conversation
 });
 
 const emit = defineEmits(['close', 'save']);
@@ -46,7 +47,7 @@ const boardCustomAttributeKey = computed(() => props.board.customAttributeKey ||
 
 const customAttributes = computed(() => {
   const allAttributes = store.getters['attributes/getAttributesByModel']('conversation_attribute') || [];
-  const ignoredKeys = ['kanban_title', 'kanban_description', 'kanban_notes', 'deal_value', 'kanban_checklist'];
+  const ignoredKeys = ['kanban_title', 'kanban_description', 'kanban_notes', 'deal_value', 'kanban_checklist', boardCustomAttributeKey.value];
   return allAttributes.filter(attr => !ignoredKeys.includes(attr.attribute_key));
 });
 
@@ -110,11 +111,21 @@ watch(() => props.item, (newItem) => {
       hasValue: false,
       priority: 'medium',
       assignee_id: null,
-      conversation_id: null,
+      conversation_id: props.conversationId || null,
       stage_id: props.stageId,
       checklist: [],
       custom_attributes: dynamicAttributes,
     };
+    
+    // If we have a conversationId but no item, we might want to fetch the conversation details
+    // to pre-fill the title (e.g. with contact name)
+    if (props.conversationId) {
+      // We can try to find it in the store first
+      const chat = store.getters['getConversation'](props.conversationId);
+      if (chat) {
+        selectConversation(chat);
+      }
+    }
   }
 }, { immediate: true, deep: true });
 
@@ -363,6 +374,19 @@ const handleSave = async () => {
           </div>
         </div>
 
+        <!-- Stage Selection -->
+        <div class="space-y-1.5">
+          <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">{{ $t('KANBAN.MODAL.STAGE') || 'Estágio' }}</label>
+          <select
+            v-model="form.stage_id"
+            class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+          >
+            <option v-for="stage in board.stages" :key="stage.id" :value="stage.id">
+              {{ stage.name }}
+            </option>
+          </select>
+        </div>
+
         <!-- Value & Priority Row -->
         <div class="grid grid-cols-2 gap-6">
           <!-- Value -->
@@ -375,7 +399,7 @@ const handleSave = async () => {
               </label>
             </div>
             <div class="relative">
-              <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm font-bold pointer-events-none">R$</span>
+              <span class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm font-bold pointer-events-none">R$</span>
               <input
                 v-model="form.value"
                 type="number"
@@ -383,7 +407,7 @@ const handleSave = async () => {
                 min="0"
                 placeholder="0.00"
                 :disabled="!form.hasValue"
-                class="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                class="w-full pl-9 pr-3 py-2.5 bg-white border border-slate-300 rounded-lg text-sm font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed"
               />
             </div>
           </div>

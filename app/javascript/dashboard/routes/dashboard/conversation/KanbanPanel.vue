@@ -47,17 +47,17 @@ const currentBoard = computed(() => {
 });
 
 const currentStage = computed(() => {
-  if (!currentBoard.value || !conversation.value.custom_attributes) return null;
+  if (!currentBoard.value || !conversation.value?.custom_attributes) return null;
   const stageId = conversation.value.custom_attributes[currentBoard.value.customAttributeKey];
   return currentBoard.value.stages.find(s => s.id === stageId);
 });
 
 const dealValue = computed(() => {
-  return conversation.value.custom_attributes?.deal_value;
+  return conversation.value?.custom_attributes?.deal_value;
 });
 
 const kanbanTitle = computed(() => {
-  return conversation.value.custom_attributes?.kanban_title;
+  return conversation.value?.custom_attributes?.kanban_title;
 });
 
 const formatCurrency = (value) => {
@@ -133,6 +133,7 @@ onUnmounted(() => {
       :show="showModal"
       :board="currentBoard"
       :item="currentStage ? conversation : null"
+      :conversation-id="props.conversationId"
       :stage-id="currentStage?.id || currentBoard.stages[0]?.id"
       @close="showModal = false"
       @save="handleSave"
