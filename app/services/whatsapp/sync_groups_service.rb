@@ -9,9 +9,10 @@ class Whatsapp::SyncGroupsService
     
     # Only for Baileys for now, as other providers might have different APIs
     # But the user context implies Baileys/Evolution
-    return unless @channel.provider.is_a?(Whatsapp::Providers::WhatsappBaileysService)
+    service = @channel.provider_service
+    return unless service.class.name == 'Whatsapp::Providers::WhatsappBaileysService'
 
-    groups = @channel.provider.fetch_all_groups
+    groups = service.fetch_all_groups
     
     # Ensure groups is an array
     return unless groups.is_a?(Array)
