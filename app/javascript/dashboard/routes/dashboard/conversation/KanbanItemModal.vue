@@ -39,16 +39,18 @@ const form = ref({
 // Initialize form when item prop changes or modal opens
 watch(() => props.item, (newItem) => {
   selectedConversation.value = null;
-  if (newItem) {
+  if (newItem && newItem.id) {
     // Extract dynamic custom attributes
     const itemAttributes = newItem.custom_attributes || {};
     const dynamicAttributes = {};
-    customAttributes.value.forEach(attr => {
-      dynamicAttributes[attr.attribute_key] = itemAttributes[attr.attribute_key] || '';
-    });
+    if (customAttributes.value.length) {
+      customAttributes.value.forEach(attr => {
+        dynamicAttributes[attr.attribute_key] = itemAttributes[attr.attribute_key] || '';
+      });
+    }
 
     form.value = {
-      title: newItem.custom_attributes?.kanban_title || '',
+      title: newItem.custom_attributes?.kanban_title || newItem.meta?.sender?.name || `Conversa #${newItem.id}`,
       description: newItem.custom_attributes?.kanban_description || '',
       notes: newItem.custom_attributes?.kanban_notes || '',
       value: Number(newItem.custom_attributes?.deal_value) || 0,
@@ -63,9 +65,11 @@ watch(() => props.item, (newItem) => {
   } else {
     // Reset form for new item
     const dynamicAttributes = {};
-    customAttributes.value.forEach(attr => {
-      dynamicAttributes[attr.attribute_key] = '';
-    });
+    if (customAttributes.value.length) {
+      customAttributes.value.forEach(attr => {
+        dynamicAttributes[attr.attribute_key] = '';
+      });
+    }
 
     form.value = {
       title: '',
@@ -81,7 +85,7 @@ watch(() => props.item, (newItem) => {
       custom_attributes: dynamicAttributes,
     };
   }
-}, { immediate: true });
+}, { immediate: true, deep: true });
 
 // Watch stageId prop change
 watch(() => props.stageId, (newVal) => {
@@ -93,7 +97,7 @@ const agents = computed(() => store.getters['agents/getAgents']);
 const boardCustomAttributeKey = computed(() => props.board.customAttributeKey || 'sales_stage');
 
 const customAttributes = computed(() => {
-  const allAttributes = store.getters['attributes/getAttributesByModel']('conversation_attribute');
+  const allAttributes = store.getters['attributes/getAttributesByModel']('conversation_attribute') || [];
   const ignoredKeys = ['kanban_title', 'kanban_description', 'kanban_notes', 'deal_value', 'kanban_checklist'];
   return allAttributes.filter(attr => !ignoredKeys.includes(attr.attribute_key));
 });

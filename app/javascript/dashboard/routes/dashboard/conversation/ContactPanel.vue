@@ -333,20 +333,4 @@ onMounted(() => {
   </div>
 </template>
 
-<style lang="scss" scoped>
-:deep(.contact--profile) {
-  @apply pb-3 border-b border-solid border-n-weak;
-}
 
-:deep(.conversation--actions .multiselect-wrap--small) {
-  .multiselect {
-    @apply box-border pl-6;
-  }
-
-  .multiselect__element {
-    span {
-      @apply w-full;
-    }
-  }
-}
-</style>
