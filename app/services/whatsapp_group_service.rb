@@ -52,17 +52,22 @@ class WhatsappGroupService
     raise ArgumentError, 'Conversation is not a WhatsApp group' unless conversation.whatsapp_group?
 
     group_info = provider_service.get_group_info(group_id)
-    return unless group_info[:participants]
+    return unless group_info
+
+    # Handle both string and symbol keys
+    group_info = group_info.with_indifferent_access
+    participants = group_info[:participants]
+    return unless participants
 
     # Update group metadata
     update_group_metadata(
-      name: group_info[:name],
-      description: group_info[:description],
-      participant_count: group_info[:participants].size
+      name: group_info[:subject] || group_info[:name], # Baileys might return subject
+      description: group_info[:desc] || group_info[:description], # Baileys might return desc
+      participant_count: participants.size
     )
 
     # Sync members
-    sync_members_from_provider(group_info[:participants])
+    sync_members_from_provider(participants)
   end
 
   private
@@ -101,16 +106,24 @@ class WhatsappGroupService
 
     # Add or update members from provider
     participants.each do |participant|
+      participant = participant.with_indifferent_access
       phone = participant[:id]
+      # Handle JID format (e.g., 123456@s.whatsapp.net -> 123456)
+      phone = phone.split('@').first if phone.include?('@')
+      
       conversation.add_whatsapp_group_member(
         phone,
-        name: participant[:name],
-        is_admin: participant[:isAdmin] || participant[:isSuperAdmin]
+        name: participant[:name] || participant[:notify] || phone, # Fallback for name
+        is_admin: participant[:admin] == 'admin' || participant[:isAdmin] || participant[:isSuperAdmin] # Baileys uses 'admin' string sometimes
       )
     end
 
     # Remove members that are no longer in the group
-    provider_phones = participants.map { |p| p[:id] }
+    provider_phones = participants.map do |p| 
+      id = p.with_indifferent_access[:id]
+      id.include?('@') ? id.split('@').first : id
+    end
+    
     removed_members = existing_members - provider_phones
     removed_members.each do |phone|
       member = conversation.whatsapp_group_members.find_by(phone_number: phone)

@@ -363,11 +363,12 @@ class Conversation < ApplicationRecord
   end
 
   def add_whatsapp_group_member(phone_number, name: nil, is_admin: false)
-    whatsapp_group_members.find_or_create_by!(phone_number: phone_number) do |member|
-      member.name = name
-      member.is_admin = is_admin
-      member.joined_at = Time.current
-    end
+    member = whatsapp_group_members.find_or_initialize_by(phone_number: phone_number)
+    member.name = name if name.present?
+    member.is_admin = is_admin
+    member.joined_at ||= Time.current
+    member.save!
+    member
   end
 
   # creating db triggers

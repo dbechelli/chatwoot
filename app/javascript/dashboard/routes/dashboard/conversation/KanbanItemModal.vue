@@ -19,6 +19,7 @@ const isLoading = ref(false);
 const searchResults = ref([]);
 const isSearching = ref(false);
 const newChecklistItem = ref('');
+const selectedConversation = ref(null);
 
 // Form Data
 const form = ref({
@@ -37,6 +38,7 @@ const form = ref({
 
 // Initialize form when item prop changes or modal opens
 watch(() => props.item, (newItem) => {
+  selectedConversation.value = null;
   if (newItem) {
     // Extract dynamic custom attributes
     const itemAttributes = newItem.custom_attributes || {};
@@ -88,6 +90,8 @@ watch(() => props.stageId, (newVal) => {
 
 const agents = computed(() => store.getters['agents/getAgents']);
 
+const boardCustomAttributeKey = computed(() => props.board.customAttributeKey || 'sales_stage');
+
 const customAttributes = computed(() => {
   const allAttributes = store.getters['attributes/getAttributesByModel']('conversation_attribute');
   const ignoredKeys = ['kanban_title', 'kanban_description', 'kanban_notes', 'deal_value', 'kanban_checklist'];
@@ -137,11 +141,30 @@ const searchConversations = async (query) => {
 };
 
 const selectConversation = (conv) => {
+  selectedConversation.value = conv;
   form.value.conversation_id = conv.id;
+  
   // Auto-fill title if empty
   if (!form.value.title) {
-    form.value.title = `Negociação #${conv.id}`;
+    form.value.title = conv.custom_attributes?.kanban_title || `Negociação #${conv.id}`;
   }
+
+  // Populate other fields if available
+  if (conv.custom_attributes) {
+    if (!form.value.description) form.value.description = conv.custom_attributes.kanban_description || '';
+    if (!form.value.notes) form.value.notes = conv.custom_attributes.kanban_notes || '';
+    if (!form.value.value) form.value.value = Number(conv.custom_attributes.deal_value) || 0;
+    if (!form.value.hasValue) form.value.hasValue = !!conv.custom_attributes.deal_value;
+    if (form.value.checklist.length === 0) form.value.checklist = conv.custom_attributes.kanban_checklist || [];
+
+    // Dynamic attributes
+    customAttributes.value.forEach(attr => {
+      if (conv.custom_attributes[attr.attribute_key]) {
+        form.value.custom_attributes[attr.attribute_key] = conv.custom_attributes[attr.attribute_key];
+      }
+    });
+  }
+
   searchResults.value = [];
 };
 
@@ -164,14 +187,23 @@ const handleSave = async () => {
   try {
     const conversationId = form.value.conversation_id;
     
+    // Determine existing attributes to preserve
+    let existingAttributes = {};
+    if (props.item) {
+      existingAttributes = props.item.custom_attributes || {};
+    } else if (selectedConversation.value) {
+      existingAttributes = selectedConversation.value.custom_attributes || {};
+    }
+
     // 1. Update Custom Attributes
     const customAttributes = {
+      ...existingAttributes,
       kanban_title: form.value.title,
       kanban_description: form.value.description,
       kanban_notes: form.value.notes,
       deal_value: form.value.hasValue ? form.value.value : 0,
       kanban_checklist: form.value.checklist, // Save checklist
-      [props.board.customAttributeKey]: form.value.stage_id,
+      [boardCustomAttributeKey.value]: form.value.stage_id,
       ...form.value.custom_attributes,
     };
 

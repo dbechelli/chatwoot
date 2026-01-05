@@ -18,6 +18,7 @@ import ContactNotes from './contact/ContactNotes.vue';
 import ConversationInfo from './ConversationInfo.vue';
 import CustomAttributes from './customAttributes/CustomAttributes.vue';
 import KanbanPanel from './KanbanPanel.vue';
+import WhatsappGroupPanel from 'dashboard/components/WhatsappGroupPanel.vue';
 import Draggable from 'vuedraggable';
 import MacrosList from './Macros/List.vue';
 import ShopifyOrdersList from 'dashboard/components/widgets/conversation/ShopifyOrdersList.vue';
@@ -55,7 +56,7 @@ const isShopifyFeatureEnabled = computed(
   () => shopifyIntegration.value.enabled
 );
 
-const { isCloudFeatureEnabled } = useAccount();
+const { isCloudFeatureEnabled, accountId } = useAccount();
 
 const isLinearFeatureEnabled = computed(() =>
   isCloudFeatureEnabled(FEATURE_FLAGS.LINEAR)
@@ -95,6 +96,10 @@ const contact = computed(() => contactGetter.value(contactId.value));
 const contactAdditionalAttributes = computed(
   () => contact.value.additional_attributes || {}
 );
+
+const isWhatsappGroup = computed(() => {
+  return currentChat.value?.additional_attributes?.is_whatsapp_group;
+});
 
 const getContactDetails = () => {
   if (contactId.value) {
@@ -147,6 +152,19 @@ onMounted(() => {
           :is-open="true"
         >
           <KanbanPanel :conversation-id="conversationId" />
+        </AccordionItem>
+      </div>
+
+      <!-- WhatsApp Group Panel -->
+      <div v-if="isWhatsappGroup" class="mb-3 conversation--actions">
+        <AccordionItem
+          :title="$t('WHATSAPP_GROUPS.TITLE') || 'Grupo WhatsApp'"
+          :is-open="true"
+        >
+          <WhatsappGroupPanel 
+            :conversation-id="conversationId" 
+            :account-id="accountId"
+          />
         </AccordionItem>
       </div>
 
@@ -316,20 +334,18 @@ onMounted(() => {
 </template>
 
 <style lang="scss" scoped>
-::v-deep {
-  .contact--profile {
-    @apply pb-3 border-b border-solid border-n-weak;
+:deep(.contact--profile) {
+  @apply pb-3 border-b border-solid border-n-weak;
+}
+
+:deep(.conversation--actions .multiselect-wrap--small) {
+  .multiselect {
+    @apply box-border pl-6;
   }
 
-  .conversation--actions .multiselect-wrap--small {
-    .multiselect {
-      @apply box-border pl-6;
-    }
-
-    .multiselect__element {
-      span {
-        @apply w-full;
-      }
+  .multiselect__element {
+    span {
+      @apply w-full;
     }
   }
 }
