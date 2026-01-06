@@ -3,7 +3,6 @@ import { ref, computed, onMounted, watch } from 'vue';
 import { useStore } from 'dashboard/composables/store';
 import { useI18n } from 'vue-i18n';
 import { useAlert } from 'dashboard/composables';
-import axios from 'axios';
 import Modal from 'dashboard/components/Modal.vue';
 
 const props = defineProps({
@@ -151,7 +150,7 @@ const searchConversations = async (query) => {
   if (!query) return;
   isSearching.value = true;
   try {
-    const { data } = await axios.get(`/api/v1/accounts/${store.getters.getCurrentAccountId}/conversations/search`, {
+    const { data } = await window.axios.get(`/api/v1/accounts/${store.getters.getCurrentAccountId}/conversations/search`, {
       params: { q: query }
     });
     searchResults.value = data.payload;
