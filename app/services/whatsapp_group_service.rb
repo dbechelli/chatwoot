@@ -21,14 +21,14 @@ class WhatsappGroupService
     raise ArgumentError, 'Conversation is not a WhatsApp group' unless conversation.whatsapp_group?
 
     provider_service.add_group_participant(group_id, phone_number)
-    conversation.add_whatsapp_group_member(phone_number, name: name)
+    conversation.add_whatsapp_group_member(clean_phone_number(phone_number), name: name)
   end
 
   def remove_member(phone_number)
     raise ArgumentError, 'Conversation is not a WhatsApp group' unless conversation.whatsapp_group?
 
     provider_service.remove_group_participant(group_id, phone_number)
-    member = conversation.whatsapp_group_members.find_by(phone_number: phone_number)
+    member = conversation.whatsapp_group_members.find_by(phone_number: clean_phone_number(phone_number))
     member&.destroy
   end
 
@@ -36,7 +36,7 @@ class WhatsappGroupService
     raise ArgumentError, 'Conversation is not a WhatsApp group' unless conversation.whatsapp_group?
 
     provider_service.promote_group_admin(group_id, phone_number)
-    member = conversation.whatsapp_group_members.find_by(phone_number: phone_number)
+    member = conversation.whatsapp_group_members.find_by(phone_number: clean_phone_number(phone_number))
     member&.update!(is_admin: true)
   end
 
@@ -44,7 +44,7 @@ class WhatsappGroupService
     raise ArgumentError, 'Conversation is not a WhatsApp group' unless conversation.whatsapp_group?
 
     provider_service.demote_group_admin(group_id, phone_number)
-    member = conversation.whatsapp_group_members.find_by(phone_number: phone_number)
+    member = conversation.whatsapp_group_members.find_by(phone_number: clean_phone_number(phone_number))
     member&.update!(is_admin: false)
   end
 
@@ -129,5 +129,9 @@ class WhatsappGroupService
       member = conversation.whatsapp_group_members.find_by(phone_number: phone)
       member&.destroy
     end
+  end
+
+  def clean_phone_number(phone_number)
+    phone_number.to_s.gsub('+', '')
   end
 end

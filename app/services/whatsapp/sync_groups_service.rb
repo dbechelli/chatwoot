@@ -7,9 +7,8 @@ class Whatsapp::SyncGroupsService
   def perform
     return unless @channel.is_a?(Channel::Whatsapp)
     
-    # Only for Baileys for now
     service = @channel.provider_service
-    return unless service.class.name.include?('WhatsappBaileysService')
+    return unless service.respond_to?(:fetch_all_groups)
 
     begin
       groups = service.fetch_all_groups
@@ -63,9 +62,11 @@ class Whatsapp::SyncGroupsService
       )
     end
     
-    # Update contact name if it changed
-    if contact.name != group_name
-      contact.update(name: group_name)
-    end
+    # Update contact name if it changed, and ensure flag is set
+    updates = {}
+    updates[:name] = group_name if contact.name != group_name
+    updates[:is_whatsapp_group] = true if contact.respond_to?(:is_whatsapp_group?) && !contact.try(:is_whatsapp_group?)
+    
+    contact.update(updates) if updates.present?
   end
 end

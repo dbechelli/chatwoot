@@ -339,13 +339,13 @@ class Conversation < ApplicationRecord
   def whatsapp_group?
     return true if additional_attributes&.dig('is_whatsapp_group') == true
     return true if additional_attributes&.dig('type') == 'group'
-    
+
     # Fallback: Check contact identifier
     if contact&.identifier&.to_s&.include?('@g.us')
       # Auto-fix: Set the attribute if it's missing but clearly a group
       self.additional_attributes ||= {}
       self.additional_attributes['is_whatsapp_group'] = true
-      self.save(validate: false) if persisted?
+      save(validate: false) if persisted?
       return true
     end
 
@@ -353,7 +353,10 @@ class Conversation < ApplicationRecord
   end
 
   def whatsapp_group_id
-    additional_attributes&.dig('whatsapp_group_id')
+    return additional_attributes['whatsapp_group_id'] if additional_attributes&.dig('whatsapp_group_id').present?
+    return contact.identifier if contact&.identifier&.ends_with?('@g.us')
+
+    nil
   end
 
   def whatsapp_group_name
