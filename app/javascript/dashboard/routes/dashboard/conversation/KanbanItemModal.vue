@@ -245,9 +245,9 @@ const handleSave = async () => {
       customAttributes,
     });
 
-    // 2. Update Priority
+    // 2. Update Priority via dedicated action (avoids missing meta/sender shape)
     if (form.value.priority) {
-      await store.dispatch('updateConversation', {
+      await store.dispatch('assignPriority', {
         conversationId,
         priority: form.value.priority,
       });
