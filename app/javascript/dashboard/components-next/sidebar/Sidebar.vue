@@ -274,9 +274,7 @@ const menuItems = computed(() => {
       to:
         kanbanBoards.value.length > 0
           ? undefined
-          : accountScopedRoute('kanban', {
-              accountId: store.getters.getCurrentAccountId,
-            }),
+          : accountScopedRoute('kanban'),
       activeOn: ['kanban'],
       children:
         kanbanBoards.value.length > 0
@@ -285,7 +283,7 @@ const menuItems = computed(() => {
               label: board.name,
               to: accountScopedRoute(
                 'kanban',
-                { accountId: store.getters.getCurrentAccountId },
+                {},
                 { board: board.id }
               ),
               icon: 'i-lucide-kanban-square',
