@@ -439,7 +439,7 @@ watch([selectedInbox, selectedAssignee], () => {
       </div>
     </Transition>
 
-    <main class="flex-1 overflow-x-auto overflow-y-hidden custom-scrollbar">
+    <main class="flex-1 w-full overflow-x-auto overflow-y-hidden bg-[#f8fafc]">
       <div
         v-if="isLoading && !allConversations.length"
         class="flex h-full items-center justify-center"
@@ -454,7 +454,7 @@ watch([selectedInbox, selectedAssignee], () => {
 
       <div
         v-else-if="salesStages.length > 0"
-        class="inline-flex h-full items-start gap-4 p-4 md:p-6 min-w-full"
+        class="inline-flex h-full items-start gap-4 p-4 md:p-6"
       >
         <div
           v-for="stage in salesStages"

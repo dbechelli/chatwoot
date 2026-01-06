@@ -276,15 +276,15 @@ const handleSave = async () => {
 
 <template>
   <Modal :show="show" :on-close="() => emit('close')" size="lg" :show-close-button="false">
-    <div class="flex flex-col h-[80vh] bg-white rounded-lg shadow-xl overflow-hidden">
+    <div class="flex flex-col h-full bg-white rounded-md overflow-hidden max-h-[85vh]">
       <!-- Header -->
-      <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+      <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50">
         <div class="flex items-center gap-3">
-          <div class="h-8 w-8 rounded-full bg-woot-50 flex items-center justify-center text-woot-600">
+          <div class="h-8 w-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-woot-600 shadow-sm">
             <i class="i-lucide-trello text-lg" />
           </div>
           <div>
-            <h2 class="text-lg font-bold text-slate-800">
+            <h2 class="text-base font-bold text-slate-800">
               {{ form.conversation_id ? $t('KANBAN.MODAL.EDIT_ITEM') : $t('KANBAN.MODAL.NEW_ITEM') }}
             </h2>
             <p class="text-xs text-slate-500 font-medium">
@@ -294,7 +294,7 @@ const handleSave = async () => {
         </div>
         <button 
           @click="emit('close')"
-          class="p-2 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-600 transition-colors"
+          class="p-2 hover:bg-slate-200 rounded-lg text-slate-400 hover:text-slate-600 transition-colors"
         >
           <i class="i-lucide-x text-lg" />
         </button>

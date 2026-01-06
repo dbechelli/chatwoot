@@ -109,13 +109,13 @@ const handleCardClick = conversation => {
       v-model="localConversations"
       group="kanban-conversations"
       item-key="id"
-      class="flex-1 flex flex-col gap-3 overflow-y-auto p-3 min-h-[150px] custom-scrollbar-inside"
+      class="flex-1 flex flex-col gap-3 overflow-y-auto overflow-x-hidden p-3 min-h-[150px] custom-scrollbar-inside"
       ghost-class="ghost-card"
       drag-class="dragging-card"
       @change="handleChange"
     >
       <template #item="{ element }">
-        <div @click="handleCardClick(element)" class="transform transition-transform active:scale-95">
+        <div @click="handleCardClick(element)" class="transform transition-transform active:scale-[0.99] cursor-pointer">
           <KanbanCard 
             :conversation="element" 
             :visible-attributes="visibleAttributes"

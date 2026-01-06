@@ -90,23 +90,20 @@ const formatCurrency = value => {
 
 <template>
   <div
-    class="group relative flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-md hover:border-woot-300 cursor-pointer"
+    class="group relative flex flex-col gap-3 rounded-lg border border-slate-200 bg-white p-3 shadow-sm hover:shadow-md hover:border-woot-300 transition-all duration-200"
     @contextmenu.prevent="$emit('contextmenu', { event: $event, conversation })"
   >
-    <div 
-      v-if="conversation.priority === 'urgent'" 
-      class="absolute left-0 top-4 bottom-4 w-1 rounded-r-full bg-red-500"
-    ></div>
-
+    <div class="absolute left-0 top-3 bottom-3 w-1 rounded-r-full bg-red-500" v-if="conversation.priority === 'urgent'"></div>
+    
     <div class="flex items-start justify-between gap-2">
       <div class="flex-1 min-w-0">
         <h4 class="truncate text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
           {{ kanbanTitle }}
         </h4>
-        <div class="flex items-center gap-1 mt-0.5">
-          <i class="i-lucide-phone text-[10px] text-slate-400" v-if="contact?.phone_number" />
+        <div class="flex items-center gap-1 mt-0.5" v-if="contact">
+          <i class="i-lucide-phone text-[10px] text-slate-400" v-if="contact.phone_number" />
           <p class="truncate text-xs font-medium text-slate-500">
-            {{ contact?.phone_number || contact?.email || '-' }}
+            {{ contact.phone_number || contact.email || '-' }}
           </p>
         </div>
       </div>
