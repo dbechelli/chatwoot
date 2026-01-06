@@ -20,7 +20,10 @@ export function useAccount() {
   );
 
   const accountId = computed(() => {
-    return Number(route.params.accountId);
+    if (route.params.accountId) {
+      return Number(route.params.accountId);
+    }
+    return store.getters.getCurrentAccountId;
   });
   const currentAccount = computed(() => getAccountFn.value(accountId.value));
 
@@ -37,7 +40,7 @@ export function useAccount() {
     return isFeatureEnabledonAccount.value(currentAccount.value.id, feature);
   };
 
-  const accountScopedRoute = (name, params, query) => {
+  const accountScopedRoute = (name, params = {}, query = {}) => {
     return {
       name,
       params: { accountId: accountId.value, ...params },
