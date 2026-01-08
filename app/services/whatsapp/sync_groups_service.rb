@@ -19,6 +19,8 @@ class Whatsapp::SyncGroupsService
           groups = groups.values
         elsif groups['data'].is_a?(Array)
           groups = groups['data']
+        elsif groups['data'].is_a?(Hash)
+          groups = groups['data'].values
         elsif groups['groups'].is_a?(Array)
           groups = groups['groups']
         end

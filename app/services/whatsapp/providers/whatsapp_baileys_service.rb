@@ -428,9 +428,9 @@ class Whatsapp::Providers::WhatsappBaileysService < Whatsapp::Providers::BaseSer
   # WhatsApp Group Management Methods
 
   def fetch_all_groups
-    # Assuming standard REST convention based on other endpoints: GET /groups/:phoneNumber
+    # Fetches all groups the user is participating in
     response = HTTParty.get(
-      "#{provider_url}/groups/#{whatsapp_channel.phone_number}",
+      "#{provider_url}/groups/#{whatsapp_channel.phone_number}/participating",
       headers: api_headers
     )
 
