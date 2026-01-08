@@ -12,8 +12,22 @@ class Whatsapp::SyncGroupsService
 
     begin
       groups = service.fetch_all_groups
+
+      # Handle Baileys Map format (jid => metadata) or wrapped responses
+      if groups.is_a?(Hash)
+        if groups.values.first.is_a?(Hash) && (groups.values.first.key?('id') || groups.values.first.key?('subject'))
+          groups = groups.values
+        elsif groups['data'].is_a?(Array)
+          groups = groups['data']
+        elsif groups['groups'].is_a?(Array)
+          groups = groups['groups']
+        end
+      end
       
-      return unless groups.is_a?(Array)
+      unless groups.is_a?(Array)
+        Rails.logger.warn "[Whatsapp::SyncGroupsService] Expected Array or Hash of groups, received: #{groups.class}. Content sample: #{groups.inspect[0..200]}"
+        return 
+      end
 
       groups.each do |group|
         process_group(group)

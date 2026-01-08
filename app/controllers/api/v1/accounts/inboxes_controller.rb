@@ -130,10 +130,10 @@ class Api::V1::Accounts::InboxesController < Api::V1::Accounts::BaseController #
 
     Whatsapp::SyncGroupsService.new(@inbox).perform
     render json: { message: 'Sync started' }, status: :ok
-  rescue StandardError => e
+  rescue Exception => e
     Rails.logger.error "SYNC_GROUPS_ERROR: #{e.message}"
     Rails.logger.error e.backtrace.join("\n")
-    render json: { error: e.message }, status: :unprocessable_entity
+    render json: { error: "#{e.class}: #{e.message}" }, status: :unprocessable_entity
   end
 
   private
