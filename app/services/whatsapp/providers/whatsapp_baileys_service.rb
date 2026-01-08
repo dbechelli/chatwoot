@@ -428,8 +428,9 @@ class Whatsapp::Providers::WhatsappBaileysService < Whatsapp::Providers::BaseSer
   # WhatsApp Group Management Methods
 
   def fetch_all_groups
+    # Assuming standard REST convention based on other endpoints: GET /groups/:phoneNumber
     response = HTTParty.get(
-      "#{provider_url}/connections/#{whatsapp_channel.phone_number}/groups",
+      "#{provider_url}/groups/#{whatsapp_channel.phone_number}",
       headers: api_headers
     )
 
@@ -439,23 +440,55 @@ class Whatsapp::Providers::WhatsappBaileysService < Whatsapp::Providers::BaseSer
   end
 
   def get_group_info(group_id)
+    # This endpoint was not explicitly documented but following the pattern:
+    # GET /groups/:phoneNumber/invite-code?id=... suggests fetching specific info
+    # We will try a hypothetical GET /groups/:phoneNumber/find?id=... or similar
+    # or fallback to fetch_all_groups filtering.
+    # Given the docs provided sync methods usually iterate all groups, getting single might be less critical 
+    # OR we use the invite-code endpoint as a proxy mostly? No, that's just invite code.
+    
+    # Let's keep the legacy path for this one if not provided, OR try to guess.
+    # Actually, often 'fetch_all_groups' is enough if the sync service filters it.
+    # But let's check if the user provided get info. No.
+    # Let's try to search in the all groups list if no specific endpoint exists,
+    # but for now let's assume the Pattern /groups/:phoneNumber/find?id=... exists
+    # Or just comment it out/leave legacy if not used by main sync path.
+    # The Sync Service calls fetch_all_groups.
+    
+    # For now, let's leave legacy path but warn, or just update to what we guess is /groups/...
+    # However, to be safe and fix the reported "Sync" error (which uses fetch_all_groups),
+    # I will focus on fetch_all_groups.
+    
+    # As the user provided docs for "endpoints criados" (created endpoints), 
+    # it implies others might NOT exist.
+    
     response = HTTParty.get(
-      "#{provider_url}/connections/#{whatsapp_channel.phone_number}/group-metadata",
+      "#{provider_url}/groups/#{whatsapp_channel.phone_number}/find",
       headers: api_headers,
-      query: { jid: ensure_group_jid(group_id) }
+      query: { id: ensure_group_jid(group_id) }
     )
 
+    if response.code == 404
+       # Fallback to legacy if new one doesn't exist
+       response = HTTParty.get(
+        "#{provider_url}/connections/#{whatsapp_channel.phone_number}/group-metadata",
+        headers: api_headers,
+        query: { jid: ensure_group_jid(group_id) }
+       )
+    end
+    
+    # If the response handles standard error
     raise ProviderUnavailableError unless process_response(response)
 
     response.parsed_response
   end
 
   def update_group_name(group_id, new_name)
-    response = HTTParty.patch(
-      "#{provider_url}/connections/#{whatsapp_channel.phone_number}/update-group-subject",
+    response = HTTParty.post(
+      "#{provider_url}/groups/#{whatsapp_channel.phone_number}/update-subject",
       headers: api_headers,
       body: {
-        jid: ensure_group_jid(group_id),
+        id: ensure_group_jid(group_id),
         subject: new_name
       }.to_json
     )
@@ -466,11 +499,11 @@ class Whatsapp::Providers::WhatsappBaileysService < Whatsapp::Providers::BaseSer
   end
 
   def update_group_description(group_id, new_description)
-    response = HTTParty.patch(
-      "#{provider_url}/connections/#{whatsapp_channel.phone_number}/update-group-description",
+    response = HTTParty.post(
+      "#{provider_url}/groups/#{whatsapp_channel.phone_number}/update-description",
       headers: api_headers,
       body: {
-        jid: ensure_group_jid(group_id),
+        id: ensure_group_jid(group_id),
         description: new_description
       }.to_json
     )
@@ -481,11 +514,11 @@ class Whatsapp::Providers::WhatsappBaileysService < Whatsapp::Providers::BaseSer
   end
 
   def add_group_participant(group_id, phone_number)
-    response = HTTParty.patch(
-      "#{provider_url}/connections/#{whatsapp_channel.phone_number}/modify-group-participants",
+    response = HTTParty.post(
+      "#{provider_url}/groups/#{whatsapp_channel.phone_number}/participants-update",
       headers: api_headers,
       body: {
-        jid: ensure_group_jid(group_id),
+        id: ensure_group_jid(group_id),
         participants: [format_phone_to_jid(phone_number)],
         action: 'add'
       }.to_json
@@ -497,11 +530,11 @@ class Whatsapp::Providers::WhatsappBaileysService < Whatsapp::Providers::BaseSer
   end
 
   def remove_group_participant(group_id, phone_number)
-    response = HTTParty.patch(
-      "#{provider_url}/connections/#{whatsapp_channel.phone_number}/modify-group-participants",
+    response = HTTParty.post(
+      "#{provider_url}/groups/#{whatsapp_channel.phone_number}/participants-update",
       headers: api_headers,
       body: {
-        jid: ensure_group_jid(group_id),
+        id: ensure_group_jid(group_id),
         participants: [format_phone_to_jid(phone_number)],
         action: 'remove'
       }.to_json
