@@ -104,6 +104,7 @@ export default {
       isLoadingPreviousConversations: false,
       hasPreviousConversations: true,
       loadedConversationsCount: 0,
+      lastLoadedConversationId: null,
     };
   },
 
@@ -286,6 +287,7 @@ export default {
       this.previousConversationsMessages = [];
       this.hasPreviousConversations = true;
       this.loadedConversationsCount = 0;
+      this.lastLoadedConversationId = null;
     },
   },
 
@@ -320,7 +322,8 @@ export default {
       try {
         const response = await ConversationApi.getPreviousResolvedConversations(
           this.currentChat.id,
-          1
+          1,
+          this.lastLoadedConversationId
         );
 
         const { conversations, messages } = response.data;
@@ -359,6 +362,10 @@ export default {
         ];
 
         this.loadedConversationsCount += conversations.length;
+
+        // Update the last loaded conversation ID (use the last one in the array, which is the oldest)
+        const lastConv = conversations[conversations.length - 1];
+        this.lastLoadedConversationId = lastConv.id;
 
         // Check if there are more conversations to load
         if (conversations.length < 1) {
