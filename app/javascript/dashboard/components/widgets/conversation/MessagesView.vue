@@ -102,9 +102,10 @@ export default {
       showLinkDeviceModal: false,
       previousConversationsMessages: [],
       isLoadingPreviousConversations: false,
-      hasPreviousConversations: true,
+      hasPreviousConversations: null, // null = não verificado ainda, true = tem, false = não tem
       loadedConversationsCount: 0,
       lastLoadedConversationId: null,
+      hasCheckedForPrevious: false,
     };
   },
 
@@ -285,9 +286,12 @@ export default {
       this.messageSentSinceOpened = false;
       // Reset previous conversations when switching chats
       this.previousConversationsMessages = [];
-      this.hasPreviousConversations = true;
+      this.hasPreviousConversations = null;
       this.loadedConversationsCount = 0;
       this.lastLoadedConversationId = null;
+      this.hasCheckedForPrevious = false;
+      // Check if there are previous conversations
+      this.checkForPreviousConversations();
     },
   },
 
@@ -312,8 +316,27 @@ export default {
   },
 
   methods: {
+    async checkForPreviousConversations() {
+      if (this.hasCheckedForPrevious) return;
+
+      try {
+        this.hasCheckedForPrevious = true;
+        const response = await ConversationApi.getPreviousResolvedConversations(
+          this.currentChat.id,
+          1,
+          null
+        );
+
+        const { conversations } = response.data;
+        this.hasPreviousConversations = conversations.length > 0;
+      } catch (error) {
+        // If error, assume no previous conversations
+        this.hasPreviousConversations = false;
+        console.error('Error checking for previous conversations:', error);
+      }
+    },
     async loadPreviousConversations() {
-      if (this.isLoadingPreviousConversations || !this.hasPreviousConversations) {
+      if (this.isLoadingPreviousConversations || this.hasPreviousConversations === false) {
         return;
       }
 
