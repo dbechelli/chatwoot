@@ -290,11 +290,16 @@ class Whatsapp::Providers::WhatsappBaileysService < Whatsapp::Providers::BaseSer
       raise StandardError, 'Message does not have a source_id. Cannot build WAMessage for forwarding.'
     end
 
+    contact_identifier = message.conversation.contact.identifier
+    if contact_identifier.blank?
+      raise StandardError, 'Contact identifier is missing. Cannot build WAMessage for forwarding.'
+    end
+
     # Build the remote JID
-    remote_jid = if message.conversation.contact.identifier.ends_with?('@lid')
-                   message.conversation.contact.identifier
+    remote_jid = if contact_identifier.ends_with?('@lid')
+                   contact_identifier
                  else
-                   "#{message.conversation.contact.identifier.delete('+')}@s.whatsapp.net"
+                   "#{contact_identifier.delete('+')}@s.whatsapp.net"
                  end
 
     # Build the message content based on type

@@ -69,6 +69,11 @@ class Api::V1::Accounts::Conversations::MessagesController < Api::V1::Accounts::
       return render json: { error: 'Forward is only supported for WhatsApp Baileys channels' }, status: :unprocessable_entity
     end
 
+    if @message.source_id.blank?
+      Rails.logger.warn "Forward: Message #{@message.id} missing source_id. Cannot forward."
+      return render json: { error: 'Cannot forward message: source_id is missing' }, status: :unprocessable_entity
+    end
+
     # Get contacts and their identifiers
     contacts = Current.account.contacts.where(id: contact_ids)
     Rails.logger.info "Forward: Found #{contacts.count} contacts for IDs: #{contact_ids.inspect}"
