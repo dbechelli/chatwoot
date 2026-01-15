@@ -1,6 +1,7 @@
 <script setup>
 import { computed } from 'vue';
 import { useMapGetter } from 'dashboard/composables/store.js';
+import { useSidebarContext } from './provider';
 import Icon from 'next/icon/Icon.vue';
 
 const props = defineProps({
@@ -16,6 +17,8 @@ const props = defineProps({
 
 const emit = defineEmits(['toggle']);
 
+const { isSidebarCollapsed } = useSidebarContext();
+
 const showBadge = useMapGetter(props.getterKeys.badge);
 const dynamicCount = useMapGetter(props.getterKeys.count);
 const count = computed(() =>
@@ -26,6 +29,7 @@ const count = computed(() =>
 <template>
   <component
     :is="to ? 'router-link' : 'div'"
+    v-tooltip="isSidebarCollapsed ? label : ''"
     class="flex items-center gap-2 px-2 py-1.5 rounded-lg h-8 min-w-0"
     role="button"
     draggable="false"
@@ -35,6 +39,7 @@ const count = computed(() =>
       'text-n-blue-text bg-n-alpha-2 font-medium': isActive && !hasActiveChild,
       'text-n-slate-12 font-medium': hasActiveChild,
       'text-n-slate-11 hover:bg-n-alpha-2': !isActive && !hasActiveChild,
+      'justify-center': isSidebarCollapsed,
     }"
     @click.stop="emit('toggle')"
   >
@@ -45,7 +50,7 @@ const count = computed(() =>
         class="size-2 -top-px ltr:-right-px rtl:-left-px bg-n-brand absolute rounded-full border border-n-solid-2"
       />
     </div>
-    <div class="flex items-center gap-1.5 flex-grow min-w-0">
+    <div v-if="!isSidebarCollapsed" class="flex items-center gap-1.5 flex-grow min-w-0">
       <span class="text-sm font-medium leading-5 truncate">
         {{ label }}
       </span>
@@ -60,11 +65,10 @@ const count = computed(() =>
         {{ count }}
       </span>
     </div>
-    <span
-      v-if="expandable"
-      v-show="isExpanded"
-      class="i-lucide-chevron-up size-3"
-      @click.stop="emit('toggle')"
+    <div
+      v-if="expandable && !isSidebarCollapsed"
+      class="i-lucide-chevron-right size-4 text-n-slate-10 transition-transform duration-200"
+      :class="{ 'rotate-90': isExpanded }"
     />
   </component>
 </template>

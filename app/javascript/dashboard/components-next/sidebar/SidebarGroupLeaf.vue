@@ -12,7 +12,7 @@ const props = defineProps({
   component: { type: Function, default: null },
 });
 
-const { resolvePermissions, resolveFeatureFlag } = useSidebarContext();
+const { resolvePermissions, resolveFeatureFlag, isSidebarCollapsed } = useSidebarContext();
 
 const shouldRenderComponent = computed(() => {
   return typeof props.component === 'function' || isVNode(props.component);
@@ -30,10 +30,12 @@ const shouldRenderComponent = computed(() => {
     <component
       :is="to ? 'router-link' : 'div'"
       :to="to"
+      v-tooltip="isSidebarCollapsed ? label : ''"
       :title="label"
       class="flex h-8 items-center gap-2 px-2 py-1 rounded-lg max-w-[9.438rem] hover:bg-gradient-to-r from-transparent via-n-slate-3/70 to-n-slate-3/70 group"
       :class="{
         'text-n-blue-text bg-n-alpha-2 active': active,
+        'justify-center': isSidebarCollapsed,
       }"
     >
       <component
@@ -45,7 +47,7 @@ const shouldRenderComponent = computed(() => {
       />
       <template v-else>
         <Icon v-if="icon" :icon="icon" class="size-4 inline-block" />
-        <div class="flex-1 truncate min-w-0">{{ label }}</div>
+        <div v-if="!isSidebarCollapsed" class="flex-1 truncate min-w-0">{{ label }}</div>
       </template>
     </component>
   </Policy>

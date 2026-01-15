@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue';
 import Auth from 'dashboard/api/auth';
 import { useMapGetter } from 'dashboard/composables/store';
+import { useSidebarContext } from './provider';
 import { useI18n } from 'vue-i18n';
 import { useUISettings } from 'dashboard/composables/useUISettings';
 import Avatar from 'next/avatar/Avatar.vue';
@@ -25,6 +26,7 @@ defineOptions({
 
 const { t } = useI18n();
 const { uiSettings } = useUISettings();
+const { isSidebarCollapsed } = useSidebarContext();
 
 const currentUser = useMapGetter('getCurrentUser');
 const currentUserAvailability = useMapGetter('getCurrentUserAvailability');
@@ -157,7 +159,10 @@ const allowedMenuItems = computed(() => {
     <template #trigger="{ toggle, isOpen }">
       <button
         class="flex gap-2 items-center p-1 w-full text-left rounded-lg cursor-pointer hover:bg-n-alpha-1"
-        :class="{ 'bg-n-alpha-1': isOpen }"
+        :class="{
+          'bg-n-alpha-1': isOpen,
+          'justify-center': isSidebarCollapsed,
+        }"
         @click="toggle"
       >
         <Avatar
@@ -168,7 +173,7 @@ const allowedMenuItems = computed(() => {
           class="flex-shrink-0"
           rounded-full
         />
-        <div class="min-w-0">
+        <div v-if="!isSidebarCollapsed" class="min-w-0">
           <div class="text-sm font-medium leading-4 truncate text-n-slate-12">
             {{ currentUser.available_name }}
           </div>

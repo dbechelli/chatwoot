@@ -68,9 +68,23 @@ const expandedItem = useStorage(
 const setExpandedItem = name => {
   expandedItem.value = expandedItem.value === name ? null : name;
 };
+
+const isUserCollapsed = useStorage('chatwoot-sidebar-collapsed', true);
+const isHovered = ref(false);
+
+const isSidebarCollapsed = computed(
+  () => isUserCollapsed.value && !isHovered.value
+);
+
+const toggleSidebar = () => {
+  isUserCollapsed.value = !isUserCollapsed.value;
+};
+
 provideSidebarContext({
   expandedItem,
   setExpandedItem,
+  isSidebarCollapsed,
+  toggleSidebar,
 });
 
 const inboxes = useMapGetter('inboxes/getInboxes');
@@ -602,41 +616,64 @@ const menuItems = computed(() => {
       closeMobileSidebar,
       { ignore: ['#mobile-sidebar-launcher'] },
     ]"
-    class="bg-n-solid-2 rtl:border-l ltr:border-r border-n-weak flex flex-col text-sm pb-1 fixed top-0 ltr:left-0 rtl:right-0 h-full z-40 transition-transform duration-200 ease-in-out md:static w-[200px] basis-[200px] md:flex-shrink-0 md:ltr:translate-x-0 md:rtl:-translate-x-0"
+    class="bg-n-solid-2 rtl:border-l ltr:border-r border-n-weak flex flex-col text-sm pb-1 fixed top-0 ltr:left-0 rtl:right-0 h-full z-40 transition-all duration-200 ease-in-out md:static md:flex-shrink-0 md:ltr:translate-x-0 md:rtl:-translate-x-0"
     :class="[
       {
         'shadow-lg md:shadow-none': isMobileSidebarOpen,
         'ltr:-translate-x-full rtl:translate-x-full': !isMobileSidebarOpen,
+        'w-[64px] basis-[64px]': isSidebarCollapsed,
+        'w-[200px] basis-[200px]': !isSidebarCollapsed,
       },
     ]"
+    @mouseenter="isHovered = true"
+    @mouseleave="isHovered = false"
   >
     <section class="grid gap-2 mt-2 mb-4">
-      <div class="flex gap-2 items-center px-2 min-w-0">
-        <div class="grid flex-shrink-0 place-content-center size-6">
-          <Logo class="size-4" />
+      <div class="flex gap-2 items-center px-2 min-w-0 justify-between">
+        <div class="flex items-center gap-2 min-w-0 flex-grow">
+          <div class="grid flex-shrink-0 place-content-center size-6">
+            <Logo class="size-4" />
+          </div>
+          <template v-if="!isSidebarCollapsed">
+            <div class="flex-shrink-0 w-px h-3 bg-n-strong" />
+            <SidebarAccountSwitcher
+              class="flex-grow -mx-1 min-w-0"
+              @show-create-account-modal="emit('showCreateAccountModal')"
+            />
+          </template>
         </div>
-        <div class="flex-shrink-0 w-px h-3 bg-n-strong" />
-        <SidebarAccountSwitcher
-          class="flex-grow -mx-1 min-w-0"
-          @show-create-account-modal="emit('showCreateAccountModal')"
+        <Button
+          :icon="
+            isUserCollapsed ? 'i-lucide-panel-left-open' : 'i-lucide-panel-left-close'
+          "
+          size="xs"
+          variant="ghost"
+          class="flex-shrink-0 text-n-slate-10 hidden md:flex"
+          @click="toggleSidebar"
         />
       </div>
       <div class="flex gap-2 px-2">
         <RouterLink
           :to="{ name: 'search' }"
-          class="flex gap-2 items-center px-2 py-1 w-full h-7 rounded-lg outline outline-1 outline-n-weak bg-n-solid-3 dark:bg-n-black/30"
+          class="flex gap-2 items-center justify-center py-1 w-full h-7 rounded-lg outline outline-1 outline-n-weak bg-n-solid-3 dark:bg-n-black/30"
+          :class="isSidebarCollapsed ? 'px-0' : 'px-2'"
         >
           <span class="flex-shrink-0 i-lucide-search size-4 text-n-slate-11" />
-          <span class="flex-grow text-left">
+          <span v-if="!isSidebarCollapsed" class="flex-grow text-left">
             {{ t('COMBOBOX.SEARCH_PLACEHOLDER') }}
           </span>
           <span
+            v-if="!isSidebarCollapsed"
             class="hidden tracking-wide pointer-events-none select-none text-n-slate-10"
           >
             {{ searchShortcut }}
           </span>
         </RouterLink>
-        <ComposeConversation align-position="right" @close="onComposeClose">
+        <ComposeConversation
+          v-if="!isSidebarCollapsed"
+          align-position="right"
+          @close="onComposeClose"
+        >
           <template #trigger="{ toggle }">
             <Button
               icon="i-lucide-pen-line"
@@ -664,12 +701,15 @@ const menuItems = computed(() => {
       <div
         class="pointer-events-none absolute inset-x-0 -top-[31px] h-8 bg-gradient-to-t from-n-solid-2 to-transparent"
       />
-      <YearInReviewBanner />
-      <SidebarChangelogCard
-        v-if="isOnChatwootCloud && !isACustomBrandedInstance"
-      />
+      <template v-if="!isSidebarCollapsed">
+        <YearInReviewBanner />
+        <SidebarChangelogCard
+          v-if="isOnChatwootCloud && !isACustomBrandedInstance"
+        />
+      </template>
       <div
         class="p-1 flex-shrink-0 flex w-full justify-between z-10 gap-2 items-center border-t border-n-weak shadow-[0px_-2px_4px_0px_rgba(27,28,29,0.02)]"
+        :class="isSidebarCollapsed ? 'justify-center' : 'justify-between'"
       >
         <SidebarProfileMenu
           @open-key-shortcut-modal="emit('openKeyShortcutModal')"
