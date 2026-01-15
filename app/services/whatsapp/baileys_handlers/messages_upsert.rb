@@ -148,7 +148,11 @@ module Whatsapp::BaileysHandlers::MessagesUpsert # rubocop:disable Metrics/Modul
   def message_content_attributes
     type = message_type
     msg = unwrap_ephemeral_message(@raw_message[:message])
-    content_attributes = { external_created_at: baileys_extract_message_timestamp(@raw_message[:messageTimestamp]) }
+    content_attributes = {
+      external_created_at: baileys_extract_message_timestamp(@raw_message[:messageTimestamp]),
+      # Store the original WAMessage for forward functionality
+      wamessage: @raw_message
+    }
     if type == 'reaction'
       content_attributes[:in_reply_to_external_id] = msg.dig(:reactionMessage, :key, :id)
       content_attributes[:is_reaction] = true

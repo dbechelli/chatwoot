@@ -244,40 +244,29 @@ class Whatsapp::Providers::WhatsappBaileysService < Whatsapp::Providers::BaseSer
   def forward_message(message, destination_jids)
     Rails.logger.info "Forward service: Starting forward for message #{message.id}"
 
-    # Check if message has source_id (WhatsApp message ID)
-    unless message.source_id.present?
-      raise StandardError, 'Message does not have a source_id (WhatsApp message ID). Cannot forward.'
+    # Get the original WAMessage object from content_attributes
+    wamessage = message.content_attributes['wamessage']
+    unless wamessage.present?
+      raise StandardError, 'Message does not have original WAMessage object. Cannot forward. Only messages received via Baileys can be forwarded.'
     end
 
-    # Build the message key (reference to original WhatsApp message)
-    source_id = message.source_id
-    remote_jid = if message.conversation.contact.identifier.ends_with?('@lid')
-                   message.conversation.contact.identifier
-                 else
-                   "#{message.conversation.contact.identifier.delete('+')}@s.whatsapp.net"
-                 end
-
-    message_key = {
-      id: source_id,
-      remoteJid: remote_jid,
-      fromMe: message.message_type == 'outgoing'
-    }
-    Rails.logger.info "Forward service: Message key: #{message_key.inspect}"
+    Rails.logger.info "Forward service: WAMessage found: #{wamessage.inspect}"
 
     # Convert destination JIDs to WhatsApp format
     formatted_jids = destination_jids.map do |jid|
       jid.ends_with?('@lid') ? jid : "#{jid.delete('+')}@s.whatsapp.net"
     end
-    Rails.logger.info "Forward service: Formatted JIDs: #{formatted_jids.inspect}"
+    Rails.logger.info "Forward service: Destination JIDs: #{formatted_jids.inspect}"
 
     url = "#{provider_url}/connections/#{whatsapp_channel.phone_number}/forward-message"
     Rails.logger.info "Forward service: Posting to: #{url}"
 
+    # Send the original WAMessage object as required by Baileys API
     response = HTTParty.post(
       url,
       headers: api_headers,
       body: {
-        key: message_key,
+        message: wamessage,
         destinationJids: formatted_jids
       }.to_json
     )
