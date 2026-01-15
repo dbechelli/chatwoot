@@ -244,13 +244,14 @@ class Whatsapp::Providers::WhatsappBaileysService < Whatsapp::Providers::BaseSer
   def forward_message(message, destination_jids)
     Rails.logger.info "Forward service: Starting forward for message #{message.id}"
 
-    # Get the original WAMessage object from content_attributes
+    # Try to get the original WAMessage object, or build one if not available
     wamessage = message.content_attributes['wamessage']
-    unless wamessage.present?
-      raise StandardError, 'Message does not have original WAMessage object. Cannot forward. Only messages received via Baileys can be forwarded.'
+    if wamessage.blank?
+      Rails.logger.info "Forward service: No original WAMessage, building from message data"
+      wamessage = build_wamessage_from_message(message)
     end
 
-    Rails.logger.info "Forward service: WAMessage found: #{wamessage.inspect}"
+    Rails.logger.info "Forward service: WAMessage ready: #{wamessage.inspect}"
 
     # Convert destination JIDs to WhatsApp format
     formatted_jids = destination_jids.map do |jid|
@@ -261,7 +262,7 @@ class Whatsapp::Providers::WhatsappBaileysService < Whatsapp::Providers::BaseSer
     url = "#{provider_url}/connections/#{whatsapp_channel.phone_number}/forward-message"
     Rails.logger.info "Forward service: Posting to: #{url}"
 
-    # Send the original WAMessage object as required by Baileys API
+    # Send the WAMessage object as required by Baileys API
     response = HTTParty.post(
       url,
       headers: api_headers,
@@ -281,6 +282,57 @@ class Whatsapp::Providers::WhatsappBaileysService < Whatsapp::Providers::BaseSer
     Rails.logger.error "Forward service error: #{e.class.name} - #{e.message}"
     Rails.logger.error e.backtrace.join("\n")
     raise e
+  end
+
+  def build_wamessage_from_message(message)
+    # Build a WAMessage structure from Chatwoot message data
+    unless message.source_id.present?
+      raise StandardError, 'Message does not have a source_id. Cannot build WAMessage for forwarding.'
+    end
+
+    # Build the remote JID
+    remote_jid = if message.conversation.contact.identifier.ends_with?('@lid')
+                   message.conversation.contact.identifier
+                 else
+                   "#{message.conversation.contact.identifier.delete('+')}@s.whatsapp.net"
+                 end
+
+    # Build the message content based on type
+    message_content = if message.attachments.present?
+                        build_wamessage_media_content(message)
+                      elsif message.content.present?
+                        { conversation: message.content }
+                      else
+                        { conversation: '' }
+                      end
+
+    # Build the complete WAMessage structure
+    {
+      key: {
+        remoteJid: remote_jid,
+        id: message.source_id,
+        fromMe: message.message_type == 'outgoing'
+      },
+      messageTimestamp: message.content_attributes['external_created_at'] || message.created_at.to_i,
+      message: message_content
+    }
+  end
+
+  def build_wamessage_media_content(message)
+    # For messages with attachments, build appropriate media message structure
+    attachment = message.attachments.first
+    case attachment.file_type
+    when 'image'
+      { imageMessage: { caption: message.content } }
+    when 'video'
+      { videoMessage: { caption: message.content } }
+    when 'audio'
+      { audioMessage: {} }
+    when 'file', 'sticker'
+      { documentMessage: { caption: message.content } }
+    else
+      { conversation: message.content }
+    end
   end
 
   private
