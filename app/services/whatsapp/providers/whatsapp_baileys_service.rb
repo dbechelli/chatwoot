@@ -244,9 +244,25 @@ class Whatsapp::Providers::WhatsappBaileysService < Whatsapp::Providers::BaseSer
   def forward_message(message, destination_jids)
     Rails.logger.info "Forward service: Starting forward for message #{message.id}"
 
-    # Build the WAMessage object from the Chatwoot message
-    wa_message = build_wa_message_from_message(message)
-    Rails.logger.info "Forward service: Built WA message: #{wa_message.inspect}"
+    # Check if message has source_id (WhatsApp message ID)
+    unless message.source_id.present?
+      raise StandardError, 'Message does not have a source_id (WhatsApp message ID). Cannot forward.'
+    end
+
+    # Build the message key (reference to original WhatsApp message)
+    source_id = message.source_id
+    remote_jid = if message.conversation.contact.identifier.ends_with?('@lid')
+                   message.conversation.contact.identifier
+                 else
+                   "#{message.conversation.contact.identifier.delete('+')}@s.whatsapp.net"
+                 end
+
+    message_key = {
+      id: source_id,
+      remoteJid: remote_jid,
+      fromMe: message.message_type == 'outgoing'
+    }
+    Rails.logger.info "Forward service: Message key: #{message_key.inspect}"
 
     # Convert destination JIDs to WhatsApp format
     formatted_jids = destination_jids.map do |jid|
@@ -261,7 +277,7 @@ class Whatsapp::Providers::WhatsappBaileysService < Whatsapp::Providers::BaseSer
       url,
       headers: api_headers,
       body: {
-        message: wa_message,
+        key: message_key,
         destinationJids: formatted_jids
       }.to_json
     )
