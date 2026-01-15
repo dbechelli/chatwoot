@@ -242,16 +242,23 @@ class Whatsapp::Providers::WhatsappBaileysService < Whatsapp::Providers::BaseSer
   end
 
   def forward_message(message, destination_jids)
+    Rails.logger.info "Forward service: Starting forward for message #{message.id}"
+
     # Build the WAMessage object from the Chatwoot message
     wa_message = build_wa_message_from_message(message)
+    Rails.logger.info "Forward service: Built WA message: #{wa_message.inspect}"
 
     # Convert destination JIDs to WhatsApp format
     formatted_jids = destination_jids.map do |jid|
       jid.ends_with?('@lid') ? jid : "#{jid.delete('+')}@s.whatsapp.net"
     end
+    Rails.logger.info "Forward service: Formatted JIDs: #{formatted_jids.inspect}"
+
+    url = "#{provider_url}/connections/#{whatsapp_channel.phone_number}/forward-message"
+    Rails.logger.info "Forward service: Posting to: #{url}"
 
     response = HTTParty.post(
-      "#{provider_url}/connections/#{whatsapp_channel.phone_number}/forward-message",
+      url,
       headers: api_headers,
       body: {
         message: wa_message,
@@ -259,9 +266,16 @@ class Whatsapp::Providers::WhatsappBaileysService < Whatsapp::Providers::BaseSer
       }.to_json
     )
 
+    Rails.logger.info "Forward service: Response status: #{response.code}"
+    Rails.logger.info "Forward service: Response body: #{response.body}"
+
     raise ProviderUnavailableError unless process_response(response)
 
     response.parsed_response.dig('data', 'results')
+  rescue StandardError => e
+    Rails.logger.error "Forward service error: #{e.class.name} - #{e.message}"
+    Rails.logger.error e.backtrace.join("\n")
+    raise e
   end
 
   private

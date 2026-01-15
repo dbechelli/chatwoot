@@ -71,16 +71,24 @@ class Api::V1::Accounts::Conversations::MessagesController < Api::V1::Accounts::
 
     # Get contacts and their identifiers
     contacts = Current.account.contacts.where(id: contact_ids)
+    Rails.logger.info "Forward: Found #{contacts.count} contacts for IDs: #{contact_ids.inspect}"
+
     destination_jids = contacts.map(&:identifier).compact
+    Rails.logger.info "Forward: Destination JIDs: #{destination_jids.inspect}"
 
     return render json: { error: 'No valid contacts found' }, status: :unprocessable_entity if destination_jids.empty?
 
     # Forward the message using the Baileys service
+    Rails.logger.info "Forward: Message ID: #{@message.id}, Content: #{@message.content}"
     service = Whatsapp::Providers::WhatsappBaileysService.new(whatsapp_channel: channel)
-    results = service.forward_message(message, destination_jids)
+    results = service.forward_message(@message, destination_jids)
+
+    Rails.logger.info "Forward: Results: #{results.inspect}"
 
     render json: { results: results }
   rescue StandardError => e
+    Rails.logger.error "Forward error: #{e.class.name} - #{e.message}"
+    Rails.logger.error e.backtrace.join("\n")
     render json: { error: e.message }, status: :internal_server_error
   end
 
