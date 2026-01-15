@@ -157,7 +157,9 @@ const forwardToContacts = async () => {
 
     closeModal();
   } catch (error) {
-    useAlert(t('CONVERSATION.FORWARD_MESSAGE.ERROR'));
+    console.error('Error forwarding message:', error);
+    const errorMessage = error.response?.data?.error || error.message || t('CONVERSATION.FORWARD_MESSAGE.ERROR');
+    useAlert(errorMessage);
   } finally {
     isForwarding.value = false;
   }
