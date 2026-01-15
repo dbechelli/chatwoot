@@ -340,14 +340,14 @@ export default {
             message_type: 0,
             created_at: conv.created_at,
             is_conversation_separator: true,
-            conversation_date: new Date(conv.created_at).toLocaleDateString('pt-BR'),
-            conversation_id: conv.id,
+            conversation_date: new Date(conv.created_at * 1000).toLocaleDateString('pt-BR'),
+            conversation_id: conv.display_id,
           };
           messagesWithSeparators.push(separator);
 
           // Add messages from this conversation
           const convMessages = messages.filter(
-            msg => msg.conversation_id === conv.id
+            msg => msg.conversation_id === conv.display_id
           );
           messagesWithSeparators.push(...convMessages);
         });

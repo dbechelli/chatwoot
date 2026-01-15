@@ -138,53 +138,25 @@ class Api::V1::Accounts::ConversationsController < Api::V1::Accounts::BaseContro
   def previous_resolved
     # Get the contact from the current conversation
     contact = @current_conversation.contact
-    return render json: { conversations: [], messages: [] } if contact.blank?
+    if contact.blank?
+      @previous_conversations = []
+      @messages = []
+      return
+    end
 
     # Find previous resolved conversations for this contact
     # excluding the current conversation and ordered by created_at desc
-    previous_conversations = Current.account.conversations
-                                    .where(contact_id: contact.id, status: 'resolved')
-                                    .where.not(id: @current_conversation.id)
-                                    .order(created_at: :desc)
-                                    .limit(params[:limit] || 1)
+    @previous_conversations = Current.account.conversations
+                                     .where(contact_id: contact.id, status: 'resolved')
+                                     .where.not(id: @current_conversation.id)
+                                     .order(created_at: :desc)
+                                     .limit(params[:limit] || 1)
 
     # Get all messages from these conversations
-    conversation_ids = previous_conversations.pluck(:id)
-    messages = Message.where(conversation_id: conversation_ids)
-                      .includes(:sender, :attachments)
-                      .order(created_at: :asc)
-
-    render json: {
-      conversations: previous_conversations.map { |conv|
-        {
-          id: conv.id,
-          display_id: conv.display_id,
-          created_at: conv.created_at,
-          updated_at: conv.updated_at,
-          status: conv.status
-        }
-      },
-      messages: messages.map { |msg|
-        {
-          id: msg.id,
-          content: msg.content,
-          created_at: msg.created_at,
-          message_type: msg.message_type,
-          conversation_id: msg.conversation_id,
-          sender: msg.sender&.available_name,
-          sender_id: msg.sender_id,
-          sender_type: msg.sender_type,
-          content_attributes: msg.content_attributes,
-          attachments: msg.attachments.map { |att|
-            {
-              id: att.id,
-              file_type: att.file_type,
-              data_url: att.download_url
-            }
-          }
-        }
-      }
-    }
+    conversation_ids = @previous_conversations.pluck(:id)
+    @messages = Message.where(conversation_id: conversation_ids)
+                       .includes(:sender, :attachments)
+                       .order(created_at: :asc)
   end
 
   private

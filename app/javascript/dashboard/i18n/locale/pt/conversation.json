@@ -30,6 +30,8 @@
     "CLICK_HERE": "Clique aqui",
     "LOADING_INBOXES": "A carregar caixas de entrada",
     "LOADING_CONVERSATIONS": "A carregar conversas",
+    "LOAD_PREVIOUS_CONVERSATIONS": "Carregar conversas anteriores",
+    "LOADING_PREVIOUS_CONVERSATIONS": "A carregar conversas anteriores...",
     "CANNOT_REPLY": "Não pode responder porque",
     "24_HOURS_WINDOW": "Mensagens bloqueadas durante 24 horas",
     "48_HOURS_WINDOW": "Mensagens bloqueadas durante 48 horas",

@@ -31,6 +31,8 @@
     "CLICK_HERE": "Clique aqui",
     "LOADING_INBOXES": "Carregando caixas de entrada",
     "LOADING_CONVERSATIONS": "Carregando conversas",
+    "LOAD_PREVIOUS_CONVERSATIONS": "Carregar conversas anteriores",
+    "LOADING_PREVIOUS_CONVERSATIONS": "Carregando conversas anteriores...",
     "CANNOT_REPLY": "Você não pode responder porque",
     "24_HOURS_WINDOW": "Restrições de janela de mensagem de 24 horas",
     "48_HOURS_WINDOW": "Restrição de janela de mensagem de 48 horas",
