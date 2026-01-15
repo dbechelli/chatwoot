@@ -147,6 +147,7 @@ Rails.application.routes.draw do
               post :mute
               post :unmute
               post :transcript
+              get :previous_resolved
               post :toggle_status
               post :toggle_priority
               post :toggle_typing_status

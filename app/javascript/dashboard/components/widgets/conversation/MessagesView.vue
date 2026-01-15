@@ -18,6 +18,7 @@ import Spinner from 'dashboard/components-next/spinner/Spinner.vue';
 
 // stores and apis
 import { mapGetters } from 'vuex';
+import ConversationApi from 'dashboard/api/conversations';
 
 // mixins
 import inboxMixin, { INBOX_FEATURES } from 'shared/mixins/inboxMixin';
@@ -99,6 +100,10 @@ export default {
       messageSentSinceOpened: false,
       labelSuggestions: [],
       showLinkDeviceModal: false,
+      previousConversationsMessages: [],
+      isLoadingPreviousConversations: false,
+      hasPreviousConversations: true,
+      loadedConversationsCount: 0,
     };
   },
 
@@ -149,11 +154,13 @@ export default {
       return '';
     },
     getMessages() {
-      const messages = this.currentChat.messages || [];
-      if (this.isAWhatsAppChannel) {
-        return filterDuplicateSourceMessages(messages);
-      }
-      return messages;
+      const currentMessages = this.currentChat.messages || [];
+      const filteredCurrentMessages = this.isAWhatsAppChannel
+        ? filterDuplicateSourceMessages(currentMessages)
+        : currentMessages;
+
+      // Combine previous conversations messages with current messages
+      return [...this.previousConversationsMessages, ...filteredCurrentMessages];
     },
     readMessages() {
       return getReadMessages(
@@ -275,6 +282,10 @@ export default {
       this.fetchAllAttachmentsFromCurrentChat();
       this.fetchSuggestions();
       this.messageSentSinceOpened = false;
+      // Reset previous conversations when switching chats
+      this.previousConversationsMessages = [];
+      this.hasPreviousConversations = true;
+      this.loadedConversationsCount = 0;
     },
   },
 
@@ -299,6 +310,67 @@ export default {
   },
 
   methods: {
+    async loadPreviousConversations() {
+      if (this.isLoadingPreviousConversations || !this.hasPreviousConversations) {
+        return;
+      }
+
+      this.isLoadingPreviousConversations = true;
+
+      try {
+        const response = await ConversationApi.getPreviousResolvedConversations(
+          this.currentChat.id,
+          1
+        );
+
+        const { conversations, messages } = response.data;
+
+        if (conversations.length === 0) {
+          this.hasPreviousConversations = false;
+          return;
+        }
+
+        // Add conversation separator for each loaded conversation
+        const messagesWithSeparators = [];
+        conversations.forEach(conv => {
+          // Add separator message
+          const separator = {
+            id: `separator-${conv.id}`,
+            content: '',
+            message_type: 0,
+            created_at: conv.created_at,
+            is_conversation_separator: true,
+            conversation_date: new Date(conv.created_at).toLocaleDateString('pt-BR'),
+            conversation_id: conv.id,
+          };
+          messagesWithSeparators.push(separator);
+
+          // Add messages from this conversation
+          const convMessages = messages.filter(
+            msg => msg.conversation_id === conv.id
+          );
+          messagesWithSeparators.push(...convMessages);
+        });
+
+        // Prepend to existing previous messages
+        this.previousConversationsMessages = [
+          ...messagesWithSeparators,
+          ...this.previousConversationsMessages,
+        ];
+
+        this.loadedConversationsCount += conversations.length;
+
+        // Check if there are more conversations to load
+        if (conversations.length < 1) {
+          this.hasPreviousConversations = false;
+        }
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error('Error loading previous conversations:', error);
+      } finally {
+        this.isLoadingPreviousConversations = false;
+      }
+    },
     async fetchSuggestions() {
       // start empty, this ensures that the label suggestions are not shown
       this.labelSuggestions = [];
@@ -569,6 +641,23 @@ export default {
             <Spinner v-if="shouldShowSpinner" class="text-n-brand" />
           </li>
         </transition>
+        <li
+          v-if="!shouldShowSpinner && hasPreviousConversations"
+          class="flex justify-center items-center my-4"
+        >
+          <button
+            class="px-4 py-2 text-sm font-medium text-n-slate-12 bg-n-background border border-n-weak rounded-lg hover:bg-n-slate-3 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            :disabled="isLoadingPreviousConversations"
+            @click="loadPreviousConversations"
+          >
+            <span v-if="isLoadingPreviousConversations">
+              {{ $t('CONVERSATION.LOADING_PREVIOUS_CONVERSATIONS') }}
+            </span>
+            <span v-else>
+              {{ $t('CONVERSATION.LOAD_PREVIOUS_CONVERSATIONS') }}
+            </span>
+          </button>
+        </li>
       </template>
       <template #unreadBadge>
         <li

@@ -163,11 +163,23 @@ const getInReplyToMessage = parentMessage => {
   <ul class="px-4 bg-n-background">
     <slot name="beforeAll" />
     <template v-for="(message, index) in allMessages" :key="message.id">
+      <!-- Conversation separator -->
+      <li
+        v-if="message.isConversationSeparator"
+        class="flex justify-center items-center my-6"
+      >
+        <div
+          class="px-4 py-2 text-xs font-medium text-n-slate-11 bg-n-slate-2 border border-n-weak rounded-full shadow-sm"
+        >
+          Conversa de {{ message.conversationDate }}
+        </div>
+      </li>
       <slot
         v-if="firstUnreadId && message.id === firstUnreadId"
         name="unreadBadge"
       />
       <Message
+        v-if="!message.isConversationSeparator"
         v-bind="message"
         :is-email-inbox="isAnEmailChannel"
         :in-reply-to="getInReplyToMessage(message)"

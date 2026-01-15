@@ -13,6 +13,12 @@ class ConversationApi extends ApiClient {
   updateLabels(conversationID, labels) {
     return axios.post(`${this.url}/${conversationID}/labels`, { labels });
   }
+
+  getPreviousResolvedConversations(conversationID, limit = 1) {
+    return axios.get(`${this.url}/${conversationID}/previous_resolved`, {
+      params: { limit },
+    });
+  }
 }
 
 export default new ConversationApi();

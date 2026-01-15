@@ -31,6 +31,8 @@
     "CLICK_HERE": "Click here",
     "LOADING_INBOXES": "Loading inboxes",
     "LOADING_CONVERSATIONS": "Loading Conversations",
+    "LOAD_PREVIOUS_CONVERSATIONS": "Load previous conversations",
+    "LOADING_PREVIOUS_CONVERSATIONS": "Loading previous conversations...",
     "CANNOT_REPLY": "You cannot reply due to",
     "24_HOURS_WINDOW": "24 hour message window restriction",
     "48_HOURS_WINDOW": "48 hour message window restriction",
