@@ -122,6 +122,12 @@ const hasSlaPolicyId = computed(() => props.chat?.sla_policy_id);
           >
             {{ currentContact.name }}
           </span>
+          <span
+            v-if="currentContact.phone_number"
+            class="text-sm text-n-slate-11 whitespace-nowrap"
+          >
+            | {{ currentContact.phone_number }}
+          </span>
           <fluent-icon
             v-if="!isHMACVerified"
             v-tooltip="$t('CONVERSATION.UNVERIFIED_SESSION')"
