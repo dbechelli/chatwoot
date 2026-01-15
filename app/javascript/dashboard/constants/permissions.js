@@ -33,8 +33,9 @@ export const ASSIGNEE_TYPE_TAB_PERMISSIONS = {
   all: {
     count: 'allCount',
     permissions: [
-      'administrator',
+      ...ROLES,
       MANAGE_ALL_CONVERSATION_PERMISSIONS,
+      CONVERSATION_PARTICIPATING_PERMISSIONS,
     ],
   },
   me: {
