@@ -427,5 +427,25 @@
   },
   "GALLERY_VIEW": {
     "ERROR_DOWNLOADING": "Unable to download attachment. Please try again"
+  },
+  "FORWARD_MESSAGE": {
+    "TITLE": "Reencaminhar mensagem",
+    "DESCRIPTION": "Selecione os contactos para reencaminhar esta mensagem",
+    "SEARCH_PLACEHOLDER": "Procurar contactos por nome, email ou telefone...",
+    "NO_CONTACTS": "Nenhum contacto encontrado",
+    "NO_CONTACTS_FOUND": "Nenhum contacto encontrado para esta pesquisa",
+    "SEARCHING": "A procurar contactos...",
+    "NO_SELECTION": "Nenhum contacto selecionado",
+    "UNKNOWN_CONTACT": "Contacto desconhecido",
+    "SELECTED_COUNT": "{count} selecionado(s)",
+    "INCLUDE_ATTACHMENTS": "Incluir anexos",
+    "FORWARD": "Reencaminhar",
+    "CANCEL": "Cancelar",
+    "SUCCESS": "Mensagem reencaminhada para {count} contacto(s)",
+    "ERROR": "Falha ao reencaminhar mensagem",
+    "PARTIAL_ERROR": "Falha ao reencaminhar para {count} contacto(s)",
+    "NO_MESSAGES": "Nenhuma mensagem para reencaminhar",
+    "LOADING_CONTACTS": "A carregar contactos...",
+    "SELECT_AT_LEAST_ONE": "Selecione pelo menos um contacto"
   }
 }

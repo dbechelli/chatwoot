@@ -173,108 +173,114 @@ onMounted(() => {
 
 <template>
   <Modal :show="show" :on-close="closeModal" :show-close-button="false">
-    <div class="flex flex-col h-full max-h-[80vh]">
+    <div class="flex flex-col h-full max-h-[80vh] w-full">
       <!-- Header -->
-      <div class="flex items-center justify-between p-4 border-b border-n-weak">
-        <div>
-          <h2 class="text-lg font-semibold text-n-slate-12">
-            {{ t('FORWARD_MESSAGE.TITLE') }}
+      <div class="flex items-center justify-between p-6 border-b border-n-weak bg-white">
+        <div class="flex-1">
+          <h2 class="text-xl font-semibold text-n-slate-12">
+            {{ $t('FORWARD_MESSAGE.TITLE') }}
           </h2>
-          <p class="text-sm text-n-slate-11">
-            {{ t('FORWARD_MESSAGE.DESCRIPTION') }}
+          <p class="text-sm text-n-slate-11 mt-1">
+            {{ $t('FORWARD_MESSAGE.DESCRIPTION') }}
           </p>
         </div>
         <button
-          class="p-2 rounded-lg hover:bg-n-slate-3 transition-colors flex items-center justify-center text-n-slate-10 hover:text-n-slate-12"
+          class="p-2 rounded-lg hover:bg-n-slate-3 transition-colors flex items-center justify-center text-n-slate-10 hover:text-n-slate-12 ml-4"
           @click="closeModal"
         >
           <i class="i-lucide-x text-xl" />
         </button>
       </div>
 
-      <!-- Contatos selecionados (tags) -->
-      <div
-        v-if="selectedContacts.length > 0"
-        class="flex flex-wrap gap-2 p-4 border-b border-n-weak bg-n-slate-2 max-h-[100px] overflow-y-auto"
-      >
-        <div
-          v-for="contactId in selectedContacts"
-          :key="contactId"
-          class="inline-flex items-center gap-2 px-3 py-1.5 bg-n-brand/10 text-n-brand rounded-full text-sm"
-        >
-          <span>
-            {{
-              contactsList.find(c => c.id === contactId)?.name ||
-              allContacts.find(c => c.id === contactId)?.name ||
-              'Contato'
-            }}
-          </span>
-          <button
-            class="hover:bg-n-brand/20 rounded-full p-0.5"
-            @click="toggleContact(contactId)"
-          >
-            <i class="i-lucide-x text-sm" />
-          </button>
-        </div>
-        <div class="text-xs font-medium text-n-slate-11 flex items-center bg-white px-2 rounded border border-n-weak">
-          {{
-            t('FORWARD_MESSAGE.SELECTED_COUNT', {
-              count: selectedContacts.length,
-            })
-          }}
-        </div>
-      </div>
-
       <!-- Busca -->
-      <div class="p-4 border-b border-n-weak">
+      <div class="p-4 border-b border-n-weak bg-white">
         <div class="relative flex items-center">
           <i
-            class="i-lucide-search absolute left-3 text-n-slate-11"
+            class="i-lucide-search absolute left-3 text-n-slate-11 text-lg"
             :class="{ 'animate-pulse text-n-brand': isSearching }"
           />
           <input
             v-model="searchQuery"
             type="text"
-            :placeholder="t('FORWARD_MESSAGE.SEARCH_PLACEHOLDER')"
-            class="w-full pl-10 pr-4 py-2 rounded-lg border border-n-weak bg-n-slate-1 text-n-slate-12 placeholder-n-slate-11 focus:outline-none focus:ring-2 focus:ring-n-brand transition-all"
+            :placeholder="$t('FORWARD_MESSAGE.SEARCH_PLACEHOLDER')"
+            class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-n-weak bg-white text-n-slate-12 placeholder-n-slate-10 focus:outline-none focus:ring-2 focus:ring-n-brand focus:border-transparent transition-all"
           />
-          <span v-if="isSearching" class="absolute right-3 text-xs text-n-slate-10">Searching...</span>
+        </div>
+      </div>
+
+      <!-- Contatos selecionados (tags) -->
+      <div
+        v-if="selectedContacts.length > 0"
+        class="flex flex-wrap gap-2 p-4 border-b border-n-weak bg-n-slate-1 max-h-[120px] overflow-y-auto"
+      >
+        <div
+          v-for="contactId in selectedContacts"
+          :key="contactId"
+          class="inline-flex items-center gap-2 px-3 py-1.5 bg-n-brand text-white rounded-full text-sm font-medium shadow-sm"
+        >
+          <span>
+            {{
+              contactsList.find(c => c.id === contactId)?.name ||
+              allContacts.find(c => c.id === contactId)?.name ||
+              $t('FORWARD_MESSAGE.UNKNOWN_CONTACT')
+            }}
+          </span>
+          <button
+            class="hover:bg-white/20 rounded-full p-0.5 transition-colors"
+            @click="toggleContact(contactId)"
+          >
+            <i class="i-lucide-x text-sm" />
+          </button>
         </div>
       </div>
 
       <!-- Lista de contatos -->
-      <div class="flex-1 overflow-y-auto p-4 min-h-[300px]">
+      <div class="flex-1 overflow-y-auto p-4 bg-n-slate-1 min-h-[350px]">
+        <!-- Loading state -->
         <div
-          v-if="isSearching && contactsList.length === 0"
-          class="flex flex-col items-center justify-center py-12 text-center"
+          v-if="isSearching && searchQuery"
+          class="flex flex-col items-center justify-center py-16 text-center"
         >
-           <i class="i-lucide-loader-2 animate-spin text-3xl text-n-brand mb-2" />
-           <p class="text-n-slate-11">{{ t('Pending...') || 'Searching contacts...' }}</p>
-        </div>
-
-        <div
-          v-else-if="contactsList.length === 0"
-          class="flex flex-col items-center justify-center py-12 text-center"
-        >
-          <i class="i-lucide-users text-4xl text-n-slate-11 mb-4" />
-          <p class="text-n-slate-11">
-            {{ searchQuery ? t('FORWARD_MESSAGE.NO_CONTACTS_FOUND') : t('FORWARD_MESSAGE.NO_CONTACTS') }}
+          <i class="i-lucide-loader-2 animate-spin text-4xl text-n-brand mb-3" />
+          <p class="text-n-slate-11 font-medium">
+            {{ $t('FORWARD_MESSAGE.SEARCHING') || 'Buscando contatos...' }}
           </p>
         </div>
 
+        <!-- Empty state -->
+        <div
+          v-else-if="contactsList.length === 0"
+          class="flex flex-col items-center justify-center py-16 text-center"
+        >
+          <i class="i-lucide-users text-5xl text-n-slate-10 mb-4" />
+          <p class="text-n-slate-11 font-medium text-lg">
+            {{
+              searchQuery
+                ? $t('FORWARD_MESSAGE.NO_CONTACTS_FOUND')
+                : $t('FORWARD_MESSAGE.NO_CONTACTS')
+            }}
+          </p>
+          <p v-if="searchQuery" class="text-n-slate-10 text-sm mt-2">
+            Tente uma busca diferente
+          </p>
+        </div>
+
+        <!-- Contact list -->
         <div v-else class="space-y-1">
           <button
             v-for="contact in contactsList"
             :key="contact.id"
-            class="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-n-slate-2 transition-colors border border-transparent"
+            class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-white transition-all border border-transparent hover:border-n-weak hover:shadow-sm"
             :class="{
-              'bg-n-brand/5 border-n-brand/20': isContactSelected(contact.id),
+              'bg-white border-n-brand/30 shadow-sm': isContactSelected(
+                contact.id
+              ),
             }"
             @click="toggleContact(contact.id)"
           >
             <!-- Checkbox -->
             <div
-              class="flex-shrink-0 w-5 h-5 rounded border flex items-center justify-center transition-all duration-200"
+              class="flex-shrink-0 w-5 h-5 rounded border-2 flex items-center justify-center transition-all duration-200"
               :class="
                 isContactSelected(contact.id)
                   ? 'bg-n-brand border-n-brand'
@@ -283,7 +289,7 @@ onMounted(() => {
             >
               <i
                 v-if="isContactSelected(contact.id)"
-                class="i-lucide-check text-white text-xs font-bold"
+                class="i-lucide-check text-white text-sm font-bold"
               />
             </div>
 
@@ -291,16 +297,16 @@ onMounted(() => {
             <Avatar
               :username="contact.name"
               :src="contact.thumbnail"
-              :size="32"
+              :size="40"
               class="flex-shrink-0"
             />
 
             <!-- Informações -->
             <div class="flex-1 text-left min-w-0">
               <p class="font-medium text-sm text-n-slate-12 truncate">
-                {{ contact.name || t('FORWARD_MESSAGE.UNKNOWN_CONTACT') }}
+                {{ contact.name || $t('FORWARD_MESSAGE.UNKNOWN_CONTACT') }}
               </p>
-              <p class="text-xs text-n-slate-11 truncate">
+              <p class="text-xs text-n-slate-11 truncate mt-0.5">
                 {{ contact.email || contact.phone_number || '-' }}
               </p>
             </div>
@@ -308,49 +314,75 @@ onMounted(() => {
             <!-- Badge de última interação -->
             <div
               v-if="contact.last_activity_at"
-              class="text-[10px] text-n-slate-10 whitespace-nowrap"
+              class="text-[10px] text-n-slate-10 whitespace-nowrap bg-n-slate-2 px-2 py-1 rounded"
             >
               {{
-                new Date(contact.last_activity_at * 1000).toLocaleDateString()
+                new Date(contact.last_activity_at * 1000).toLocaleDateString(
+                  'pt-BR'
+                )
               }}
             </div>
           </button>
         </div>
       </div>
 
-      <!-- Opções -->
-      <div class="p-4 border-t border-n-weak bg-n-slate-1">
-        <label class="flex items-center gap-2 cursor-pointer select-none">
-          <input
-            v-model="includeAttachments"
-            type="checkbox"
-            class="w-4 h-4 rounded border-n-slate-6 text-n-brand focus:ring-n-brand"
-          />
-          <span class="text-sm font-medium text-n-slate-12">
-            {{ t('FORWARD_MESSAGE.INCLUDE_ATTACHMENTS') }}
-          </span>
-        </label>
-      </div>
+      <!-- Footer com opções e botões -->
+      <div class="border-t border-n-weak bg-white">
+        <!-- Opção de anexos -->
+        <div class="p-4 border-b border-n-weak">
+          <label class="flex items-center gap-3 cursor-pointer select-none">
+            <input
+              v-model="includeAttachments"
+              type="checkbox"
+              class="w-5 h-5 rounded border-n-slate-6 text-n-brand focus:ring-n-brand"
+            />
+            <div class="flex-1">
+              <span class="text-sm font-medium text-n-slate-12 block">
+                {{ $t('FORWARD_MESSAGE.INCLUDE_ATTACHMENTS') }}
+              </span>
+              <span class="text-xs text-n-slate-10">
+                Incluir imagens, vídeos e arquivos anexados
+              </span>
+            </div>
+          </label>
+        </div>
 
-      <!-- Footer -->
-      <div
-        class="flex items-center justify-end gap-3 p-4 border-t border-n-weak"
-      >
-        <button
-          class="px-4 py-2 rounded-lg text-sm font-medium text-n-slate-11 hover:bg-n-slate-3 hover:text-n-slate-12 transition-colors"
-          @click="closeModal"
-        >
-          {{ t('FORWARD_MESSAGE.CANCEL') }}
-        </button>
-        <button
-          class="px-6 py-2 rounded-lg bg-n-brand text-white text-sm font-bold shadow-sm hover:bg-n-brand/90 hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-          :disabled="!canForward"
-          @click="forwardToContacts"
-        >
-          <i v-if="isForwarding" class="i-lucide-loader-2 animate-spin" />
-          <i v-else class="i-lucide-send" />
-          {{ t('FORWARD_MESSAGE.FORWARD') }}
-        </button>
+        <!-- Botões de ação -->
+        <div class="flex items-center justify-between p-4">
+          <div class="text-sm text-n-slate-11">
+            <span v-if="selectedContacts.length > 0" class="font-medium">
+              {{ selectedContacts.length }}
+              {{
+                selectedContacts.length === 1
+                  ? 'contato selecionado'
+                  : 'contatos selecionados'
+              }}
+            </span>
+            <span v-else class="text-n-slate-10">
+              {{ $t('FORWARD_MESSAGE.NO_SELECTION') || 'Nenhum contato selecionado' }}
+            </span>
+          </div>
+          <div class="flex items-center gap-3">
+            <button
+              class="px-5 py-2.5 rounded-lg text-sm font-medium text-n-slate-11 hover:bg-n-slate-2 hover:text-n-slate-12 transition-colors"
+              @click="closeModal"
+            >
+              {{ $t('FORWARD_MESSAGE.CANCEL') }}
+            </button>
+            <button
+              class="px-6 py-2.5 rounded-lg bg-n-brand text-white text-sm font-bold shadow-sm hover:bg-n-brand/90 hover:shadow-md transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-sm flex items-center gap-2 min-w-[140px] justify-center"
+              :disabled="!canForward"
+              @click="forwardToContacts"
+            >
+              <i
+                v-if="isForwarding"
+                class="i-lucide-loader-2 animate-spin text-base"
+              />
+              <i v-else class="i-lucide-send text-base" />
+              <span>{{ $t('FORWARD_MESSAGE.FORWARD') }}</span>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   </Modal>
