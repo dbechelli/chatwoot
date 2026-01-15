@@ -26,6 +26,7 @@ const {
   resolvePermissions,
   resolveFeatureFlag,
   isAllowed,
+  isSidebarCollapsed,
 } = useSidebarContext();
 
 const navigableChildren = computed(() => {
@@ -34,7 +35,7 @@ const navigableChildren = computed(() => {
 
 const route = useRoute();
 const router = useRouter();
-const isExpanded = computed(() => expandedItem.value === props.name);
+const isExpanded = computed(() => !isSidebarCollapsed.value && expandedItem.value === props.name);
 const isExpandable = computed(() => props.children);
 const hasChildren = computed(
   () => Array.isArray(props.children) && props.children.length > 0
@@ -159,7 +160,7 @@ onMounted(async () => {
     />
     <ul
       v-if="hasChildren"
-      v-show="isExpanded || hasActiveChild"
+      v-show="!isSidebarCollapsed && (isExpanded || hasActiveChild)"
       class="grid m-0 list-none sidebar-group-children"
     >
       <template v-for="child in children" :key="child.name">
