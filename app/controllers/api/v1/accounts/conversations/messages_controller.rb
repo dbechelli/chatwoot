@@ -1,6 +1,7 @@
 class Api::V1::Accounts::Conversations::MessagesController < Api::V1::Accounts::Conversations::BaseController
   include Events::Types
 
+  before_action :set_message, only: [:update, :destroy, :retry, :translate, :forward]
   before_action :ensure_api_inbox, only: :update
 
   def index
@@ -85,8 +86,12 @@ class Api::V1::Accounts::Conversations::MessagesController < Api::V1::Accounts::
 
   private
 
+  def set_message
+    @message = @conversation.messages.find(params[:id])
+  end
+
   def message
-    @message ||= @conversation.messages.find(permitted_params[:id])
+    @message ||= @conversation.messages.find(params[:id])
   end
 
   def message_finder
