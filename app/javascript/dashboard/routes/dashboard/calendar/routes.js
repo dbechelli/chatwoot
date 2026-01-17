@@ -1,4 +1,4 @@
-import { frontendURL } from '../../helper/URLHelper';
+import { frontendURL } from '../../../helper/URLHelper';
 import Calendar from './Index.vue';
 
 export const routes = [
