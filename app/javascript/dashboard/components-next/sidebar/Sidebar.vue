@@ -305,6 +305,12 @@ const menuItems = computed(() => {
           : undefined,
     },
     {
+      name: 'Agenda',
+      label: 'Agenda',
+      icon: 'i-lucide-calendar',
+      to: accountScopedRoute('calendar_dashboard'),
+    },
+    {
       name: 'WhatsApp Groups',
       label: 'Sincronizar Grupos',
       icon: 'i-lucide-users',
