@@ -12,7 +12,7 @@ import {
   isSameDay,
   isSameMonth
 } from 'date-fns';
-import CalendarEventsAPI from '../../api/calendarEvents';
+import CalendarEventsAPI from '../../../api/calendarEvents';
 
 // State
 const currentDate = ref(new Date());
