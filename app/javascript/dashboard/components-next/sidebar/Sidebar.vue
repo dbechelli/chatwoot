@@ -7,7 +7,6 @@ import { useKbd } from 'dashboard/composables/utils/useKbd';
 import { useMapGetter } from 'dashboard/composables/store';
 import { useStore } from 'vuex';
 import { useI18n } from 'vue-i18n';
-import { useStorage } from '@vueuse/core';
 import { useSidebarKeyboardShortcuts } from './useSidebarKeyboardShortcuts';
 import { vOnClickOutside } from '@vueuse/components';
 import { emitter } from 'shared/helpers/mitt';
@@ -17,7 +16,6 @@ import Button from 'dashboard/components-next/button/Button.vue';
 import SidebarGroup from './SidebarGroup.vue';
 import SidebarProfileMenu from './SidebarProfileMenu.vue';
 import SidebarChangelogCard from './SidebarChangelogCard.vue';
-import YearInReviewBanner from '../year-in-review/YearInReviewBanner.vue';
 import ChannelLeaf from './ChannelLeaf.vue';
 import SidebarAccountSwitcher from './SidebarAccountSwitcher.vue';
 import Logo from 'next/icon/Logo.vue';
@@ -56,14 +54,7 @@ const toggleShortcutModalFn = show => {
 
 useSidebarKeyboardShortcuts(toggleShortcutModalFn);
 
-// We're using localStorage to store the expanded item in the sidebar
-// This helps preserve context when navigating between portal and dashboard layouts
-// and also when the user refreshes the page
-const expandedItem = useStorage(
-  'next-sidebar-expanded-item',
-  null,
-  sessionStorage
-);
+const expandedItem = ref(null);
 
 const setExpandedItem = name => {
   expandedItem.value = expandedItem.value === name ? null : name;
@@ -509,6 +500,12 @@ const menuItems = computed(() => {
           icon: 'i-lucide-briefcase',
           to: accountScopedRoute('general_settings_index'),
         },
+        // {
+        //   name: 'Settings Captain',
+        //   label: t('SIDEBAR.CAPTAIN_AI'),
+        //   icon: 'i-woot-captain',
+        //   to: accountScopedRoute('captain_settings_index'),
+        // },
         {
           name: 'Settings Agents',
           label: t('SIDEBAR.AGENTS'),
@@ -707,12 +704,9 @@ const menuItems = computed(() => {
       <div
         class="pointer-events-none absolute inset-x-0 -top-[31px] h-8 bg-gradient-to-t from-n-solid-2 to-transparent"
       />
-      <template v-if="!isSidebarCollapsed">
-        <YearInReviewBanner />
-        <SidebarChangelogCard
-          v-if="isOnChatwootCloud && !isACustomBrandedInstance"
-        />
-      </template>
+      <SidebarChangelogCard
+        v-if="isOnChatwootCloud && !isACustomBrandedInstance"
+      />
       <div
         class="p-1 flex-shrink-0 flex w-full justify-between z-10 gap-2 items-center border-t border-n-weak shadow-[0px_-2px_4px_0px_rgba(27,28,29,0.02)]"
         :class="isSidebarCollapsed ? 'justify-center' : 'justify-between'"

@@ -19,6 +19,8 @@ class Whatsapp::IncomingMessageBaseService
   private
 
   def process_messages
+    @lock_acquired = false
+
     # We don't support reactions & ephemeral message now, we need to skip processing the message
     # if the webhook event is a reaction or an ephermal message or an unsupported message.
     return if unprocessable_message_type?(message_type)
@@ -26,17 +28,27 @@ class Whatsapp::IncomingMessageBaseService
     # Multiple webhook event can be received against the same message due to misconfigurations in the Meta
     # business manager account. While we have not found the core reason yet, the following line ensure that
     # there are no duplicate messages created.
-    return if find_message_by_source_id(@processed_params[:messages].first[:id]) || message_under_process?
+    return if find_message_by_source_id(@processed_params[:messages].first[:id])
 
-    cache_message_source_id_in_redis
-    set_contact
-    return unless @contact
+    @lock_acquired = acquire_message_processing_lock
+    return unless @lock_acquired
 
-    ActiveRecord::Base.transaction do
-      set_conversation
-      create_messages
-      clear_message_source_id_from_redis
+    # Lock by contact phone to prevent race conditions when multiple messages
+    # from the same contact arrive simultaneously (e.g., WhatsApp albums).
+    contact_phone = @processed_params[:messages].first[:from]
+    with_contact_lock(contact_phone) do
+      set_contact
+      return unless @contact
+
+      ActiveRecord::Base.transaction do
+        set_conversation
+        create_messages
+      end
     end
+  ensure
+    # Clear lock AFTER transaction commits to prevent race conditions where another request
+    # acquires the lock before this transaction is visible to other connections
+    clear_message_source_id_from_redis if @lock_acquired
   end
 
   def process_statuses
@@ -158,7 +170,8 @@ class Whatsapp::IncomingMessageBaseService
       message_type: :incoming,
       sender: @contact,
       source_id: message[:id].to_s,
-      in_reply_to_external_id: @in_reply_to_external_id
+      in_reply_to_external_id: @in_reply_to_external_id,
+      external_created_at: message[:timestamp].to_i
     )
   end
 
