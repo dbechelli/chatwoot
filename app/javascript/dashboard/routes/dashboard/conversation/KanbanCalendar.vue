@@ -46,6 +46,41 @@ const monthTitle = computed(() => {
   return formatted.charAt(0).toUpperCase() + formatted.slice(1);
 });
 
+// Optimization: Pre-calculate items map by date to avoid O(N*30) complexity
+const itemsByDateMap = computed(() => {
+  const map = {};
+  
+  props.items.forEach(item => {
+    const attrs = item.custom_attributes || {};
+    
+    // Helper to add item to map
+    const addToMap = (dateStr, type, idSuffix) => {
+       if (!dateStr) return;
+       // Parse once
+       try {
+         const date = parseISO(dateStr);
+         const key = format(date, 'yyyy-MM-dd');
+         
+         if (!map[key]) map[key] = [];
+         
+         map[key].push({ 
+           ...item, 
+           calendarType: type, 
+           calendarUniqueId: `${item.id}-${idSuffix}` 
+         });
+       } catch (e) {
+         // Invalid date
+       }
+    };
+
+    addToMap(attrs.kanban_due_date, 'due', 'due');
+    addToMap(attrs.kanban_start_date, 'start', 'start');
+    addToMap(attrs.kanban_scheduled_at, 'schedule', 'schedule');
+  });
+
+  return map;
+});
+
 const calendarDays = computed(() => {
   const monthStart = startOfMonth(currentMonth.value);
   const monthEnd = endOfMonth(currentMonth.value);
@@ -58,11 +93,12 @@ const calendarDays = computed(() => {
   });
 
   return days.map(day => {
+    const dateKey = format(day, 'yyyy-MM-dd');
     return {
       date: day,
       isCurrentMonth: isSameMonth(day, monthStart),
       isToday: isToday(day),
-      items: getItemsForDay(day),
+      items: itemsByDateMap.value[dateKey] || [],
     };
   });
 });
@@ -75,31 +111,6 @@ const weekDays = computed(() => {
     format(day, 'EEEE', { locale: currentLocale.value })
   );
 });
-
-const getItemsForDay = (date) => {
-  const itemsOnDay = [];
-  
-  props.items.forEach(item => {
-    const attrs = item.custom_attributes || {};
-    
-    // Check Due Date
-    if (attrs.kanban_due_date && isSameDay(parseISO(attrs.kanban_due_date), date)) {
-      itemsOnDay.push({ ...item, calendarType: 'due', calendarUniqueId: `${item.id}-due` });
-    }
-
-    // Check Start Date
-    if (attrs.kanban_start_date && isSameDay(parseISO(attrs.kanban_start_date), date)) {
-      itemsOnDay.push({ ...item, calendarType: 'start', calendarUniqueId: `${item.id}-start` });
-    }
-
-    // Check Scheduled Message
-    if (attrs.kanban_scheduled_at && isSameDay(parseISO(attrs.kanban_scheduled_at), date)) {
-      itemsOnDay.push({ ...item, calendarType: 'schedule', calendarUniqueId: `${item.id}-schedule` });
-    }
-  });
-
-  return itemsOnDay;
-};
 
 const nextMonth = () => {
   currentMonth.value = addMonths(currentMonth.value, 1);

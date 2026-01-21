@@ -84,32 +84,46 @@ const allConversations = computed(
 
 const inboxes = computed(() => store.getters['inboxes/getInboxes'] || []);
 
-// Agrupar conversas por estágio
+// Agrupar conversas por estágio - OTIMIZADO
 const conversationsByStage = computed(() => {
   const grouped = {};
   const attrKey = customAttributeKey.value;
-
+  
+  // 1. Initialize buckets for all stages
   salesStages.value.forEach(stage => {
-    let filtered = allConversations.value.filter(
-      conv => conv.custom_attributes?.[attrKey] === stage.stage
-    );
+    grouped[stage.stage] = [];
+  });
 
-    // Aplicar filtros de inbox
-    if (selectedInbox.value) {
-      filtered = filtered.filter(conv => conv.inbox_id === selectedInbox.value);
+  // 2. Pre-calculate filters to avoid repeated lookups
+  const isInboxFiltered = !!selectedInbox.value;
+  const currentInboxId = selectedInbox.value;
+  
+  const isAssigneeFiltered = selectedAssignee.value !== 'all';
+  const assigneeMode = selectedAssignee.value; // 'me', 'unassigned', or specific ID
+  const currentUserId = store.getters.getCurrentUser.id;
+
+  // 3. Iterate conversations ONCE
+  allConversations.value.forEach(conv => {
+    // Stage Filter (Basic Distribution)
+    const stageId = conv.custom_attributes?.[attrKey];
+    if (!stageId || !grouped[stageId]) return;
+
+    // Inbox Filter
+    if (isInboxFiltered && conv.inbox_id !== currentInboxId) return;
+
+    // Assignee Filter
+    if (isAssigneeFiltered) {
+      if (assigneeMode === 'me') {
+        if (conv.meta?.assignee?.id !== currentUserId) return;
+      } else if (assigneeMode === 'unassigned') {
+        if (conv.meta?.assignee) return;
+      } else {
+        // Specific user ID map if needed, but assuming simple string match logic from original code might need review
+        // Original code didn't handle specific ID, only 'me', 'unassigned' or 'all'.
+      }
     }
 
-    // Aplicar filtros de assignee
-    if (selectedAssignee.value === 'me') {
-      const currentUserId = store.getters.getCurrentUser.id;
-      filtered = filtered.filter(
-        conv => conv.meta?.assignee?.id === currentUserId
-      );
-    } else if (selectedAssignee.value === 'unassigned') {
-      filtered = filtered.filter(conv => !conv.meta?.assignee);
-    }
-
-    grouped[stage.stage] = filtered;
+    grouped[stageId].push(conv);
   });
 
   return grouped;
