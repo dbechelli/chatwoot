@@ -345,7 +345,7 @@ const toggleMetrics = () => {
 
 const toggleViewMode = () => {
   viewMode.value = viewMode.value === 'board' ? 'list' : 'board';
-  
+};
 
 const handleBulkUpdate = async (bulkData) => {
   try {
@@ -513,11 +513,10 @@ watch([selectedInbox, selectedAssignee], () => {
             <h1 class="text-xl font-bold text-slate-900 leading-tight">
               {{ currentBoard?.name || t('KANBAN.TITLE') }}
             </h1>
-            <span
-              class="text-xs font-medium text-slate-500 uppercase tracking-wider"
-            >
+            <span class="text-xs font-medium text-slate-500 uppercase tracking-wider">
               {{ currentBoard?.description || 'Gestão de Funil' }}
-           div class="flex items-center gap-1 bg-slate-100 rounded-lg p-1">
+            </span>
+           <div class="flex items-center gap-1 bg-slate-100 rounded-lg p-1">
             <button
               class="inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-semibold transition-all"
               :class="viewMode === 'board' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'"
@@ -552,7 +551,7 @@ watch([selectedInbox, selectedAssignee], () => {
             </button>
           </div>
 
-          < </span>
+            
           </div>
         </div>
 

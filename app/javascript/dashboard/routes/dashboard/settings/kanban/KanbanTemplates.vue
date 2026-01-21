@@ -172,7 +172,7 @@ const selectTemplate = (template) => {
               </p>
               <div class="flex flex-wrap gap-1.5">
                 <div
-                  v-for="(stage, index) in template.stages.slice(0, 4)"
+                  v-for="stage in template.stages.slice(0, 4)"
                   :key="stage.id"
                   class="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-medium text-white"
                   :style="{ backgroundColor: stage.color }"
