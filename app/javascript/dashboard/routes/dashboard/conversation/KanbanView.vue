@@ -757,7 +757,7 @@ watch([selectedInbox, selectedAssignee], () => {
       </div>
     </Modal>
 
-    <div class="flex-1 overflow-hidden bg-[#f8fafc]" :class="viewMode === 'list' ? 'overflow-y-auto' : 'overflow-x-auto overflow-y-hidden'">
+    <main class="flex-1 w-full overflow-hidden bg-[#f8fafc]" :class="viewMode === 'list' ? 'overflow-y-auto' : 'overflow-x-auto overflow-y-hidden'">
       <div
         v-if="isLoading && !allConversations.length"
         class="flex h-full items-center justify-center"
@@ -793,29 +793,9 @@ watch([selectedInbox, selectedAssignee], () => {
         />
       </div>
 
-      <!-- Visualização em Quadro (Kanban) -->
-      <div
-        v-else-if="salesStages.length > 0 && viewMode === 'board'"
-        />
-      </div>
-    </Transition>
-
-    <main class="flex-1 w-full overflow-x-auto overflow-y-hidden bg-[#f8fafc]">
-      <div
-        v-if="isLoading && !allConversations.length"
-        class="flex h-full items-center justify-center"
-      >
-        <div class="flex flex-col items-center gap-4">
-          <i class="i-lucide-loader-2 animate-spin text-5xl text-woot-600" />
-          <p class="text-sm font-semibold text-slate-500">
-            {{ t('KANBAN.LOADING') }}
-          </p>
-        </div>
-      </div>
-
       <!-- Standard Board View -->
       <div
-        v-else-if="salesStages.length > 0 && groupBy === 'none'"
+        v-else-if="salesStages.length > 0 && viewMode === 'board' && groupBy === 'none'"
         class="inline-flex h-full items-start gap-4 p-4 md:p-6"
       >
         <div
@@ -841,7 +821,7 @@ watch([selectedInbox, selectedAssignee], () => {
 
       <!-- Swimlane Board View -->
       <div
-        v-else-if="salesStages.length > 0 && groupBy !== 'none'"
+        v-else-if="salesStages.length > 0 && viewMode === 'board' && groupBy !== 'none'"
         class="flex flex-col h-full bg-[#f8fafc] overflow-y-auto overflow-x-hidden p-4 md:p-6 pb-20 gap-8"
       >
         <div v-for="group in swimlaneGroups" :key="group.id" class="flex flex-col gap-3">
@@ -920,7 +900,6 @@ watch([selectedInbox, selectedAssignee], () => {
       @bulk-update="handleBulkUpdate"
       @close="showBulkActions = false"
     />
-    </main>
 
     <KanbanHelpModal 
       v-if="showHelpModal" 
