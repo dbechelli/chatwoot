@@ -120,7 +120,7 @@
       "EXPORT_CSV": "Export CSV",
       "STAGE_PERFORMANCE": "Performance by Stage",
       "AGENT_PERFORMANCE": "Performance by Agent",
-      "NO_BOARD_SELECTED": "No board selected"    }
+      "NO_BOARD_SELECTED": "No board selected"
     },
     "PRIORITY_LABEL": {
       "LOW": "Low",
