@@ -541,14 +541,6 @@ watch([selectedInbox, selectedAssignee], () => {
               <i class="i-lucide-calendar text-lg" />
               <span class="hidden sm:inline">Calendário</span>
             </button>
-            <button
-              class="inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-semibold transition-all"
-              :class="viewMode === 'list' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'"
-              @click="viewMode = 'list'"
-            >
-              <i class="i-lucide-list text-lg" />
-              <span class="hidden sm:inline">Lista</span>
-            </button>
           </div>
 
             

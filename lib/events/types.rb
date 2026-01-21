@@ -28,6 +28,11 @@ module Events::Types
   CONVERSATION_CONTACT_CHANGED = 'conversation.contact_changed'
   ASSIGNEE_CHANGED = 'assignee.changed'
   TEAM_CHANGED = 'team.changed'
+
+  # kanban events
+  KANBAN_CARD_CREATED = 'kanban_card_created'
+  KANBAN_CARD_UPDATED = 'kanban_card_updated'
+  KANBAN_CARD_DELETED = 'kanban_card_deleted'
   CONVERSATION_TYPING_ON = 'conversation.typing_on'
   CONVERSATION_RECORDING = 'conversation.recording'
   CONVERSATION_TYPING_OFF = 'conversation.typing_off'

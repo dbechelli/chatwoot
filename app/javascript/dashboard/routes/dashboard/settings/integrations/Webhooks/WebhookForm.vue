@@ -23,6 +23,9 @@ const SUPPORTED_WEBHOOK_EVENTS = [
   'conversation_typing_on',
   'conversation_typing_off',
   'provider_event_received',
+  'kanban_card_created',
+  'kanban_card_updated',
+  'kanban_card_deleted',
 ];
 
 const localhostUrl = value => {

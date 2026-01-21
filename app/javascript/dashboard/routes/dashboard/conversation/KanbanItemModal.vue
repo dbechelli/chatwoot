@@ -4,6 +4,8 @@ import { useStore } from 'dashboard/composables/store';
 import { useI18n } from 'vue-i18n';
 import { useAlert } from 'dashboard/composables';
 import Modal from 'dashboard/components/Modal.vue';
+import TagMultiSelectComboBox from 'dashboard/components-next/combobox/TagMultiSelectComboBox.vue';
+import AutomationFileInput from 'dashboard/components/widgets/AutomationFileInput.vue';
 
 const props = defineProps({
   show: { type: Boolean, default: false },
@@ -38,6 +40,8 @@ const form = ref({
   custom_attributes: {},
   start_date: '',
   due_date: '',
+  scheduled_message: '',
+  scheduled_at: '',
 });
 
 
@@ -96,6 +100,10 @@ watch(() => props.item, (newItem) => {
       custom_attributes: dynamicAttributes,
       start_date: newItem.custom_attributes?.kanban_start_date || '',
       due_date: newItem.custom_attributes?.kanban_due_date || '',
+      scheduled_message: newItem.custom_attributes?.kanban_scheduled_message || '',
+      scheduled_at: newItem.custom_attributes?.kanban_scheduled_at || '',
+      labels: newItem.labels || newItem.conversation_labels || [],
+      attachments: newItem.custom_attributes?.kanban_attachments || [],
     };
   } else {
     // Reset form for new item
@@ -118,8 +126,12 @@ watch(() => props.item, (newItem) => {
       stage_id: props.stageId,
       checklist: [],
       custom_attributes: dynamicAttributes,
+      scheduled_message: '',
+      scheduled_at: '',
       start_date: '',
       due_date: '',
+      labels: [],
+      attachments: [],
     };
     
     // If we have a conversationId but no item, we might want to fetch the conversation details
@@ -194,6 +206,16 @@ const selectConversation = (conv) => {
   // Dates
   form.value.start_date = attrs.kanban_start_date || '';
   form.value.due_date = attrs.kanban_due_date || '';
+  
+  // Scheduled Message
+  form.value.scheduled_message = attrs.kanban_scheduled_message || '';
+  form.value.scheduled_at = attrs.kanban_scheduled_at || '';
+
+  // Labels
+  form.value.labels = conv.labels || [];
+  
+  // Attachments
+  form.value.attachments = attrs.kanban_attachments || [];
 
   // Dynamic attributes
   customAttributes.value.forEach(attr => {
@@ -263,6 +285,9 @@ const handleSave = async () => {
       kanban_checklist: form.value.checklist, // Save checklist
       kanban_start_date: form.value.start_date || null,
       kanban_due_date: form.value.due_date || null,
+      kanban_scheduled_message: form.value.scheduled_message || null,
+      kanban_scheduled_at: form.value.scheduled_at || null,
+      kanban_attachments: form.value.attachments,
       [boardCustomAttributeKey.value]: form.value.stage_id,
       ...form.value.custom_attributes,
     };
@@ -271,6 +296,14 @@ const handleSave = async () => {
       conversationId,
       customAttributes,
     });
+    
+    // 4. Update Labels
+    if (form.value.labels) {
+       await store.dispatch('conversationLabels/update', {
+         conversationId,
+         labels: form.value.labels
+       });
+    }
 
     // 2. Update Priority via dedicated action (avoids missing meta/sender shape)
     if (form.value.priority) {
@@ -290,6 +323,16 @@ const handleSave = async () => {
 
     useAlert(t('KANBAN.MODAL.SUCCESS_MESSAGE') || 'Item salvo com sucesso');
     emit('save');
+const handleAttachmentUpload = (files) => {
+  if (files && files.length > 0) {
+    // Appending new file ID to the list
+    form.value.attachments = [...form.value.attachments, files[0]];
+  }
+};
+
+const removeAttachment = (index) => {
+  form.value.attachments.splice(index, 1);
+};
     emit('close');
   } catch (error) {
     console.error(error);
@@ -352,7 +395,35 @@ const handleSave = async () => {
         </div>
 
         <!-- Notes -->
-        <div class="space-y-1.5">
+        <div Agent & Labels -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Agent -->
+          <div class="space-y-1.5">
+            <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">{{ $t('KANBAN.MODAL.ASSIGNEE') }}</label>
+            <select
+              v-model="form.assignee_id"
+              class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-woot-500/20 focus:border-woot-500 transition-all"
+            >
+              <option :value="null">{{ $t('KANBAN.MODAL.NO_ASSIGNEE') }}</option>
+              <option v-for="agent in agents" :key="agent.id" :value="agent.id">
+                {{ agent.name }}
+              </option>
+            </select>
+          </div>
+          
+           <!-- Labels -->
+           <div class="space-y-1.5">
+            <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Etiquetas</label>
+            <TagMultiSelectComboBox
+              v-model="form.labels"
+              :options="allLabels"
+              placeholder="Selecionar etiquetas"
+              search-placeholder="Buscar etiqueta"
+            />
+          </div>
+        </div>
+
+        <!-- class="space-y-1.5">
           <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">{{ $t('KANBAN.MODAL.NOTES') }}</label>
           <textarea
             v-model="form.notes"
@@ -372,7 +443,31 @@ const handleSave = async () => {
               v-if="['text', 'link', 'number', 'date'].includes(attr.attribute_display_type)"
               v-model="form.custom_attributes[attr.attribute_key]"
               :type="attr.attribute_display_type === 'link' ? 'url' : attr.attribute_display_type"
-              :placeholder="attr.attribute_display_name"
+             Attachments & History -->
+        <div class="space-y-3 pt-4 border-t border-slate-100">
+           <label class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
+            <i class="i-lucide-paperclip text-slate-400" />
+            Anexar Arquivos
+          </label>
+          <div class="space-y-2">
+             <AutomationFileInput @update:modelValue="handleAttachmentUpload" />
+             <div v-if="form.attachments.length > 0" class="space-y-1">
+                <div v-for="(fileId, idx) in form.attachments" :key="idx" class="flex items-center justify-between p-2 bg-slate-50 border border-slate-200 rounded text-xs">
+                   <span>Anexo ID: {{ fileId }}</span>
+                   <button @click="removeAttachment(idx)" class="text-red-500 hover:text-red-700"><i class="i-lucide-trash-2" /></button>
+                </div>
+             </div>
+          </div>
+        </div>
+
+        <div class="pt-4 border-t border-slate-100">
+           <button class="flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-700">
+             <i class="i-lucide-history" />
+             Ver Histórico da Tarefa (Em breve)
+           </button>
+        </div>
+
+        <!--  :placeholder="attr.attribute_display_name"
               class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-woot-500/20 focus:border-woot-500 transition-all"
             />
 
@@ -486,6 +581,32 @@ const handleSave = async () => {
           </div>
         </div>
 
+        <!-- Scheduled Message Section -->
+        <div class="space-y-3 pt-4 border-t border-slate-100">
+           <label class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
+            <i class="i-lucide-message-square-clock text-slate-400" />
+            Agendar Mensagem Automática
+          </label>
+          <div class="grid grid-cols-1 gap-4">
+            <div class="space-y-1.5">
+               <textarea
+                v-model="form.scheduled_message"
+                rows="2"
+                placeholder="Digite a mensagem para enviar automaticamente..."
+                class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-woot-500/20 focus:border-woot-500 transition-all resize-none"
+              />
+            </div>
+             <div class="space-y-1.5">
+               <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Data e Hora do Envio</label>
+               <input
+                v-model="form.scheduled_at"
+                type="datetime-local"
+                class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-woot-500/20 focus:border-woot-500 transition-all"
+              />
+            </div>
+          </div>
+        </div>
+
         <!-- Checklist Section -->
         <div class="space-y-3 pt-4 border-t border-slate-100">
           <div class="flex items-center justify-between">
@@ -554,7 +675,7 @@ const handleSave = async () => {
           </div>
         </div>
 
-        <!-- Conversation Link -->
+        <!-- Conversation Link  hidden-->
         <div class="space-y-1.5 pt-4 border-t border-slate-100">
           <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">{{ $t('KANBAN.MODAL.LINK_CONVERSATION') }}</label>
           

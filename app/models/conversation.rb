@@ -74,6 +74,8 @@ class Conversation < ApplicationRecord
 
   after_create_commit :apply_kanban_automation
 
+  after_update_commit :dispatch_kanban_events
+
   enum status: { open: 0, resolved: 1, pending: 2, snoozed: 3 }
   enum priority: { low: 0, medium: 1, high: 2, urgent: 3 }
 
@@ -211,6 +213,31 @@ class Conversation < ApplicationRecord
 
   def dispatch_conversation_updated_event(previous_changes = nil)
     dispatcher_dispatch(CONVERSATION_UPDATED, previous_changes)
+  end
+
+  def dispatch_kanban_events
+    return unless saved_change_to_custom_attributes?
+
+    changes = saved_changes['custom_attributes']
+    old_attrs = changes[0] || {}
+    new_attrs = changes[1] || {}
+
+    kanban_keys = new_attrs.keys.select { |k| k.to_s.start_with?('kanban_') } + ['sales_stage']
+    changed_keys = kanban_keys.select { |k| new_attrs[k] != old_attrs[k] }
+    
+    return unless changed_keys.any?
+
+    if new_attrs['sales_stage'] != old_attrs['sales_stage']
+       if old_attrs['sales_stage'].blank? && new_attrs['sales_stage'].present?
+          dispatcher_dispatch(Events::Types::KANBAN_CARD_CREATED, saved_changes)
+       elsif old_attrs['sales_stage'].present? && new_attrs['sales_stage'].blank?
+          dispatcher_dispatch(Events::Types::KANBAN_CARD_DELETED, saved_changes)
+       else
+          dispatcher_dispatch(Events::Types::KANBAN_CARD_UPDATED, saved_changes)
+       end
+    else
+       dispatcher_dispatch(Events::Types::KANBAN_CARD_UPDATED, saved_changes)
+    end
   end
 
   private

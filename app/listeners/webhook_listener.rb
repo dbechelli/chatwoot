@@ -15,6 +15,25 @@ class WebhookListener < BaseListener
     deliver_webhook_payloads(payload, inbox)
   end
 
+  def kanban_card_created(event)
+    conversation = extract_conversation_and_account(event)[0]
+    payload = conversation.webhook_data.merge(event: __method__.to_s)
+    deliver_webhook_payloads(payload, conversation.inbox)
+  end
+
+  def kanban_card_updated(event)
+    conversation = extract_conversation_and_account(event)[0]
+    changed_attributes = extract_changed_attributes(event)
+    payload = conversation.webhook_data.merge(event: __method__.to_s, changed_attributes: changed_attributes)
+    deliver_webhook_payloads(payload, conversation.inbox)
+  end
+
+  def kanban_card_deleted(event)
+    conversation = extract_conversation_and_account(event)[0]
+    payload = conversation.webhook_data.merge(event: __method__.to_s)
+    deliver_webhook_payloads(payload, conversation.inbox)
+  end
+
   def conversation_created(event)
     conversation = extract_conversation_and_account(event)[0]
     inbox = conversation.inbox
