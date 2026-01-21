@@ -47,6 +47,7 @@ const form = ref({
 
 
 const agents = computed(() => store.getters['agents/getAgents']);
+const allLabels = computed(() => store.getters['labels/getLabels']);
 
 const boardCustomAttributeKey = computed(() => props.board.customAttributeKey || 'sales_stage');
 
@@ -394,8 +395,7 @@ const removeAttachment = (index) => {
           />
         </div>
 
-        <!-- Notes -->
-        <div Agent & Labels -->
+        <!-- Agent & Labels -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <!-- Agent -->
           <div class="space-y-1.5">
@@ -423,7 +423,8 @@ const removeAttachment = (index) => {
           </div>
         </div>
 
-        <!-- class="space-y-1.5">
+        <!-- Notes -->
+        <div class="space-y-1.5">
           <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">{{ $t('KANBAN.MODAL.NOTES') }}</label>
           <textarea
             v-model="form.notes"
@@ -443,31 +444,7 @@ const removeAttachment = (index) => {
               v-if="['text', 'link', 'number', 'date'].includes(attr.attribute_display_type)"
               v-model="form.custom_attributes[attr.attribute_key]"
               :type="attr.attribute_display_type === 'link' ? 'url' : attr.attribute_display_type"
-             Attachments & History -->
-        <div class="space-y-3 pt-4 border-t border-slate-100">
-           <label class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
-            <i class="i-lucide-paperclip text-slate-400" />
-            Anexar Arquivos
-          </label>
-          <div class="space-y-2">
-             <AutomationFileInput @update:modelValue="handleAttachmentUpload" />
-             <div v-if="form.attachments.length > 0" class="space-y-1">
-                <div v-for="(fileId, idx) in form.attachments" :key="idx" class="flex items-center justify-between p-2 bg-slate-50 border border-slate-200 rounded text-xs">
-                   <span>Anexo ID: {{ fileId }}</span>
-                   <button @click="removeAttachment(idx)" class="text-red-500 hover:text-red-700"><i class="i-lucide-trash-2" /></button>
-                </div>
-             </div>
-          </div>
-        </div>
-
-        <div class="pt-4 border-t border-slate-100">
-           <button class="flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-700">
-             <i class="i-lucide-history" />
-             Ver Histórico da Tarefa (Em breve)
-           </button>
-        </div>
-
-        <!--  :placeholder="attr.attribute_display_name"
+              :placeholder="attr.attribute_display_name"
               class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-woot-500/20 focus:border-woot-500 transition-all"
             />
 
@@ -493,6 +470,30 @@ const removeAttachment = (index) => {
               <span class="text-sm text-slate-600">{{ attr.attribute_display_name }}</span>
             </label>
           </div>
+        </div>
+
+        <!-- Attachments & History -->
+        <div class="space-y-3 pt-4 border-t border-slate-100">
+           <label class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
+            <i class="i-lucide-paperclip text-slate-400" />
+            Anexar Arquivos
+          </label>
+          <div class="space-y-2">
+             <AutomationFileInput @update:modelValue="handleAttachmentUpload" />
+             <div v-if="form.attachments.length > 0" class="space-y-1">
+                <div v-for="(fileId, idx) in form.attachments" :key="idx" class="flex items-center justify-between p-2 bg-slate-50 border border-slate-200 rounded text-xs">
+                   <span>Anexo ID: {{ fileId }}</span>
+                   <button @click="removeAttachment(idx)" class="text-red-500 hover:text-red-700"><i class="i-lucide-trash-2" /></button>
+                </div>
+             </div>
+          </div>
+        </div>
+
+        <div class="pt-4 border-t border-slate-100">
+           <button class="flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-700">
+             <i class="i-lucide-history" />
+             Ver Histórico da Tarefa (Em breve)
+           </button>
         </div>
 
         <!-- Stage Selection -->
