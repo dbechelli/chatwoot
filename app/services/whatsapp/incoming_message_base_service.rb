@@ -119,7 +119,8 @@ class Whatsapp::IncomingMessageBaseService
     conversation_scope = @contact.conversations.where(inbox_id: @inbox.id)
 
     @conversation = if @inbox.lock_to_single_conversation
-                      conversation_scope.last
+                      conversation = conversation_scope.last
+                      conversation && !conversation.resolved? ? conversation : nil
                     else
                       conversation_scope.where.not(status: :resolved).last
                     end
