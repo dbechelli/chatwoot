@@ -77,14 +77,28 @@ const weekDays = computed(() => {
 });
 
 const getItemsForDay = (date) => {
-  return props.items.filter(item => {
-    const dueDate = item.custom_attributes?.kanban_due_date;
-    if (!dueDate) return false;
-    // Fix: parseISO treats string as UTC, but date input saves as YYYY-MM-DD local usually. 
-    // We should compare strictly by local date YYYY-MM-DD
-    const itemDate = parseISO(dueDate);
-    return isSameDay(itemDate, date);
+  const itemsOnDay = [];
+  
+  props.items.forEach(item => {
+    const attrs = item.custom_attributes || {};
+    
+    // Check Due Date
+    if (attrs.kanban_due_date && isSameDay(parseISO(attrs.kanban_due_date), date)) {
+      itemsOnDay.push({ ...item, calendarType: 'due', calendarUniqueId: `${item.id}-due` });
+    }
+
+    // Check Start Date
+    if (attrs.kanban_start_date && isSameDay(parseISO(attrs.kanban_start_date), date)) {
+      itemsOnDay.push({ ...item, calendarType: 'start', calendarUniqueId: `${item.id}-start` });
+    }
+
+    // Check Scheduled Message
+    if (attrs.kanban_scheduled_at && isSameDay(parseISO(attrs.kanban_scheduled_at), date)) {
+      itemsOnDay.push({ ...item, calendarType: 'schedule', calendarUniqueId: `${item.id}-schedule` });
+    }
   });
+
+  return itemsOnDay;
 };
 
 const nextMonth = () => {
@@ -184,9 +198,9 @@ const getStageColor = (stageId) => {
           <div class="flex-1 space-y-1 overflow-y-auto max-h-[100px] custom-scrollbar">
             <div 
               v-for="item in day.items" 
-              :key="item.id"
+              :key="item.calendarUniqueId"
               @click.stop="handleItemClick(item)"
-              class="px-2 py-1.5 bg-white border border-slate-200 rounded shadow-sm text-xs cursor-pointer hover:border-woot-300 hover:shadow-md transition-all truncate border-l-4"
+              class="px-2 py-1.5 bg-white border border-slate-200 rounded shadow-sm text-xs cursor-pointer hover:border-woot-300 hover:shadow-md transition-all truncate border-l-4 group/item"
               :class="{
                 'border-l-red-500': item.priority === 'urgent',
                 'border-l-orange-400': item.priority === 'high',
@@ -194,12 +208,22 @@ const getStageColor = (stageId) => {
                 'border-l-slate-400': item.priority === 'low'
               }"
             >
-              <div class="font-medium text-slate-700 truncate">
-                {{ item.custom_attributes?.kanban_title || item.meta?.sender?.name || `#${item.id}` }}
+              <div class="flex items-center gap-1.5 min-w-0">
+                 <!-- Icon based on type -->
+                 <i v-if="item.calendarType === 'start'" class="i-lucide-calendar-clock text-blue-500 flex-shrink-0" title="Início" />
+                 <i v-else-if="item.calendarType === 'due'" class="i-lucide-calendar-x text-red-500 flex-shrink-0" title="Vencimento" />
+                 <i v-else-if="item.calendarType === 'schedule'" class="i-lucide-message-square-clock text-amber-500 flex-shrink-0" title="Mensagem Agendada" />
+
+                <div class="font-medium text-slate-700 truncate">
+                  {{ item.custom_attributes?.kanban_title || item.meta?.sender?.name || `#${item.id}` }}
+                </div>
               </div>
               <!-- Optional: show time if we had it, or value -->
-              <div v-if="item.custom_attributes?.deal_value" class="text-[10px] text-slate-500">
-                R$ {{ item.custom_attributes.deal_value }}
+              <div class="flex justify-between items-center text-[10px] text-slate-500 mt-0.5">
+                <span v-if="item.custom_attributes?.deal_value">R$ {{ item.custom_attributes.deal_value }}</span>
+                <span v-if="item.calendarType === 'schedule'" class="ml-auto font-mono">
+                   {{ item.custom_attributes.kanban_scheduled_at ? format(parseISO(item.custom_attributes.kanban_scheduled_at), 'HH:mm') : '' }}
+                </span>
               </div>
             </div>
           </div>
