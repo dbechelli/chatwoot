@@ -36,6 +36,8 @@ const form = ref({
   stage_id: props.stageId,
   checklist: [],
   custom_attributes: {},
+  start_date: '',
+  due_date: '',
 });
 
 
@@ -92,6 +94,8 @@ watch(() => props.item, (newItem) => {
       stage_id: props.stageId,
       checklist: newItem.custom_attributes?.kanban_checklist || [],
       custom_attributes: dynamicAttributes,
+      start_date: newItem.custom_attributes?.kanban_start_date || '',
+      due_date: newItem.custom_attributes?.kanban_due_date || '',
     };
   } else {
     // Reset form for new item
@@ -114,6 +118,8 @@ watch(() => props.item, (newItem) => {
       stage_id: props.stageId,
       checklist: [],
       custom_attributes: dynamicAttributes,
+      start_date: '',
+      due_date: '',
     };
     
     // If we have a conversationId but no item, we might want to fetch the conversation details
@@ -185,6 +191,10 @@ const selectConversation = (conv) => {
     form.value.checklist = attrs.kanban_checklist;
   }
 
+  // Dates
+  form.value.start_date = attrs.kanban_start_date || '';
+  form.value.due_date = attrs.kanban_due_date || '';
+
   // Dynamic attributes
   customAttributes.value.forEach(attr => {
     if (attrs[attr.attribute_key]) {
@@ -203,6 +213,21 @@ const getPriorityClasses = (p) => {
     urgent: 'bg-red-50 text-red-600 border-red-200',
   };
   return map[p];
+};
+
+const wonStage = computed(() => {
+  if (!props.board?.stages) return null;
+  return props.board.stages.find(s => ['won', 'ganho', 'concluido', 'concluído', 'fechado', 'venda', 'sucesso'].some(k => s.name.toLowerCase().includes(k)));
+});
+
+const lostStage = computed(() => {
+  if (!props.board?.stages) return null;
+  return props.board.stages.find(s => ['lost', 'perda', 'perdido', 'cancelado', 'arquivado'].some(k => s.name.toLowerCase().includes(k)));
+});
+
+const moveToStage = async (stageId) => {
+  form.value.stage_id = stageId;
+  await handleSave();
 };
 
 const handleSave = async () => {
@@ -236,6 +261,8 @@ const handleSave = async () => {
       kanban_notes: form.value.notes,
       deal_value: form.value.hasValue ? form.value.value : 0,
       kanban_checklist: form.value.checklist, // Save checklist
+      kanban_start_date: form.value.start_date || null,
+      kanban_due_date: form.value.due_date || null,
       [boardCustomAttributeKey.value]: form.value.stage_id,
       ...form.value.custom_attributes,
     };
@@ -430,6 +457,35 @@ const handleSave = async () => {
           </div>
         </div>
 
+        <!-- Dates Row -->
+        <div class="grid grid-cols-2 gap-6 pt-2">
+          <!-- Start Date -->
+          <div class="space-y-1.5">
+            <label class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
+              <i class="i-lucide-calendar-clock text-slate-400" />
+              {{ $t('KANBAN.MODAL.START_DATE') }}
+            </label>
+            <input
+              v-model="form.start_date"
+              type="date"
+              class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-woot-500/20 focus:border-woot-500 transition-all"
+            />
+          </div>
+
+          <!-- Due Date -->
+          <div class="space-y-1.5">
+            <label class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
+              <i class="i-lucide-calendar-x text-slate-400" />
+              {{ $t('KANBAN.MODAL.DUE_DATE') }}
+            </label>
+            <input
+              v-model="form.due_date"
+              type="date"
+              class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-woot-500/20 focus:border-woot-500 transition-all"
+            />
+          </div>
+        </div>
+
         <!-- Checklist Section -->
         <div class="space-y-3 pt-4 border-t border-slate-100">
           <div class="flex items-center justify-between">
@@ -566,8 +622,25 @@ const handleSave = async () => {
 
       <!-- Footer -->
       <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex justify-between items-center gap-3">
-        <div class="text-xs text-slate-400 font-mono">
-          {{ form.conversation_id ? `#${form.conversation_id}` : 'Novo Item' }}
+        <div class="flex items-center gap-2">
+          <button
+            v-if="wonStage && form.stage_id !== wonStage.id"
+            @click="moveToStage(wonStage.id)"
+            :title="wonStage.name"
+            class="px-3 py-2 text-xs font-bold text-green-700 bg-green-100 hover:bg-green-200 border border-green-200 rounded-lg transition-colors flex items-center gap-1.5"
+          >
+            <i class="i-lucide-trophy text-sm" />
+            <span class="hidden sm:inline">Ganho</span>
+          </button>
+          <button
+            v-if="lostStage && form.stage_id !== lostStage.id"
+            @click="moveToStage(lostStage.id)"
+            :title="lostStage.name"
+            class="px-3 py-2 text-xs font-bold text-red-700 bg-red-100 hover:bg-red-200 border border-red-200 rounded-lg transition-colors flex items-center gap-1.5"
+          >
+            <i class="i-lucide-thumbs-down text-sm" />
+            <span class="hidden sm:inline">Perdido</span>
+          </button>
         </div>
         <div class="flex gap-3">
           <button
@@ -579,7 +652,7 @@ const handleSave = async () => {
           <button
             @click="handleSave"
             :disabled="isLoading"
-            class="px-6 py-2 text-sm font-bold text-white bg-green-600 hover:bg-green-700 rounded-lg shadow-sm shadow-green-200 transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2"
+            class="px-6 py-2 text-sm font-bold text-white bg-woot-600 hover:bg-woot-700 rounded-lg shadow-sm shadow-woot-200 transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2"
           >
             <i v-if="isLoading" class="i-lucide-loader-2 animate-spin" />
             {{ isLoading ? $t('KANBAN.MODAL.SAVING') : $t('KANBAN.MODAL.SAVE') }}

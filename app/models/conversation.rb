@@ -72,6 +72,8 @@ class Conversation < ApplicationRecord
   validates :uuid, uniqueness: true
   validate :validate_referer_url
 
+  after_create_commit :apply_kanban_automation
+
   enum status: { open: 0, resolved: 1, pending: 2, snoozed: 3 }
   enum priority: { low: 0, medium: 1, high: 2, urgent: 3 }
 
@@ -297,8 +299,8 @@ class Conversation < ApplicationRecord
       CONVERSATION_OPENED => -> { saved_change_to_status? && open? },
       CONVERSATION_RESOLVED => -> { saved_change_to_status? && resolved? },
       CONVERSATION_STATUS_CHANGED => -> { saved_change_to_status? },
-      CONVERSATION_READ => -> { saved_change_to_contact_last_seen_at? },
-      CONVERSATION_CONTACT_CHANGED => -> { saved_change_to_contact_id? }
+      CONVERSATION_RESOLUTION_REQUIRED => -> { pending? || snoozed? || open? },
+      CONVERSATION_UPDATED => -> { saved_change_to_custom_attributes? }
     }.each do |event, condition|
       condition.call && dispatcher_dispatch(event, status_change)
     end
@@ -384,6 +386,57 @@ class Conversation < ApplicationRecord
     member.joined_at ||= Time.current
     member.save!
     member
+  end
+
+  def apply_kanban_automation
+    return unless account.respond_to?(:kanban_config)
+    config = account.kanban_config
+    return unless config && config['boards']
+
+    config['boards'].each do |board|
+      inbox_ids = board['auto_assign_inboxes'] || []
+      # Handle string/integer mismatch by converting everything to integers
+      if inbox_ids.map(&:to_i).include?(inbox_id)
+        initial_stage = board['auto_assign_stage_id'] || (board['stages']&.first || {})['id']
+        key = board['customAttributeKey'] || 'sales_stage'
+        
+        # Avoid overwriting if somehow already set
+        next if custom_attributes&.key?(key)
+
+        updates = {}
+        updates[key] = initial_stage
+        # Set default title if not present
+        updates['kanban_title'] = "Ticket ##{display_id}" unless custom_attributes&.key?('kanban_title')
+
+        # Round Robin Logic
+        if board['enable_round_robin'] && board['agent_ids'].present?
+          eligible_ids = board['agent_ids'].map(&:to_i)
+          # Find last assigned agent for this board
+          last_conv = Conversation.where(account_id: account_id)
+                                  .where("custom_attributes ? :key", key: key)
+                                  .where(assignee_id: eligible_ids)
+                                  .order(created_at: :desc)
+                                  .first
+          
+          last_assignee_id = last_conv&.assignee_id
+          
+          next_agent_id = if last_assignee_id && (idx = eligible_ids.index(last_assignee_id))
+                            eligible_ids[(idx + 1) % eligible_ids.length]
+                          else
+                            eligible_ids.first
+                          end
+          
+          self.assignee_id = next_agent_id
+        end
+        
+        # Use update_columns to avoid callback loops if we were using save!, 
+        # but here we want to trigger update callbacks so UI refreshes?
+        # Using update! is safer to trigger broadcasts
+        self.custom_attributes = (custom_attributes || {}).merge(updates)
+        save!
+        break # Only assign to one board for now to avoid conflicts
+      end
+    end
   end
 
   # creating db triggers

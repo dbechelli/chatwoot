@@ -16,9 +16,19 @@
       "TITLE_PLACEHOLDER": "Ex: Negotiation Company X",
       "DESCRIPTION": "Description",
       "DESCRIPTION_PLACEHOLDER": "Details about this opportunity...",
+      "NOTES": "Internal Notes",
+      "NOTES_PLACEHOLDER": "Private notes for the team...",
       "DEAL_VALUE": "Deal Value",
       "ACTIVATE": "Activate",
       "PRIORITY": "Priority",
+      "PRIORITY_LABEL": {
+        "LOW": "Low",
+        "MEDIUM": "Medium",
+        "HIGH": "High",
+        "URGENT": "Urgent"
+      },
+      "START_DATE": "Start Date",
+      "DUE_DATE": "Due Date",
       "CHECKLIST": "Checklist",
       "ADD_CHECKLIST_ITEM": "Add item to checklist...",
       "ADD": "Add",
@@ -29,9 +39,13 @@
       "UNLINK": "Unlink",
       "ASSIGNEE": "Assignee",
       "NO_ASSIGNEE": "No assignee",
+      "STAGE": "Stage",
       "CANCEL": "Cancel",
       "SAVE": "Save Item",
-      "SAVING": "Saving..."
+      "SAVING": "Saving...",
+      "NO_CONVERSATION_SELECTED": "Select a conversation to continue",
+      "SUCCESS_MESSAGE": "Item saved successfully",
+      "ERROR_MESSAGE": "Error saving item"
     },
     "CONTEXT_MENU": {
       "EDIT": "Edit Item",
@@ -40,11 +54,19 @@
       "DELETE": "Delete"
     },
     "ITEM_REMOVED": "Item removed from Kanban",
+    "ITEM_SAVED": "Item saved successfully",
     "BOARD": "Board",
+    "CALENDAR": {
+      "TODAY": "Today",
+      "ADD_ITEM": "Add Item"
+    },
     "LOADING": "Loading deals...",
     "REFRESH": "Refresh",
     "SHOW_METRICS": "Show Metrics",
     "HIDE_METRICS": "Hide Metrics",
+    "NO_BOARDS_TITLE": "No Kanban boards found",
+    "NO_BOARDS_DESCRIPTION": "Create your first board to start organizing your processes visually and efficiently.",
+    "CREATE_FIRST_BOARD": "Create my first board",
     "FETCH_ERROR": "Failed to load conversations",
     "UPDATE_ERROR": "Failed to update deal stage",
     "STAGE_UPDATED": "Deal stage updated successfully",
@@ -74,7 +96,37 @@
       "TOTAL_VALUE": "Total Value",
       "AVG_DEAL_VALUE": "Avg Deal Value",
       "CONVERSION_RATE": "Conversion Rate",
-      "FORECAST": "Forecast"
+      "FORECAST": "Forecast"    },
+    "VIEW_MODE": {
+      "BOARD": "Board",
+      "LIST": "List",
+      "REPORTS": "Reports"
+    },
+    "BULK_ACTIONS": {
+      "TITLE": "Bulk Actions",
+      "SELECTED": "selected",
+      "SELECT_ACTION": "Select action",
+      "MOVE_TO_STAGE": "Move to stage",
+      "ASSIGN_AGENT": "Assign agent",
+      "CHANGE_PRIORITY": "Change priority",
+      "ARCHIVE": "Archive tasks",
+      "DELETE": "Delete tasks",
+      "APPLY": "Apply Action",
+      "SUCCESS": "task(s) updated successfully"
+    },
+    "REPORTS": {
+      "TITLE": "Kanban Reports",
+      "DESCRIPTION": "Performance analysis and pipeline metrics",
+      "EXPORT_CSV": "Export CSV",
+      "STAGE_PERFORMANCE": "Performance by Stage",
+      "AGENT_PERFORMANCE": "Performance by Agent",
+      "NO_BOARD_SELECTED": "No board selected"    }
+    },
+    "PRIORITY_LABEL": {
+      "LOW": "Low",
+      "MEDIUM": "Medium",
+      "HIGH": "High",
+      "URGENT": "Urgent"
     }
   },
   "KANBAN_SETTINGS": {
@@ -102,8 +154,14 @@
     "BASIC_CONFIG": "Basic Configuration",
     "BOARD_NAME": "Board Name",
     "BOARD_NAME_PLACEHOLDER": "e.g., Sales Pipeline",
-    "DESCRIPTION": "Description",
-    "DESCRIPTION_PLACEHOLDER": "Describe this board's purpose",
+    "BOARD_DESCRIPTION": "Description",
+    "BOARD_DESCRIPTION_PLACEHOLDER": "Describe this board's purpose",
+    "AGENTS": "Allowed Agents",
+    "AGENTS_HELP": "Select who can view and edit this board. Leave empty for everyone.",
+    "VISIBLE_ATTRIBUTES": "Card Fields",
+    "VISIBLE_ATTRIBUTES_HELP": "Select which extra information should appear on Kanban cards.",
+    "ENABLE_VALUE": "Track Monetary Value",
+    "ENABLE_VALUE_HELP": "Enable a field to add value ($) to cards.",
     "CUSTOM_ATTRIBUTE_KEY": "Custom Attribute Key",
     "CUSTOM_ATTRIBUTE_HELP": "The field name used to store the stage value (e.g., sales_stage)",
     "VALUE_ATTRIBUTE_KEY": "Value Attribute Key",

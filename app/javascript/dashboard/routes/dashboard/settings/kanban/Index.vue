@@ -5,6 +5,7 @@ import { useI18n } from 'vue-i18n';
 import { useAlert } from 'dashboard/composables';
 import SettingsLayout from '../SettingsLayout.vue';
 import KanbanBoardEditor from './KanbanBoardEditor.vue';
+import KanbanTemplates from './KanbanTemplates.vue';
 
 const store = useStore();
 const { t } = useI18n();
@@ -13,6 +14,7 @@ const kanbanConfig = ref(null);
 const isLoading = ref(true);
 const selectedBoard = ref(null);
 const showEditor = ref(false);
+const showTemplates = ref(false);
 
 const accountId = computed(() => store.getters.getCurrentAccountId);
 
@@ -31,6 +33,16 @@ const loadConfig = async () => {
 };
 
 const createBoard = () => {
+  showTemplates.value = true;
+};
+
+const createFromTemplate = (templateData) => {
+  selectedBoard.value = templateData;
+  showEditor.value = true;
+  showTemplates.value = false;
+};
+
+const createBlankBoard = () => {
   selectedBoard.value = {
     name: t('KANBAN_SETTINGS.NEW_BOARD'),
     description: '',
@@ -85,13 +97,25 @@ const deleteBoard = async boardId => {
   if (!confirm(t('KANBAN_SETTINGS.CONFIRM_DELETE'))) return;
 
   try {
-    await axios.delete(
+    await window.axios.delete(
       `/api/v1/accounts/${accountId.value}/kanban_settings/boards/${boardId}`
     );
     useAlert(t('KANBAN_SETTINGS.DELETE_SUCCESS'));
     await loadConfig();
   } catch (error) {
     useAlert(t('KANBAN_SETTINGS.DELETE_ERROR'));
+  }
+};
+
+const duplicateBoard = async board => {
+  try {
+    await window.axios.post(
+      `/api/v1/accounts/${accountId.value}/kanban_settings/boards/${board.id}/duplicate`
+    );
+    useAlert('Quadro duplicado com sucesso');
+    await loadConfig();
+  } catch (error) {
+    useAlert('Erro ao duplicar quadro');
   }
 };
 
@@ -194,11 +218,18 @@ onMounted(() => {
           <!-- Ações -->
           <div class="flex items-center gap-2 pt-2 border-t border-n-weak">
             <button
-              class="flex-1 px-3 py-1.5 text-sm font-medium text-n-slate-12 hover:bg-n-slate-2 rounded transition-colors"
+              class="flex-1 px-3 py-1.5 text-sm font-medium text-n-slate-12 hover:bg-n-slate-2 rounded transition-colors flex items-center justify-center gap-1"
               @click="editBoard(board)"
             >
-              <i class="i-lucide-edit-2 mr-1" />
+              <i class="i-lucide-edit-2" />
               {{ $t('KANBAN_SETTINGS.EDIT') }}
+            </button>
+            <button
+              class="px-3 py-1.5 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded transition-colors"
+              @click="duplicateBoard(board)"
+              title="Duplicar quadro"
+            >
+              <i class="i-lucide-copy" />
             </button>
             <button
               class="px-3 py-1.5 text-sm font-medium text-red-600 hover:bg-red-50 rounded transition-colors"
@@ -229,6 +260,14 @@ onMounted(() => {
           <i class="i-lucide-plus" />
           {{ $t('KANBAN_SETTINGS.CREATE_FIRST_BOARD') }}
         </button>
+
+    <!-- Templates Modal -->
+    <KanbanTemplates
+      v-if="showTemplates"
+      :show="showTemplates"
+      @select-template="createFromTemplate"
+      @close="showTemplates = false; createBlankBoard()"
+    />
       </div>
     </div>
 

@@ -143,6 +143,13 @@ class ActionCableListener < BaseListener
     broadcast(account, tokens, CONVERSATION_CONTACT_CHANGED, conversation.push_event_data)
   end
 
+  def conversation_updated(event)
+    conversation, account = extract_conversation_and_account(event)
+    tokens = user_tokens(account, conversation.inbox.members)
+
+    broadcast(account, tokens, CONVERSATION_UPDATED, conversation.push_event_data)
+  end
+
   def contact_created(event)
     contact, account = extract_contact_and_account(event)
     broadcast(account, [account_token(account)], CONTACT_CREATED, contact.push_event_data)

@@ -54,7 +54,7 @@ const actions = {
     commit(types.default.SET_KANBAN_UI_FLAG, { isUpdating: true });
     try {
       const accountId = rootGetters.getCurrentAccountId;
-      const response = await axios.put(
+      const response = await window.axios.put(
         `/api/v1/accounts/${accountId}/kanban_settings/boards/${id}`,
         { board: boardData }
       );
@@ -71,7 +71,7 @@ const actions = {
     commit(types.default.SET_KANBAN_UI_FLAG, { isDeleting: true });
     try {
       const accountId = rootGetters.getCurrentAccountId;
-      await axios.delete(
+      await window.axios.delete(
         `/api/v1/accounts/${accountId}/kanban_settings/boards/${id}`
       );
       commit(types.default.DELETE_KANBAN_BOARD, id);
@@ -84,16 +84,10 @@ const actions = {
 };
 
 const mutations = {
-  [types.default.SET_KANBAN_UI_FLAG](
-    $state,
-    { isFetching, isCreating, isUpdating, isDeleting }
-  ) {
+  [types.default.SET_KANBAN_UI_FLAG]($state, data) {
     $state.uiFlags = {
       ...$state.uiFlags,
-      isFetching: isFetching || $state.uiFlags.isFetching,
-      isCreating: isCreating || $state.uiFlags.isCreating,
-      isUpdating: isUpdating || $state.uiFlags.isUpdating,
-      isDeleting: isDeleting || $state.uiFlags.isDeleting,
+      ...data,
     };
   },
   [types.default.SET_KANBAN_BOARDS](

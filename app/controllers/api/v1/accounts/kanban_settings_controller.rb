@@ -38,6 +38,23 @@ class Api::V1::Accounts::KanbanSettingsController < Api::V1::Accounts::BaseContr
     head :no_content
   end
 
+  # POST /api/v1/accounts/:account_id/kanban_settings/boards/:id/duplicate
+  def duplicate_board
+    original_board = Current.account.find_kanban_board(params[:id])
+    
+    if original_board
+      duplicated_board = original_board.deep_dup
+      duplicated_board['id'] = SecureRandom.uuid
+      duplicated_board['name'] = "#{original_board['name']} (Cópia)"
+      duplicated_board['isDefault'] = false
+      
+      board = Current.account.add_kanban_board(duplicated_board)
+      render json: board
+    else
+      render json: { error: 'Board not found' }, status: :not_found
+    end
+  end
+
   private
 
   def check_administrator_authorization
@@ -48,7 +65,7 @@ class Api::V1::Accounts::KanbanSettingsController < Api::V1::Accounts::BaseContr
     params.require(:kanban_config).permit(
       :enabled,
       boards: [
-        :id, :name, :description, :customAttributeKey, :valueAttributeKey, :isDefault,
+        :id, :name, :description, :customAttributeKey, :valueAttributeKey, :isDefault, :webhook_url, :enable_round_robin,
         { agent_ids: [] },
         { visible_attributes: [] },
         stages: [:id, :name, :color, :order, :wipLimit]
@@ -58,7 +75,7 @@ class Api::V1::Accounts::KanbanSettingsController < Api::V1::Accounts::BaseContr
 
   def board_params
     params.require(:board).permit(
-      :name, :description, :customAttributeKey, :valueAttributeKey, :isDefault,
+      :name, :description, :customAttributeKey, :valueAttributeKey, :isDefault, :webhook_url, :enable_round_robin,
       { agent_ids: [] },
       { visible_attributes: [] },
       stages: [:id, :name, :color, :order, :wipLimit]

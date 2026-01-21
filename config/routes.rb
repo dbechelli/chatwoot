@@ -219,6 +219,7 @@ Rails.application.routes.draw do
             post 'boards', to: 'kanban_settings#create_board'
             put 'boards/:id', to: 'kanban_settings#update_board'
             delete 'boards/:id', to: 'kanban_settings#destroy_board'
+            post 'boards/:id/duplicate', to: 'kanban_settings#duplicate_board'
           end
           resources :inboxes, only: [:index, :show, :create, :update, :destroy] do
             get :assignable_agents, on: :member

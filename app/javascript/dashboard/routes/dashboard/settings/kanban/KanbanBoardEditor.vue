@@ -20,6 +20,9 @@ const localBoard = ref({
   ...props.board,
   agent_ids: props.board.agent_ids || [],
   visible_attributes: props.board.visible_attributes || [],
+  auto_assign_inboxes: props.board.auto_assign_inboxes || [],
+  auto_assign_stage_id: props.board.auto_assign_stage_id || '',
+  enable_round_robin: props.board.enable_round_robin || false,
 });
 
 const showAdvanced = ref(false);
@@ -43,11 +46,13 @@ watch(enableValue, (enabled) => {
 });
 
 const agents = computed(() => store.getters['agents/getAgents']);
+const inboxes = computed(() => store.getters['inboxes/getInboxes']);
 const conversationAttributes = computed(() => store.getters['attributes/getConversationAttributes']);
 
 onMounted(() => {
   store.dispatch('agents/get');
   store.dispatch('attributes/get');
+  store.dispatch('inboxes/get');
 });
 
 const toggleAgent = agentId => {
@@ -315,6 +320,72 @@ const canSave = computed(() => {
                 <p class="text-xs text-n-slate-11">
                   Quando um card for movido, enviaremos um POST para esta URL com os dados do item.
                 </p>
+              </div>
+            </div>
+
+            <!-- Auto Assign -->
+            <div class="md:col-span-2 pt-4 border-t border-n-weak mt-2">
+              <h4 class="text-sm font-bold text-n-slate-12 mb-3 flex items-center gap-2">
+                <i class="i-lucide-zap text-amber-500" />
+                Automação (Auto-Assign)
+              </h4>
+              <p class="text-xs text-n-slate-11 mb-3">
+                Adicione automaticamente novas conversas destas caixas de entrada a este quadro.
+              </p>
+              
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-n-slate-12 mb-2">
+                    Caixas de Entrada
+                  </label>
+                  <div class="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto border border-n-weak rounded-lg p-2 bg-white">
+                    <label
+                      v-for="inbox in inboxes"
+                      :key="inbox.id"
+                      class="flex items-center gap-2 p-2 rounded hover:bg-n-alpha-1 cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        :value="inbox.id"
+                        v-model="localBoard.auto_assign_inboxes"
+                        class="rounded border-n-weak text-n-brand focus:ring-n-brand"
+                      />
+                      <span class="text-sm text-n-slate-12">{{ inbox.name }}</span>
+                    </label>
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block text-sm font-medium text-n-slate-12 mb-2">
+                    Estágio Inicial
+                  </label>
+                  <select
+                     v-model="localBoard.auto_assign_stage_id"
+                     class="w-full px-3 py-2 border border-n-weak rounded-lg focus:border-n-brand focus:ring-2 focus:ring-n-brand/20 outline-none"
+                  >
+                    <option value="">{{ $t('KANBAN_SETTINGS.SELECT_STAGE') || 'Selecione...' }}</option>
+                    <option v-for="stage in localBoard.stages" :key="stage.id" :value="stage.id">
+                      {{ stage.name }}
+                    </option>
+                  </select>
+
+                  <div class="mt-4">
+                    <label class="flex items-center gap-2 cursor-pointer p-2 border border-n-weak rounded-lg bg-white hover:bg-n-brand/5">
+                      <div class="flex items-center justify-center w-5 h-5 rounded border border-gray-300 bg-white" :class="{ 'bg-n-brand border-n-brand': localBoard.enable_round_robin }">
+                        <input
+                          v-model="localBoard.enable_round_robin"
+                          type="checkbox"
+                          class="opacity-0 absolute"
+                        />
+                        <i v-if="localBoard.enable_round_robin" class="i-lucide-check text-white text-xs" />
+                      </div>
+                      <div class="flex-1">
+                        <span class="text-sm font-medium text-n-slate-12 block">Distribuição Round-Robin</span>
+                        <span class="text-xs text-n-slate-11">Atribuir conversas circularmente entre os agentes do quadro</span>
+                      </div>
+                    </label>
+                  </div>
+                </div>
               </div>
             </div>
 

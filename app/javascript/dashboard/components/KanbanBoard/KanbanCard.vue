@@ -80,6 +80,27 @@ const checklistProgress = computed(() => {
   return { done, total };
 });
 
+const dueDate = computed(() => {
+  return props.conversation.custom_attributes?.kanban_due_date;
+});
+
+const isOverdue = computed(() => {
+  if (!dueDate.value) return false;
+  return new Date(dueDate.value) < new Date();
+});
+
+const isDueSoon = computed(() => {
+  if (!dueDate.value || isOverdue.value) return false;
+  const daysUntilDue = Math.ceil((new Date(dueDate.value) - new Date()) / (1000 * 60 * 60 * 24));
+  return daysUntilDue <= 3 && daysUntilDue > 0;
+});
+
+const formatDate = (dateStr) => {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  return date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+};
+
 const formatCurrency = value => {
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
@@ -165,6 +186,20 @@ const formatCurrency = value => {
       class="flex items-center justify-between gap-2 pt-3 border-t border-slate-100 mt-1"
     >
       <div class="flex flex-wrap items-center gap-2">
+        <!-- Due Date -->
+        <span
+          v-if="dueDate"
+          class="inline-flex items-center gap-1 text-[11px] font-semibold px-1.5 py-0.5 rounded border"
+          :class="[
+            isOverdue ? 'bg-red-50 text-red-700 border-red-200' : 
+            isDueSoon ? 'bg-yellow-50 text-yellow-700 border-yellow-200' : 
+            'bg-slate-100 text-slate-600 border-slate-200'
+          ]"
+        >
+          <i class="i-lucide-calendar text-xs" />
+          {{ formatDate(dueDate) }}
+        </span>
+
         <span
           v-if="inbox"
           class="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded"

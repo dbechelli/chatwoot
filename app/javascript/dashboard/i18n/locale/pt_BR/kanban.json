@@ -27,6 +27,8 @@
         "HIGH": "Alta",
         "URGENT": "Urgente"
       },
+      "START_DATE": "Data de Início",
+      "DUE_DATE": "Data de Vencimento",
       "CHECKLIST": "Checklist",
       "ADD_CHECKLIST_ITEM": "Adicionar item ao checklist...",
       "ADD": "Adicionar",
@@ -37,6 +39,7 @@
       "UNLINK": "Desvincular",
       "ASSIGNEE": "Agente Responsável",
       "NO_ASSIGNEE": "Sem agente",
+      "STAGE": "Estágio",
       "CANCEL": "Cancelar",
       "SAVE": "Salvar Item",
       "SAVING": "Salvando...",
@@ -52,6 +55,10 @@
     },
     "ITEM_REMOVED": "Item removido do Kanban",
     "BOARD": "Quadro",
+    "CALENDAR": {
+      "TODAY": "Hoje",
+      "ADD_ITEM": "Adicionar Item"
+    },
     "LOADING": "Carregando...",
     "REFRESH": "Atualizar",
     "SHOW_METRICS": "Mostrar Métricas",
@@ -88,6 +95,31 @@
       "AVG_DEAL_VALUE": "Valor Médio",
       "CONVERSION_RATE": "Taxa de Conversão",
       "FORECAST": "Previsão"
+    },
+    "VIEW_MODE": {
+      "BOARD": "Quadro",
+      "LIST": "Lista",
+      "REPORTS": "Relatórios"
+    },
+    "BULK_ACTIONS": {
+      "TITLE": "Ações em Massa",
+      "SELECTED": "selecionado(s)",
+      "SELECT_ACTION": "Selecione a ação",
+      "MOVE_TO_STAGE": "Mover para estágio",
+      "ASSIGN_AGENT": "Atribuir agente",
+      "CHANGE_PRIORITY": "Alterar prioridade",
+      "ARCHIVE": "Arquivar tarefas",
+      "DELETE": "Excluir tarefas",
+      "APPLY": "Aplicar Ação",
+      "SUCCESS": "tarefa(s) atualizada(s) com sucesso"
+    },
+    "REPORTS": {
+      "TITLE": "Relatórios Kanban",
+      "DESCRIPTION": "Análise de desempenho e métricas do seu pipeline",
+      "EXPORT_CSV": "Exportar CSV",
+      "STAGE_PERFORMANCE": "Desempenho por Estágio",
+      "AGENT_PERFORMANCE": "Desempenho por Agente",
+      "NO_BOARD_SELECTED": "Nenhum quadro selecionado"
     }
   },
   "KANBAN_SETTINGS": {
@@ -96,7 +128,7 @@
     "BOARDS_TITLE": "Quadros Kanban",
     "BOARDS_DESCRIPTION": "Crie e gerencie múltiplos quadros Kanban para diferentes processos",
     "CREATE_BOARD": "Criar Quadro",
-    "CREATE_FIRST_BOARD": "Criar Seu Primeiro Quadro",
+    "CREATE_FIRST_BOARD": "Criar Primeiro Quadro",
     "EDIT_BOARD": "Editar Quadro",
     "NO_BOARDS": "Nenhum quadro ainda",
     "NO_BOARDS_DESCRIPTION": "Crie seu primeiro quadro Kanban para começar a organizar seu pipeline",
