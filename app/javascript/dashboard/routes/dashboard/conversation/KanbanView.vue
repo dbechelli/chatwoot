@@ -880,16 +880,6 @@ watch([selectedInbox, selectedAssignee], () => {
 
       <div
         v-else
-
-    <KanbanBulkActions
-      v-if="showBulkActions"
-      :selected-items="selectedItems"
-      :stages="salesStages"
-      :current-board="currentBoard"
-      @bulk-update="handleBulkUpdate"
-      @close="showBulkActions = false"
-    />
-        v-else
         class="flex h-full flex-col items-center justify-center gap-6 p-8 text-center"
       >
         <div class="rounded-full bg-slate-100 p-6">
@@ -920,6 +910,16 @@ watch([selectedInbox, selectedAssignee], () => {
           </button>
         </div>
       </div>
+    </main>
+
+    <KanbanBulkActions
+      v-if="showBulkActions"
+      :selected-items="selectedItems"
+      :stages="salesStages"
+      :current-board="currentBoard"
+      @bulk-update="handleBulkUpdate"
+      @close="showBulkActions = false"
+    />
     </main>
 
     <KanbanHelpModal 
