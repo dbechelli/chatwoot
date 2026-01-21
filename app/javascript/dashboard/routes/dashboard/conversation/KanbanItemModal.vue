@@ -5,7 +5,7 @@ import { useI18n } from 'vue-i18n';
 import { useAlert } from 'dashboard/composables';
 import Modal from 'dashboard/components/Modal.vue';
 import TagMultiSelectComboBox from 'dashboard/components-next/combobox/TagMultiSelectComboBox.vue';
-import AutomationFileInput from 'dashboard/components/widgets/AutomationFileInput.vue';
+import { uploadFile } from 'dashboard/helper/uploadHelper';
 
 const props = defineProps({
   show: { type: Boolean, default: false },
@@ -324,16 +324,6 @@ const handleSave = async () => {
 
     useAlert(t('KANBAN.MODAL.SUCCESS_MESSAGE') || 'Item salvo com sucesso');
     emit('save');
-const handleAttachmentUpload = (files) => {
-  if (files && files.length > 0) {
-    // Appending new file ID to the list
-    form.value.attachments = [...form.value.attachments, files[0]];
-  }
-};
-
-const removeAttachment = (index) => {
-  form.value.attachments.splice(index, 1);
-};
     emit('close');
   } catch (error) {
     console.error(error);
@@ -342,6 +332,44 @@ const removeAttachment = (index) => {
     isLoading.value = false;
   }
 };
+
+const fileInputRef = ref(null);
+const isUploading = ref(false);
+
+const triggerFileUpload = () => {
+  fileInputRef.value.click();
+};
+
+const handleAttachmentUpload = async (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  isUploading.value = true;
+  try {
+    const { fileUrl, blobId } = await uploadFile(file, store.getters.getCurrentAccountId);
+    
+    // Store object with metadata
+    form.value.attachments.push({
+      id: blobId,
+      url: fileUrl,
+      name: file.name,
+      type: file.type
+    });
+  } catch (error) {
+    useAlert(t('KANBAN.MODAL.UPLOAD_ERROR') || 'Erro ao fazer upload');
+  } finally {
+    isUploading.value = false;
+    event.target.value = ''; // Reset input
+  }
+};
+
+const removeAttachment = (index) => {
+  form.value.attachments.splice(index, 1);
+};
+const openAttachment = (url) => {
+  window.open(url, '_blank');
+};
+
 
 </script>
 
@@ -479,11 +507,40 @@ const removeAttachment = (index) => {
             Anexar Arquivos
           </label>
           <div class="space-y-2">
-             <AutomationFileInput @update:modelValue="handleAttachmentUpload" />
-             <div v-if="form.attachments.length > 0" class="space-y-1">
-                <div v-for="(fileId, idx) in form.attachments" :key="idx" class="flex items-center justify-between p-2 bg-slate-50 border border-slate-200 rounded text-xs">
-                   <span>Anexo ID: {{ fileId }}</span>
-                   <button @click="removeAttachment(idx)" class="text-red-500 hover:text-red-700"><i class="i-lucide-trash-2" /></button>
+             <input type="file" ref="fileInputRef" @change="handleAttachmentUpload" class="hidden" />
+             <button 
+               @click="triggerFileUpload" 
+               class="flex items-center gap-2 px-3 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg text-sm text-slate-600 transition-colors w-full justify-center border-dashed"
+               :disabled="isUploading"
+             >
+               <i v-if="isUploading" class="i-lucide-loader-2 animate-spin" />
+               <i v-else class="i-lucide-upload-cloud" />
+               {{ isUploading ? 'Enviando...' : 'Clique para enviar arquivo' }}
+             </button>
+
+             <div v-if="form.attachments.length > 0" class="space-y-2 mt-2">
+                <div v-for="(att, idx) in form.attachments" :key="idx" class="flex items-center gap-3 p-2 bg-slate-50 border border-slate-200 rounded-lg group">
+                   <!-- Thumbnail / Icon -->
+                   <div 
+                     class="h-10 w-10 rounded bg-slate-200 flex items-center justify-center overflow-hidden flex-shrink-0 cursor-pointer"
+                     @click="att.url ? openAttachment(att.url) : null"
+                   >
+                     <img v-if="att.url && (att.type?.startsWith('image') || att.url?.match(/\.(jpeg|jpg|gif|png)$/i))" :src="att.url" class="h-full w-full object-cover" />
+                     <i v-else class="i-lucide-file-text text-slate-500" />
+                   </div>
+
+                   <!-- Info -->
+                   <div class="flex-1 min-w-0" @click="att.url ? openAttachment(att.url) : null">
+                     <div class="text-xs font-medium text-slate-700 truncate cursor-pointer hover:underline">
+                       {{ att.name || (typeof att === 'object' ? `Anexo #${att.id}` : `Anexo (Legado)`) }}
+                     </div>
+                     <div class="text-[10px] text-slate-500 truncate" v-if="att.id">ID: {{ att.id }}</div>
+                   </div>
+
+                   <!-- Actions -->
+                   <button @click="removeAttachment(idx)" class="p-1.5 hover:bg-red-50 text-slate-400 hover:text-red-600 rounded transition-colors">
+                     <i class="i-lucide-trash-2 text-xs" />
+                   </button>
                 </div>
              </div>
           </div>
