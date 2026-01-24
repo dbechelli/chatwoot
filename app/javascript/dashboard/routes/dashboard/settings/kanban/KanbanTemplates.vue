@@ -1,5 +1,6 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import Modal from 'dashboard/components/Modal.vue';
 
 defineProps({
@@ -7,124 +8,85 @@ defineProps({
 });
 
 const emit = defineEmits(['close', 'selectTemplate']);
+const { t } = useI18n();
 
-const templates = ref([
+const templateDefinitions = ref([
   {
     id: 'sales_pipeline',
-    name: 'Pipeline de Vendas',
-    description:
-      'Gerencie oportunidades desde o primeiro contato até o fechamento',
+    key: 'SALES_PIPELINE',
     icon: 'i-lucide-trending-up',
     iconBg: '#d1fae5',
     iconColor: '#10b981',
-    stages: [
-      { id: 'lead', name: 'Novo Lead', color: '#3b82f6', order: 1 },
-      { id: 'contacted', name: 'Contatado', color: '#8b5cf6', order: 2 },
-      { id: 'qualified', name: 'Qualificado', color: '#06b6d4', order: 3 },
-      { id: 'proposal', name: 'Proposta Enviada', color: '#f59e0b', order: 4 },
-      { id: 'negotiation', name: 'Negociação', color: '#ec4899', order: 5 },
-      { id: 'won', name: 'Ganho', color: '#10b981', order: 6 },
-      { id: 'lost', name: 'Perdido', color: '#ef4444', order: 7 },
-    ],
+    stageColors: ['#3b82f6', '#8b5cf6', '#06b6d4', '#f59e0b', '#ec4899', '#10b981', '#ef4444'],
   },
   {
     id: 'customer_support',
-    name: 'Suporte ao Cliente',
-    description: 'Acompanhe tickets de suporte do início à resolução',
+    key: 'CUSTOMER_SUPPORT',
     icon: 'i-lucide-headphones',
     iconBg: '#dbeafe',
     iconColor: '#3b82f6',
-    stages: [
-      { id: 'new', name: 'Novo Ticket', color: '#3b82f6', order: 1 },
-      { id: 'in_progress', name: 'Em Andamento', color: '#8b5cf6', order: 2 },
-      {
-        id: 'waiting_customer',
-        name: 'Aguardando Cliente',
-        color: '#f59e0b',
-        order: 3,
-      },
-      { id: 'resolved', name: 'Resolvido', color: '#10b981', order: 4 },
-      { id: 'closed', name: 'Fechado', color: '#64748b', order: 5 },
-    ],
+    stageColors: ['#3b82f6', '#8b5cf6', '#f59e0b', '#10b981', '#64748b'],
   },
   {
     id: 'recruitment',
-    name: 'Recrutamento',
-    description: 'Gerencie candidatos durante todo o processo seletivo',
+    key: 'RECRUITMENT',
     icon: 'i-lucide-user-plus',
     iconBg: '#e9d5ff',
     iconColor: '#8b5cf6',
-    stages: [
-      { id: 'applied', name: 'Aplicou', color: '#3b82f6', order: 1 },
-      { id: 'screening', name: 'Triagem', color: '#8b5cf6', order: 2 },
-      { id: 'interview', name: 'Entrevista', color: '#06b6d4', order: 3 },
-      { id: 'technical', name: 'Teste Técnico', color: '#f59e0b', order: 4 },
-      { id: 'offer', name: 'Proposta', color: '#ec4899', order: 5 },
-      { id: 'hired', name: 'Contratado', color: '#10b981', order: 6 },
-      { id: 'rejected', name: 'Rejeitado', color: '#ef4444', order: 7 },
-    ],
+    stageColors: ['#3b82f6', '#8b5cf6', '#06b6d4', '#f59e0b', '#ec4899', '#10b981', '#ef4444'],
   },
   {
     id: 'onboarding',
-    name: 'Onboarding de Clientes',
-    description: 'Guie novos clientes através do processo de integração',
+    key: 'ONBOARDING',
     icon: 'i-lucide-rocket',
     iconBg: '#fed7aa',
     iconColor: '#f59e0b',
-    stages: [
-      { id: 'welcome', name: 'Boas-vindas', color: '#3b82f6', order: 1 },
-      { id: 'documentation', name: 'Documentação', color: '#8b5cf6', order: 2 },
-      { id: 'setup', name: 'Configuração', color: '#06b6d4', order: 3 },
-      { id: 'training', name: 'Treinamento', color: '#f59e0b', order: 4 },
-      { id: 'active', name: 'Ativo', color: '#10b981', order: 5 },
-    ],
+    stageColors: ['#3b82f6', '#8b5cf6', '#06b6d4', '#f59e0b', '#10b981'],
   },
   {
     id: 'project_management',
-    name: 'Gestão de Projetos',
-    description: 'Acompanhe tarefas e projetos da equipe',
+    key: 'PROJECT_MANAGEMENT',
     icon: 'i-lucide-folder-kanban',
     iconBg: '#e0e7ff',
     iconColor: '#6366f1',
-    stages: [
-      { id: 'backlog', name: 'Backlog', color: '#64748b', order: 1 },
-      { id: 'todo', name: 'A Fazer', color: '#3b82f6', order: 2 },
-      { id: 'in_progress', name: 'Em Progresso', color: '#f59e0b', order: 3 },
-      { id: 'review', name: 'Em Revisão', color: '#8b5cf6', order: 4 },
-      { id: 'done', name: 'Concluído', color: '#10b981', order: 5 },
-    ],
+    stageColors: ['#64748b', '#3b82f6', '#f59e0b', '#8b5cf6', '#10b981'],
   },
   {
     id: 'lead_qualification',
-    name: 'Qualificação de Leads',
-    description: 'Filtre e qualifique leads antes de enviar para vendas',
+    key: 'LEAD_QUALIFICATION',
     icon: 'i-lucide-filter',
     iconBg: '#cffafe',
     iconColor: '#06b6d4',
-    stages: [
-      { id: 'new_lead', name: 'Novo Lead', color: '#3b82f6', order: 1 },
-      {
-        id: 'contact_attempt',
-        name: 'Tentativa de Contato',
-        color: '#8b5cf6',
-        order: 2,
-      },
-      { id: 'qualified', name: 'Qualificado', color: '#10b981', order: 3 },
-      {
-        id: 'disqualified',
-        name: 'Desqualificado',
-        color: '#ef4444',
-        order: 4,
-      },
-      {
-        id: 'passed_to_sales',
-        name: 'Enviado p/ Vendas',
-        color: '#06b6d4',
-        order: 5,
-      },
-    ],
+    stageColors: ['#3b82f6', '#8b5cf6', '#10b981', '#ef4444', '#06b6d4'],
   },
 ]);
+
+const templates = computed(() => {
+  return templateDefinitions.value.map(tmpl => {
+    const baseKey = `KANBAN_SETTINGS.TEMPLATES.${tmpl.key}`;
+    const stagesKey = `${baseKey}.STAGES`;
+
+    // Get all stage keys for this template
+    const stageKeys = Object.keys(t(stagesKey));
+
+    const stages = stageKeys.map((key, index) => ({
+      id: key.toLowerCase(),
+      name: t(`${stagesKey}.${key}`),
+      color: tmpl.stageColors[index] || '#64748b',
+      order: index + 1,
+    }));
+
+    return {
+      id: tmpl.id,
+      name: t(`${baseKey}.NAME`),
+      description: t(`${baseKey}.DESCRIPTION`),
+      icon: tmpl.icon,
+      iconBg: tmpl.iconBg,
+      iconColor: tmpl.iconColor,
+      stages,
+    };
+  });
+});
 
 const selectTemplate = template => {
   const boardData = {

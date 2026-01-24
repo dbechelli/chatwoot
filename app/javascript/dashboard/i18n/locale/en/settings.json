@@ -937,7 +937,79 @@
       "USE_TEMPLATE": "Use This Template",
       "CUSTOMIZE_AFTER_CREATE": "You can customize stages after creating the board",
       "CREATE_BLANK_BOARD": "Create Blank Board",
-      "NEW_BOARD": "New Board"
+      "NEW_BOARD": "New Board",
+      "TEMPLATES": {
+        "SALES_PIPELINE": {
+          "NAME": "Sales Pipeline",
+          "DESCRIPTION": "Manage opportunities from first contact to closure",
+          "STAGES": {
+            "LEAD": "New Lead",
+            "CONTACTED": "Contacted",
+            "QUALIFIED": "Qualified",
+            "PROPOSAL": "Proposal Sent",
+            "NEGOTIATION": "Negotiation",
+            "WON": "Won",
+            "LOST": "Lost"
+          }
+        },
+        "CUSTOMER_SUPPORT": {
+          "NAME": "Customer Support",
+          "DESCRIPTION": "Track support tickets from start to resolution",
+          "STAGES": {
+            "NEW": "New Ticket",
+            "IN_PROGRESS": "In Progress",
+            "WAITING_CUSTOMER": "Waiting Customer",
+            "RESOLVED": "Resolved",
+            "CLOSED": "Closed"
+          }
+        },
+        "RECRUITMENT": {
+          "NAME": "Recruitment",
+          "DESCRIPTION": "Manage candidates through the selection process",
+          "STAGES": {
+            "APPLIED": "Applied",
+            "SCREENING": "Screening",
+            "INTERVIEW": "Interview",
+            "TECHNICAL": "Technical Test",
+            "OFFER": "Offer",
+            "HIRED": "Hired",
+            "REJECTED": "Rejected"
+          }
+        },
+        "ONBOARDING": {
+          "NAME": "Customer Onboarding",
+          "DESCRIPTION": "Guide new customers through the integration process",
+          "STAGES": {
+            "WELCOME": "Welcome",
+            "DOCUMENTATION": "Documentation",
+            "SETUP": "Setup",
+            "TRAINING": "Training",
+            "ACTIVE": "Active"
+          }
+        },
+        "PROJECT_MANAGEMENT": {
+          "NAME": "Project Management",
+          "DESCRIPTION": "Track team tasks and projects",
+          "STAGES": {
+            "BACKLOG": "Backlog",
+            "TODO": "To Do",
+            "IN_PROGRESS": "In Progress",
+            "REVIEW": "In Review",
+            "DONE": "Done"
+          }
+        },
+        "LEAD_QUALIFICATION": {
+          "NAME": "Lead Qualification",
+          "DESCRIPTION": "Filter and qualify leads before sending to sales",
+          "STAGES": {
+            "NEW_LEAD": "New Lead",
+            "CONTACT_ATTEMPT": "Contact Attempt",
+            "QUALIFIED": "Qualified",
+            "DISQUALIFIED": "Disqualified",
+            "PASSED_TO_SALES": "Sent to Sales"
+          }
+        }
+      }
     }
   }
 }
