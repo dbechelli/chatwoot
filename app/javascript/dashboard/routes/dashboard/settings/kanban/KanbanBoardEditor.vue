@@ -29,15 +29,21 @@ const showAdvanced = ref(false);
 const enableValue = ref(!!props.board.valueAttributeKey);
 
 // Auto-generate key for new boards
-watch(() => localBoard.value.name, (newName) => {
-  if (!props.board.id && !showAdvanced.value && newName) {
-    const slug = newName.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
-    localBoard.value.customAttributeKey = slug ? `${slug}_status` : '';
+watch(
+  () => localBoard.value.name,
+  newName => {
+    if (!props.board.id && !showAdvanced.value && newName) {
+      const slug = newName
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, '_')
+        .replace(/^_+|_+$/g, '');
+      localBoard.value.customAttributeKey = slug ? `${slug}_status` : '';
+    }
   }
-});
+);
 
 // Handle value tracking toggle
-watch(enableValue, (enabled) => {
+watch(enableValue, enabled => {
   if (!enabled) {
     localBoard.value.valueAttributeKey = '';
   } else if (!localBoard.value.valueAttributeKey) {
@@ -47,7 +53,9 @@ watch(enableValue, (enabled) => {
 
 const agents = computed(() => store.getters['agents/getAgents']);
 const inboxes = computed(() => store.getters['inboxes/getInboxes']);
-const conversationAttributes = computed(() => store.getters['attributes/getConversationAttributes']);
+const conversationAttributes = computed(
+  () => store.getters['attributes/getConversationAttributes']
+);
 
 onMounted(() => {
   store.dispatch('agents/get');
@@ -143,37 +151,47 @@ const canSave = computed(() => {
 </script>
 
 <template>
-  <Modal :show="true" :on-close="() => emit('close')">
+  <Modal show :on-close="() => emit('close')">
     <div class="flex flex-col h-full max-h-[90vh] w-full max-w-4xl">
       <!-- Header -->
-      <div class="flex items-center justify-between p-6 border-b border-n-weak">
-        <div>
-          <h2 class="text-2xl font-bold text-n-slate-12">
+      <div
+        class="flex items-center justify-between p-4 md:p-6 border-b border-n-weak"
+      >
+        <div class="flex-1 min-w-0">
+          <h2 class="text-lg md:text-2xl font-bold text-n-slate-12 truncate">
             {{
               board.id
                 ? $t('KANBAN_SETTINGS.EDIT_BOARD')
                 : $t('KANBAN_SETTINGS.CREATE_BOARD')
             }}
           </h2>
-          <p class="text-sm text-n-slate-11 mt-1">
+          <p class="text-xs md:text-sm text-n-slate-11 mt-1">
             {{ $t('KANBAN_SETTINGS.BOARD_EDITOR_DESCRIPTION') }}
           </p>
         </div>
+        <button
+          class="ml-3 p-2 hover:bg-n-slate-2 rounded-lg transition-colors flex-shrink-0"
+          @click="$emit('close')"
+        >
+          <i class="i-lucide-x text-xl text-n-slate-11" />
+        </button>
       </div>
 
       <!-- Content -->
-      <div class="flex-1 overflow-y-auto p-6 space-y-6">
+      <div class="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 md:space-y-6">
         <!-- Configurações básicas -->
-        <div class="space-y-4">
-          <h3 class="text-lg font-semibold text-n-slate-12">
+        <div class="space-y-3 md:space-y-4">
+          <h3 class="text-base md:text-lg font-semibold text-n-slate-12">
             {{ $t('KANBAN_SETTINGS.BASIC_CONFIG') }}
           </h3>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
             <div>
               <label class="block text-sm font-medium text-n-slate-12 mb-2">
                 {{ $t('KANBAN_SETTINGS.BOARD_NAME') }}
-                <span class="text-red-500">*</span>
+                <span class="text-red-500">{{
+                  $t('KANBAN_SETTINGS.REQUIRED')
+                }}</span>
               </label>
               <input
                 v-model="localBoard.name"
@@ -186,13 +204,17 @@ const canSave = computed(() => {
             <div v-if="showAdvanced">
               <label class="block text-sm font-medium text-n-slate-12 mb-2">
                 {{ $t('KANBAN_SETTINGS.CUSTOM_ATTRIBUTE_KEY') }}
-                <span class="text-red-500">*</span>
+                <span class="text-red-500">{{
+                  $t('KANBAN_SETTINGS.REQUIRED')
+                }}</span>
               </label>
               <input
                 v-model="localBoard.customAttributeKey"
                 type="text"
                 class="w-full px-3 py-2 border border-n-weak rounded-lg focus:border-n-brand focus:ring-2 focus:ring-n-brand/20 outline-none"
-                placeholder="sales_stage"
+                :placeholder="
+                  $t('KANBAN_SETTINGS.CUSTOM_ATTRIBUTE_PLACEHOLDER')
+                "
               />
               <p class="text-xs text-n-slate-11 mt-1">
                 {{ $t('KANBAN_SETTINGS.CUSTOM_ATTRIBUTE_HELP') }}
@@ -200,10 +222,14 @@ const canSave = computed(() => {
             </div>
 
             <div class="md:col-span-2">
-              <label class="block text-sm font-medium text-n-slate-12 mb-2">
+              <label
+                class="block text-xs md:text-sm font-medium text-n-slate-12 mb-2"
+              >
                 {{ $t('KANBAN_SETTINGS.AGENTS') }}
               </label>
-              <div class="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-40 overflow-y-auto border border-n-weak rounded-lg p-2">
+              <div
+                class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 max-h-32 md:max-h-40 overflow-y-auto border border-n-weak rounded-lg p-2"
+              >
                 <label
                   v-for="agent in agents"
                   :key="agent.id"
@@ -212,10 +238,12 @@ const canSave = computed(() => {
                   <input
                     type="checkbox"
                     :checked="localBoard.agent_ids.includes(agent.id)"
+                    class="rounded border-n-weak text-n-brand focus:ring-n-brand flex-shrink-0"
                     @change="toggleAgent(agent.id)"
-                    class="rounded border-n-weak text-n-brand focus:ring-n-brand"
                   />
-                  <span class="text-sm text-n-slate-12">{{ agent.name }}</span>
+                  <span class="text-xs md:text-sm text-n-slate-12 truncate">{{
+                    agent.name
+                  }}</span>
                 </label>
               </div>
               <p class="text-xs text-n-slate-11 mt-1">
@@ -223,11 +251,15 @@ const canSave = computed(() => {
               </p>
             </div>
 
-            <div class="md:col-span-2" v-if="conversationAttributes.length > 0">
-              <label class="block text-sm font-medium text-n-slate-12 mb-2">
+            <div v-if="conversationAttributes.length > 0" class="md:col-span-2">
+              <label
+                class="block text-xs md:text-sm font-medium text-n-slate-12 mb-2"
+              >
                 {{ $t('KANBAN_SETTINGS.VISIBLE_ATTRIBUTES') }}
               </label>
-              <div class="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-40 overflow-y-auto border border-n-weak rounded-lg p-2">
+              <div
+                class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 max-h-32 md:max-h-40 overflow-y-auto border border-n-weak rounded-lg p-2"
+              >
                 <label
                   v-for="attr in conversationAttributes"
                   :key="attr.attributeKey"
@@ -235,11 +267,15 @@ const canSave = computed(() => {
                 >
                   <input
                     type="checkbox"
-                    :checked="localBoard.visible_attributes.includes(attr.attributeKey)"
+                    :checked="
+                      localBoard.visible_attributes.includes(attr.attributeKey)
+                    "
+                    class="rounded border-n-weak text-n-brand focus:ring-n-brand flex-shrink-0"
                     @change="toggleAttribute(attr.attributeKey)"
-                    class="rounded border-n-weak text-n-brand focus:ring-n-brand"
                   />
-                  <span class="text-sm text-n-slate-12">{{ attr.attributeDisplayName }}</span>
+                  <span class="text-xs md:text-sm text-n-slate-12 truncate">{{
+                    attr.attributeDisplayName
+                  }}</span>
                 </label>
               </div>
               <p class="text-xs text-n-slate-11 mt-1">
@@ -255,7 +291,9 @@ const canSave = computed(() => {
                 v-model="localBoard.description"
                 rows="2"
                 class="w-full px-3 py-2 border border-n-weak rounded-lg focus:border-n-brand focus:ring-2 focus:ring-n-brand/20 outline-none resize-none"
-                :placeholder="$t('KANBAN_SETTINGS.BOARD_DESCRIPTION_PLACEHOLDER')"
+                :placeholder="
+                  $t('KANBAN_SETTINGS.BOARD_DESCRIPTION_PLACEHOLDER')
+                "
               />
             </div>
 
@@ -282,7 +320,9 @@ const canSave = computed(() => {
                   v-model="localBoard.valueAttributeKey"
                   type="text"
                   class="w-full px-3 py-2 border border-n-weak rounded-lg focus:border-n-brand focus:ring-2 focus:ring-n-brand/20 outline-none"
-                  placeholder="deal_value"
+                  :placeholder="
+                    $t('KANBAN_SETTINGS.VALUE_ATTRIBUTE_PLACEHOLDER')
+                  "
                 />
                 <p class="text-xs text-n-slate-11 mt-1">
                   {{ $t('KANBAN_SETTINGS.VALUE_ATTRIBUTE_HELP') }}
@@ -296,92 +336,135 @@ const canSave = computed(() => {
                 class="text-sm text-n-brand hover:underline flex items-center gap-1"
                 @click="showAdvanced = !showAdvanced"
               >
-                <i :class="showAdvanced ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'" />
+                <i
+                  :class="
+                    showAdvanced
+                      ? 'i-lucide-chevron-up'
+                      : 'i-lucide-chevron-down'
+                  "
+                />
                 {{ $t('KANBAN_SETTINGS.ADVANCED_CONFIG') }}
               </button>
             </div>
 
             <!-- Webhook Section -->
-            <div class="md:col-span-2 pt-4 border-t border-n-weak mt-2">
-              <h4 class="text-sm font-bold text-n-slate-12 mb-3 flex items-center gap-2">
+            <div class="md:col-span-2 pt-3 md:pt-4 border-t border-n-weak mt-2">
+              <h4
+                class="text-xs md:text-sm font-bold text-n-slate-12 mb-3 flex items-center gap-2"
+              >
                 <i class="i-lucide-webhook text-n-brand" />
-                Automação (Webhook)
+                {{ $t('KANBAN_SETTINGS.WEBHOOK_AUTOMATION') }}
               </h4>
               <div class="space-y-2">
-                <label class="block text-sm font-medium text-n-slate-12">
-                  URL do Webhook
+                <label
+                  class="block text-xs md:text-sm font-medium text-n-slate-12"
+                >
+                  {{ $t('KANBAN_SETTINGS.WEBHOOK_URL') }}
                 </label>
                 <input
                   v-model="localBoard.webhook_url"
                   type="url"
-                  class="w-full px-3 py-2 border border-n-weak rounded-lg focus:border-n-brand focus:ring-2 focus:ring-n-brand/20 outline-none"
-                  placeholder="https://n8n.seu-dominio.com/webhook/..."
+                  class="w-full px-3 py-2 text-sm border border-n-weak rounded-lg focus:border-n-brand focus:ring-2 focus:ring-n-brand/20 outline-none"
+                  :placeholder="$t('KANBAN_SETTINGS.WEBHOOK_PLACEHOLDER')"
                 />
                 <p class="text-xs text-n-slate-11">
-                  Quando um card for movido, enviaremos um POST para esta URL com os dados do item.
+                  {{ $t('KANBAN_SETTINGS.WEBHOOK_HELP') }}
                 </p>
               </div>
             </div>
 
             <!-- Auto Assign -->
-            <div class="md:col-span-2 pt-4 border-t border-n-weak mt-2">
-              <h4 class="text-sm font-bold text-n-slate-12 mb-3 flex items-center gap-2">
+            <div class="md:col-span-2 pt-3 md:pt-4 border-t border-n-weak mt-2">
+              <h4
+                class="text-xs md:text-sm font-bold text-n-slate-12 mb-3 flex items-center gap-2"
+              >
                 <i class="i-lucide-zap text-amber-500" />
-                Automação (Auto-Assign)
+                {{ $t('KANBAN_SETTINGS.AUTO_ASSIGN') }}
               </h4>
               <p class="text-xs text-n-slate-11 mb-3">
-                Adicione automaticamente novas conversas destas caixas de entrada a este quadro.
+                {{ $t('KANBAN_SETTINGS.AUTO_ASSIGN_DESCRIPTION') }}
               </p>
-              
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                 <div>
-                  <label class="block text-sm font-medium text-n-slate-12 mb-2">
-                    Caixas de Entrada
+                  <label
+                    class="block text-xs md:text-sm font-medium text-n-slate-12 mb-2"
+                  >
+                    {{ $t('KANBAN_SETTINGS.INBOXES') }}
                   </label>
-                  <div class="grid grid-cols-1 gap-2 max-h-40 overflow-y-auto border border-n-weak rounded-lg p-2 bg-white">
+                  <div
+                    class="grid grid-cols-1 gap-2 max-h-32 md:max-h-40 overflow-y-auto border border-n-weak rounded-lg p-2 bg-white"
+                  >
                     <label
                       v-for="inbox in inboxes"
                       :key="inbox.id"
                       class="flex items-center gap-2 p-2 rounded hover:bg-n-alpha-1 cursor-pointer"
                     >
                       <input
+                        v-model="localBoard.auto_assign_inboxes"
                         type="checkbox"
                         :value="inbox.id"
-                        v-model="localBoard.auto_assign_inboxes"
-                        class="rounded border-n-weak text-n-brand focus:ring-n-brand"
+                        class="rounded border-n-weak text-n-brand focus:ring-n-brand flex-shrink-0"
                       />
-                      <span class="text-sm text-n-slate-12">{{ inbox.name }}</span>
+                      <span
+                        class="text-xs md:text-sm text-n-slate-12 truncate"
+                        >{{ inbox.name }}</span
+                      >
                     </label>
                   </div>
                 </div>
 
                 <div>
-                  <label class="block text-sm font-medium text-n-slate-12 mb-2">
-                    Estágio Inicial
+                  <label
+                    class="block text-xs md:text-sm font-medium text-n-slate-12 mb-2"
+                  >
+                    {{ $t('KANBAN_SETTINGS.INITIAL_STAGE') }}
                   </label>
                   <select
-                     v-model="localBoard.auto_assign_stage_id"
-                     class="w-full px-3 py-2 border border-n-weak rounded-lg focus:border-n-brand focus:ring-2 focus:ring-n-brand/20 outline-none"
+                    v-model="localBoard.auto_assign_stage_id"
+                    class="w-full px-3 py-2 text-sm border border-n-weak rounded-lg focus:border-n-brand focus:ring-2 focus:ring-n-brand/20 outline-none"
                   >
-                    <option value="">{{ $t('KANBAN_SETTINGS.SELECT_STAGE') || 'Selecione...' }}</option>
-                    <option v-for="stage in localBoard.stages" :key="stage.id" :value="stage.id">
+                    <option value="">
+                      {{ $t('KANBAN_SETTINGS.SELECT_STAGE') }}
+                    </option>
+                    <option
+                      v-for="stage in localBoard.stages"
+                      :key="stage.id"
+                      :value="stage.id"
+                    >
                       {{ stage.name }}
                     </option>
                   </select>
 
-                  <div class="mt-4">
-                    <label class="flex items-center gap-2 cursor-pointer p-2 border border-n-weak rounded-lg bg-white hover:bg-n-brand/5">
-                      <div class="flex items-center justify-center w-5 h-5 rounded border border-gray-300 bg-white" :class="{ 'bg-n-brand border-n-brand': localBoard.enable_round_robin }">
+                  <div class="mt-3 md:mt-4">
+                    <label
+                      class="flex items-start gap-2 cursor-pointer p-2 md:p-3 border border-n-weak rounded-lg bg-white hover:bg-n-brand/5"
+                    >
+                      <div
+                        class="flex items-center justify-center w-5 h-5 mt-0.5 flex-shrink-0 rounded border border-gray-300 bg-white"
+                        :class="{
+                          'bg-n-brand border-n-brand':
+                            localBoard.enable_round_robin,
+                        }"
+                      >
                         <input
                           v-model="localBoard.enable_round_robin"
                           type="checkbox"
                           class="opacity-0 absolute"
                         />
-                        <i v-if="localBoard.enable_round_robin" class="i-lucide-check text-white text-xs" />
+                        <i
+                          v-if="localBoard.enable_round_robin"
+                          class="i-lucide-check text-white text-xs"
+                        />
                       </div>
-                      <div class="flex-1">
-                        <span class="text-sm font-medium text-n-slate-12 block">Distribuição Round-Robin</span>
-                        <span class="text-xs text-n-slate-11">Atribuir conversas circularmente entre os agentes do quadro</span>
+                      <div class="flex-1 min-w-0">
+                        <span
+                          class="text-xs md:text-sm font-medium text-n-slate-12 block"
+                          >{{ $t('KANBAN_SETTINGS.ROUND_ROBIN') }}</span
+                        >
+                        <span class="text-xs text-n-slate-11 block mt-0.5">{{
+                          $t('KANBAN_SETTINGS.ROUND_ROBIN_HELP')
+                        }}</span>
                       </div>
                     </label>
                   </div>
@@ -405,14 +488,18 @@ const canSave = computed(() => {
         </div>
 
         <!-- Estágios -->
-        <div class="space-y-4">
-          <div class="flex items-center justify-between">
-            <h3 class="text-lg font-semibold text-n-slate-12">
+        <div class="space-y-3 md:space-y-4">
+          <div
+            class="flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+          >
+            <h3 class="text-base md:text-lg font-semibold text-n-slate-12">
               {{ $t('KANBAN_SETTINGS.STAGES') }}
-              <span class="text-red-500">*</span>
+              <span class="text-red-500">{{
+                $t('KANBAN_SETTINGS.REQUIRED')
+              }}</span>
             </h3>
             <button
-              class="inline-flex items-center gap-2 px-3 py-1.5 bg-n-brand text-white rounded-lg text-sm hover:bg-n-brand/90 transition-colors"
+              class="inline-flex items-center justify-center gap-2 px-3 py-1.5 bg-n-brand text-white rounded-lg text-xs md:text-sm hover:bg-n-brand/90 transition-colors whitespace-nowrap"
               @click="addStage"
             >
               <i class="i-lucide-plus" />
@@ -424,28 +511,30 @@ const canSave = computed(() => {
             <div
               v-for="(stage, index) in localBoard.stages"
               :key="stage.id"
-              class="flex items-start gap-3 p-4 border border-n-weak rounded-lg bg-white hover:border-n-brand/50 transition-colors"
+              class="flex items-start gap-2 md:gap-3 p-3 md:p-4 border border-n-weak rounded-lg bg-white hover:border-n-brand/50 transition-colors"
             >
               <!-- Order controls -->
-              <div class="flex flex-col gap-1">
+              <div class="flex flex-col gap-1 flex-shrink-0">
                 <button
                   class="p-1 text-n-slate-11 hover:text-n-brand hover:bg-n-slate-2 rounded disabled:opacity-30"
                   :disabled="index === 0"
                   @click="moveStageUp(index)"
                 >
-                  <i class="i-lucide-chevron-up" />
+                  <i class="i-lucide-chevron-up text-sm" />
                 </button>
                 <button
                   class="p-1 text-n-slate-11 hover:text-n-brand hover:bg-n-slate-2 rounded disabled:opacity-30"
                   :disabled="index === localBoard.stages.length - 1"
                   @click="moveStageDown(index)"
                 >
-                  <i class="i-lucide-chevron-down" />
+                  <i class="i-lucide-chevron-down text-sm" />
                 </button>
               </div>
 
               <!-- Stage content -->
-              <div class="flex-1 grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div
+                class="flex-1 grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-3"
+              >
                 <!-- Nome -->
                 <div>
                   <label class="block text-xs font-medium text-n-slate-11 mb-1">
@@ -524,16 +613,16 @@ const canSave = computed(() => {
 
       <!-- Footer -->
       <div
-        class="flex items-center justify-end gap-3 p-6 border-t border-n-weak"
+        class="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2 md:gap-3 p-4 md:p-6 border-t border-n-weak"
       >
         <button
-          class="px-4 py-2 text-sm font-medium text-n-slate-12 hover:bg-n-slate-3 rounded-lg transition-colors"
+          class="px-4 py-2 text-xs md:text-sm font-medium text-n-slate-12 hover:bg-n-slate-3 rounded-lg transition-colors"
           @click="$emit('close')"
         >
           {{ $t('KANBAN_SETTINGS.CANCEL') }}
         </button>
         <button
-          class="px-4 py-2 text-sm font-medium bg-n-brand text-white rounded-lg hover:bg-n-brand/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          class="px-4 py-2 text-xs md:text-sm font-medium bg-n-brand text-white rounded-lg hover:bg-n-brand/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           :disabled="!canSave"
           @click="handleSave"
         >

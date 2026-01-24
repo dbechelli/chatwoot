@@ -1,23 +1,22 @@
 <script setup>
 import { ref } from 'vue';
-import { useI18n } from 'vue-i18n';
 import Modal from 'dashboard/components/Modal.vue';
 
-const props = defineProps({
+defineProps({
   show: { type: Boolean, default: false },
 });
 
 const emit = defineEmits(['close', 'selectTemplate']);
 
-const { t } = useI18n();
-
 const templates = ref([
   {
     id: 'sales_pipeline',
     name: 'Pipeline de Vendas',
-    description: 'Gerencie oportunidades desde o primeiro contato até o fechamento',
+    description:
+      'Gerencie oportunidades desde o primeiro contato até o fechamento',
     icon: 'i-lucide-trending-up',
-    color: 'emerald',
+    iconBg: '#d1fae5',
+    iconColor: '#10b981',
     stages: [
       { id: 'lead', name: 'Novo Lead', color: '#3b82f6', order: 1 },
       { id: 'contacted', name: 'Contatado', color: '#8b5cf6', order: 2 },
@@ -33,11 +32,17 @@ const templates = ref([
     name: 'Suporte ao Cliente',
     description: 'Acompanhe tickets de suporte do início à resolução',
     icon: 'i-lucide-headphones',
-    color: 'blue',
+    iconBg: '#dbeafe',
+    iconColor: '#3b82f6',
     stages: [
       { id: 'new', name: 'Novo Ticket', color: '#3b82f6', order: 1 },
       { id: 'in_progress', name: 'Em Andamento', color: '#8b5cf6', order: 2 },
-      { id: 'waiting_customer', name: 'Aguardando Cliente', color: '#f59e0b', order: 3 },
+      {
+        id: 'waiting_customer',
+        name: 'Aguardando Cliente',
+        color: '#f59e0b',
+        order: 3,
+      },
       { id: 'resolved', name: 'Resolvido', color: '#10b981', order: 4 },
       { id: 'closed', name: 'Fechado', color: '#64748b', order: 5 },
     ],
@@ -47,7 +52,8 @@ const templates = ref([
     name: 'Recrutamento',
     description: 'Gerencie candidatos durante todo o processo seletivo',
     icon: 'i-lucide-user-plus',
-    color: 'purple',
+    iconBg: '#e9d5ff',
+    iconColor: '#8b5cf6',
     stages: [
       { id: 'applied', name: 'Aplicou', color: '#3b82f6', order: 1 },
       { id: 'screening', name: 'Triagem', color: '#8b5cf6', order: 2 },
@@ -63,7 +69,8 @@ const templates = ref([
     name: 'Onboarding de Clientes',
     description: 'Guie novos clientes através do processo de integração',
     icon: 'i-lucide-rocket',
-    color: 'orange',
+    iconBg: '#fed7aa',
+    iconColor: '#f59e0b',
     stages: [
       { id: 'welcome', name: 'Boas-vindas', color: '#3b82f6', order: 1 },
       { id: 'documentation', name: 'Documentação', color: '#8b5cf6', order: 2 },
@@ -77,7 +84,8 @@ const templates = ref([
     name: 'Gestão de Projetos',
     description: 'Acompanhe tarefas e projetos da equipe',
     icon: 'i-lucide-folder-kanban',
-    color: 'indigo',
+    iconBg: '#e0e7ff',
+    iconColor: '#6366f1',
     stages: [
       { id: 'backlog', name: 'Backlog', color: '#64748b', order: 1 },
       { id: 'todo', name: 'A Fazer', color: '#3b82f6', order: 2 },
@@ -91,18 +99,34 @@ const templates = ref([
     name: 'Qualificação de Leads',
     description: 'Filtre e qualifique leads antes de enviar para vendas',
     icon: 'i-lucide-filter',
-    color: 'cyan',
+    iconBg: '#cffafe',
+    iconColor: '#06b6d4',
     stages: [
       { id: 'new_lead', name: 'Novo Lead', color: '#3b82f6', order: 1 },
-      { id: 'contact_attempt', name: 'Tentativa de Contato', color: '#8b5cf6', order: 2 },
+      {
+        id: 'contact_attempt',
+        name: 'Tentativa de Contato',
+        color: '#8b5cf6',
+        order: 2,
+      },
       { id: 'qualified', name: 'Qualificado', color: '#10b981', order: 3 },
-      { id: 'disqualified', name: 'Desqualificado', color: '#ef4444', order: 4 },
-      { id: 'passed_to_sales', name: 'Enviado p/ Vendas', color: '#06b6d4', order: 5 },
+      {
+        id: 'disqualified',
+        name: 'Desqualificado',
+        color: '#ef4444',
+        order: 4,
+      },
+      {
+        id: 'passed_to_sales',
+        name: 'Enviado p/ Vendas',
+        color: '#06b6d4',
+        order: 5,
+      },
     ],
   },
 ]);
 
-const selectTemplate = (template) => {
+const selectTemplate = template => {
   const boardData = {
     name: template.name,
     description: template.description,
@@ -111,7 +135,7 @@ const selectTemplate = (template) => {
     isDefault: false,
     stages: template.stages,
   };
-  
+
   emit('selectTemplate', boardData);
   emit('close');
 };
@@ -121,45 +145,55 @@ const selectTemplate = (template) => {
   <Modal :show="show" :on-close="() => emit('close')">
     <div class="flex flex-col h-full max-h-[90vh] w-full max-w-5xl">
       <!-- Header -->
-      <div class="flex items-center justify-between p-6 border-b border-slate-200">
+      <div
+        class="flex items-center justify-between p-4 md:p-6 border-b border-n-weak"
+      >
         <div>
-          <h2 class="text-2xl font-bold text-slate-900">
-            Templates de Quadros Kanban
+          <h2 class="text-xl md:text-2xl font-bold text-n-slate-12">
+            {{ $t('KANBAN_SETTINGS.TEMPLATES_TITLE') }}
           </h2>
-          <p class="text-sm text-slate-500 mt-1">
-            Comece rapidamente com templates pré-configurados
+          <p class="text-xs md:text-sm text-n-slate-11 mt-1">
+            {{ $t('KANBAN_SETTINGS.TEMPLATES_DESCRIPTION') }}
           </p>
         </div>
         <button
+          class="p-2 hover:bg-n-slate-2 rounded-lg transition-colors"
           @click="$emit('close')"
-          class="p-2 hover:bg-slate-100 rounded-full transition-colors"
         >
-          <i class="i-lucide-x text-xl text-slate-500" />
+          <i class="i-lucide-x text-xl text-n-slate-11" />
         </button>
       </div>
 
       <!-- Content -->
-      <div class="flex-1 overflow-y-auto p-6">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div class="flex-1 overflow-y-auto p-4 md:p-6">
+        <div
+          class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4"
+        >
           <div
             v-for="template in templates"
             :key="template.id"
-            class="group border border-slate-200 rounded-xl p-5 hover:shadow-lg hover:border-woot-300 transition-all cursor-pointer bg-white"
+            class="group border border-n-weak rounded-lg p-4 md:p-5 hover:shadow-md hover:border-n-brand transition-all cursor-pointer bg-white"
             @click="selectTemplate(template)"
           >
             <!-- Icon & Title -->
-            <div class="flex items-start gap-4 mb-4">
+            <div class="flex items-start gap-3 md:gap-4 mb-3 md:mb-4">
               <div
-                class="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform"
-                :class="`bg-${template.color}-100 text-${template.color}-600`"
+                class="flex-shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform"
+                :style="{ backgroundColor: template.iconBg }"
               >
-                <i :class="template.icon" class="text-2xl" />
+                <i
+                  :class="template.icon"
+                  class="text-xl md:text-2xl"
+                  :style="{ color: template.iconColor }"
+                />
               </div>
               <div class="flex-1 min-w-0">
-                <h3 class="font-bold text-slate-900 mb-1 group-hover:text-woot-600 transition-colors">
+                <h3
+                  class="font-bold text-sm md:text-base text-n-slate-12 mb-1 group-hover:text-n-brand transition-colors"
+                >
                   {{ template.name }}
                 </h3>
-                <p class="text-xs text-slate-500 line-clamp-2">
+                <p class="text-xs text-n-slate-11 line-clamp-2">
                   {{ template.description }}
                 </p>
               </div>
@@ -167,8 +201,10 @@ const selectTemplate = (template) => {
 
             <!-- Stages Preview -->
             <div class="space-y-2">
-              <p class="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                {{ template.stages.length }} Estágios
+              <p
+                class="text-xs font-semibold text-n-slate-9 uppercase tracking-wider"
+              >
+                {{ template.stages.length }} {{ $t('KANBAN_SETTINGS.STAGES') }}
               </p>
               <div class="flex flex-wrap gap-1.5">
                 <div
@@ -181,45 +217,37 @@ const selectTemplate = (template) => {
                 </div>
                 <div
                   v-if="template.stages.length > 4"
-                  class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-slate-200 text-slate-600"
+                  class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-n-slate-3 text-n-slate-11"
                 >
-                  +{{ template.stages.length - 4 }}
+                  {{ `+${template.stages.length - 4}` }}
                 </div>
               </div>
             </div>
 
             <!-- Use Button -->
             <button
-              class="w-full mt-4 px-4 py-2 bg-woot-600 text-white rounded-lg font-semibold text-sm hover:bg-woot-700 transition-colors opacity-0 group-hover:opacity-100"
+              class="w-full mt-3 md:mt-4 px-4 py-2 bg-n-brand text-white rounded-lg font-semibold text-xs md:text-sm hover:bg-n-brand/90 transition-colors opacity-0 group-hover:opacity-100"
             >
-              Usar Este Template
+              {{ $t('KANBAN_SETTINGS.USE_TEMPLATE') }}
             </button>
           </div>
         </div>
       </div>
 
       <!-- Footer -->
-      <div class="flex items-center justify-between p-6 border-t border-slate-200 bg-slate-50">
-        <p class="text-sm text-slate-500">
-          💡 Você pode personalizar os estágios após criar o quadro
+      <div
+        class="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 md:p-6 border-t border-n-weak bg-n-slate-1"
+      >
+        <p class="text-xs md:text-sm text-n-slate-11 text-center sm:text-left">
+          {{ `💡 ${$t('KANBAN_SETTINGS.CUSTOMIZE_AFTER_CREATE')}` }}
         </p>
         <button
+          class="w-full sm:w-auto px-4 py-2 text-xs md:text-sm font-semibold text-n-slate-12 hover:bg-n-slate-2 rounded-lg transition-colors"
           @click="$emit('close')"
-          class="px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-200 rounded-lg transition-colors"
         >
-          Criar Quadro Vazio
+          {{ $t('KANBAN_SETTINGS.CREATE_BLANK_BOARD') }}
         </button>
       </div>
     </div>
   </Modal>
 </template>
-
-<style scoped>
-.line-clamp-2 {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-</style>
