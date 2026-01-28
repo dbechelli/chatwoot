@@ -131,7 +131,7 @@ class Captain::Document < ApplicationRecord
   def validate_file_attachment
     return unless pdf_file.attached?
 
-    return unless pdf_file.blob.byte_size > 10.megabytes
+    return unless pdf_file.blob.byte_size > 100.megabytes
 
     errors.add(:pdf_file, I18n.t('captain.documents.pdf_size_error'))
   end

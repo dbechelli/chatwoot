@@ -14,7 +14,7 @@ import { useAlert } from 'dashboard/composables';
 import { useUISettings } from 'dashboard/composables/useUISettings';
 import keyboardEventListenerMixins from 'shared/mixins/keyboardEventListenerMixins';
 
-const MAXIMUM_FILE_UPLOAD_SIZE = 4; // in MB
+const MAXIMUM_FILE_UPLOAD_SIZE = 100; // in MB
 const createState = (
   content,
   placeholder,

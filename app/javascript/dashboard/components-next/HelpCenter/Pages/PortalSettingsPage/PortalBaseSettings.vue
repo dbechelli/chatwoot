@@ -33,7 +33,7 @@ const { t } = useI18n();
 const store = useStore();
 const getters = useStoreGetters();
 
-const MAXIMUM_FILE_UPLOAD_SIZE = 4; // in MB
+const MAXIMUM_FILE_UPLOAD_SIZE = 100; // in MB
 
 const state = reactive({
   name: '',

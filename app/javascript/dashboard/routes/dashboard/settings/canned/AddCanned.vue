@@ -31,6 +31,7 @@ export default {
     return {
       shortCode: '',
       content: this.responseContent || '',
+      attachments: [],
       addCanned: {
         showLoading: false,
         message: '',
@@ -51,8 +52,15 @@ export default {
     resetForm() {
       this.shortCode = '';
       this.content = '';
+      this.attachments = [];
+      if (this.$refs.fileInput) {
+        this.$refs.fileInput.value = '';
+      }
       this.v$.shortCode.$reset();
       this.v$.content.$reset();
+    },
+    onFileChange(e) {
+      this.attachments = e.target.files;
     },
     addCannedResponse() {
       // Show loading on button
@@ -62,6 +70,7 @@ export default {
         .dispatch('createCannedResponse', {
           short_code: this.shortCode,
           content: this.content,
+          attachments: this.attachments,
         })
         .then(() => {
           // Reset Form, Show success message
@@ -118,6 +127,19 @@ export default {
             />
           </div>
         </div>
+
+        <div class="w-full">
+          <label>
+            Attachments
+            <input
+              ref="fileInput"
+              type="file"
+              multiple
+              @change="onFileChange"
+            />
+          </label>
+        </div>
+
         <div class="flex flex-row justify-end w-full gap-2 px-0 py-2">
           <NextButton
             faded

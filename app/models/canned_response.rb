@@ -11,6 +11,8 @@
 #
 
 class CannedResponse < ApplicationRecord
+  has_many_attached :attachments
+
   validates :content, presence: true
   validates :short_code, presence: true
   validates :account, presence: true

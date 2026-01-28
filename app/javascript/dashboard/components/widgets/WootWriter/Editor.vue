@@ -105,7 +105,7 @@ const emit = defineEmits([
 const { t } = useI18n();
 
 const TYPING_INDICATOR_IDLE_TIME = 4000;
-const MAXIMUM_FILE_UPLOAD_SIZE = 4; // in MB
+const MAXIMUM_FILE_UPLOAD_SIZE = 100; // in MB
 const DEFAULT_FORMATTING = 'Context::Default';
 
 const effectiveChannelType = computed(() =>
