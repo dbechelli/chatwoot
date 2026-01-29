@@ -918,6 +918,22 @@ export default {
         isPrivate,
       });
     },
+    async onAttach(files) {
+      if (!files || files.length === 0) return;
+
+      files.forEach(async fileInfo => {
+        try {
+          const response = await fetch(fileInfo.url);
+          const blob = await response.blob();
+          const file = new File([blob], fileInfo.filename, {
+            type: fileInfo.content_type || blob.type,
+          });
+          this.onFileUpload({ file });
+        } catch (error) {
+          useAlert(this.$t('CONVERSATION.FILE_SIZE_LIMIT')); // Fallback error
+        }
+      });
+    },
     attachFile({ blob, file }) {
       if (file?.isRecordedAudio) {
         this.removeRecordedAudio();
@@ -1184,6 +1200,7 @@ export default {
         @toggle-canned-menu="toggleCannedMenu"
         @toggle-variables-menu="toggleVariablesMenu"
         @clear-selection="clearEditorSelection"
+        @on-attach="onAttach"
       />
       <QuotedEmailPreview
         v-if="shouldShowQuotedPreview"

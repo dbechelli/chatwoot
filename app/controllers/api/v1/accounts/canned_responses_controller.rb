@@ -36,9 +36,9 @@ class Api::V1::Accounts::CannedResponsesController < Api::V1::Accounts::BaseCont
       Current.account.canned_responses
              .where('short_code ILIKE :search OR content ILIKE :search', search: "%#{params[:search]}%")
              .order_by_search(params[:search])
-
+             .as_json(methods: :file_urls)
     else
-      Current.account.canned_responses
+      Current.account.canned_responses.as_json(methods: :file_urls)
     end
   end
 end

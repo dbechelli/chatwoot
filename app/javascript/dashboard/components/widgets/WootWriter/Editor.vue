@@ -100,6 +100,7 @@ const emit = defineEmits([
   'focus',
   'input',
   'update:modelValue',
+  'on-attach',
 ]);
 
 const { t } = useI18n();
@@ -576,6 +577,15 @@ function insertContentIntoEditor(content, defaultFrom = 0) {
  * @param {Object|string} content - The content to insert, depending on the type.
  */
 function insertSpecialContent(type, content) {
+  let contentToInsert = content;
+
+  if (type === 'cannedResponse' && typeof content === 'object') {
+    contentToInsert = content.content;
+    if (content.files && content.files.length > 0) {
+      emit('on-attach', content.files);
+    }
+  }
+
   if (!editorView) {
     return;
   }
@@ -583,7 +593,7 @@ function insertSpecialContent(type, content) {
   let { node, from, to } = getContentNode(
     editorView,
     type,
-    content,
+    contentToInsert,
     range.value,
     props.variables
   );

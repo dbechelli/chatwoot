@@ -29,4 +29,15 @@ class CannedResponse < ApplicationRecord
 
     order(Arel.sql(order_clause) => :desc)
   }
+
+  def file_urls
+    attachments.map do |attachment|
+      {
+        id: attachment.id,
+        filename: attachment.filename.to_s,
+        content_type: attachment.content_type,
+        url: Rails.application.routes.url_helpers.url_for(attachment)
+      }
+    end
+  end
 end

@@ -52,7 +52,7 @@ export const useFileUpload = ({ inbox, attachFile, isPrivateNote = false }) => {
       return installationLimit;
     }
 
-    return Math.min(channelLimit, installationLimit);
+    return installationLimit;
   };
 
   const alertOverLimit = maxSizeMB =>
