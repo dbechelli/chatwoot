@@ -18,7 +18,7 @@ describe Whatsapp::IncomingMessageBaileysService do
 
         expect do
           described_class.new(inbox: inbox, params: params).perform
-        end.to raise_error(Whatsapp::IncomingMessageBaileysService::InvalidWebhookVerifyToken)
+        end.to(raise_error { |error| expect(error.class.name).to eq('Whatsapp::IncomingMessageBaileysService::InvalidWebhookVerifyToken') })
       end
     end
 
@@ -451,22 +451,85 @@ describe Whatsapp::IncomingMessageBaileysService do
             expect(messages).to eq([message])
           end
 
+          it 'does not create duplicate message when source_id is set after contact lock is acquired' do
+            # This tests the race condition fix:
+            # 1. Agent sends message from Chatwoot (message created without source_id)
+            # 2. Webhook arrives before source_id is saved
+            # 3. Webhook handler times out on channel lock and proceeds
+            # 4. Inside contact lock, we re-check for message by source_id
+            # 5. By then, source_id should be set, so duplicate is prevented
+
+            # Create contact and conversation that will be found
+            contact = create(:contact, account: inbox.account, identifier: '12345678@lid', phone_number: '+5511912345678')
+            contact_inbox = create(:contact_inbox, inbox: inbox, contact: contact, source_id: '12345678')
+            conversation = create(:conversation, inbox: inbox, contact_inbox: contact_inbox, contact: contact)
+
+            # Simulate the race: message exists but will only be found on the re-check inside contact lock
+            existing_message = create(:message, inbox: inbox, conversation: conversation)
+
+            # First call returns nil (simulating message not having source_id yet)
+            # Second call (inside contact lock) returns the message
+            service = described_class.new(inbox: inbox, params: params)
+            call_count = 0
+            allow(service).to receive(:find_message_by_source_id).and_wrap_original do |_method, _source_id|
+              call_count += 1
+              call_count == 1 ? nil : existing_message
+            end
+
+            service.perform
+
+            # Should not create a new conversation or message
+            expect(inbox.conversations.count).to eq(1)
+            expect(inbox.messages.count).to eq(1)
+          end
+
           it 'does not create a message if it is already being processed' do
-            allow(Redis::Alfred).to receive(:get).with(format_message_source_key('msg_123')).and_return(true)
+            # Simulate lock already acquired by returning false from SETNX
+            allow(Redis::Alfred).to receive(:set)
+              .with(format_message_source_key('msg_123'), true, nx: true, ex: 1.day)
+              .and_return(false)
 
             described_class.new(inbox: inbox, params: params).perform
 
             expect(inbox.conversations).to be_empty
           end
 
-          it 'caches the message source id in Redis and clears it' do
-            allow(Redis::Alfred).to receive(:setex).with(format_message_source_key('msg_123'), true)
+          it 'caches and clears message source id in Redis' do
+            # Allow all Redis::Alfred calls (contact lock uses different keys)
+            allow(Redis::Alfred).to receive(:set).and_call_original
+            allow(Redis::Alfred).to receive(:delete).and_call_original
+
+            # Stub message lock specifically
+            allow(Redis::Alfred).to receive(:set)
+              .with(format_message_source_key('msg_123'), true, nx: true, ex: 1.day)
+              .and_return(true)
             allow(Redis::Alfred).to receive(:delete).with(format_message_source_key('msg_123'))
 
             described_class.new(inbox: inbox, params: params).perform
 
-            expect(Redis::Alfred).to have_received(:setex)
-            expect(Redis::Alfred).to have_received(:delete)
+            expect(Redis::Alfred).to have_received(:set).with(format_message_source_key('msg_123'), true, nx: true, ex: 1.day)
+            expect(Redis::Alfred).to have_received(:delete).with(format_message_source_key('msg_123'))
+          end
+
+          it 'clears lock even when an exception occurs after acquiring it' do
+            # Bug: no ensure block meant exceptions left lock stuck forever
+            # Fix: use ensure block to always clear lock when acquired
+            # Allow all Redis::Alfred calls (contact lock uses different keys)
+            allow(Redis::Alfred).to receive(:set).and_call_original
+            allow(Redis::Alfred).to receive(:delete).and_call_original
+
+            # Stub message lock specifically
+            allow(Redis::Alfred).to receive(:set)
+              .with(format_message_source_key('msg_123'), true, nx: true, ex: 1.day)
+              .and_return(true)
+            allow(Redis::Alfred).to receive(:delete).with(format_message_source_key('msg_123'))
+
+            service = described_class.new(inbox: inbox, params: params)
+            allow(service).to receive(:handle_create_message).and_raise(StandardError, 'simulated error')
+
+            expect { service.perform }.to raise_error(StandardError, 'simulated error')
+
+            expect(Redis::Alfred).to have_received(:delete).with(format_message_source_key('msg_123'))
           end
         end
 
@@ -913,7 +976,7 @@ describe Whatsapp::IncomingMessageBaileysService do
 
           expect do
             described_class.new(inbox: inbox, params: params).perform
-          end.to raise_error(Whatsapp::IncomingMessageBaileysService::MessageNotFoundError)
+          end.to(raise_error { |error| expect(error.class.name).to eq('Whatsapp::BaileysHandlers::MessagesUpdate::MessageNotFoundError') })
         end
       end
 

@@ -333,6 +333,23 @@ const actions = {
     }
   },
 
+  editMessage: async function editMessage(
+    { commit },
+    { conversationId, messageId, content }
+  ) {
+    try {
+      const { data } = await MessageApi.editContent(
+        conversationId,
+        messageId,
+        content
+      );
+      commit(types.ADD_MESSAGE, data);
+      return data;
+    } catch (error) {
+      throw new Error(error);
+    }
+  },
+
   deleteConversation: async ({ commit, dispatch }, conversationId) => {
     try {
       await ConversationApi.delete(conversationId);
@@ -417,6 +434,18 @@ const actions = {
       commit(`contacts/${types.SET_CONTACT_ITEM}`, data);
     }
     commit(types.UPDATE_CONVERSATION_CONTACT, data);
+  },
+
+  handleScheduledMessageCreated({ dispatch }, scheduledMessage) {
+    dispatch('scheduledMessages/upsertFromEvent', scheduledMessage);
+  },
+
+  handleScheduledMessageUpdated({ dispatch }, scheduledMessage) {
+    dispatch('scheduledMessages/upsertFromEvent', scheduledMessage);
+  },
+
+  handleScheduledMessageDeleted({ dispatch }, scheduledMessage) {
+    dispatch('scheduledMessages/removeFromEvent', scheduledMessage);
   },
 
   setActiveInbox({ commit }, inboxId) {

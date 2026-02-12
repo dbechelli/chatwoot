@@ -69,7 +69,7 @@ class Whatsapp::Providers::WhatsappCloudService < Whatsapp::Providers::BaseServi
   end
 
   def delete_csat_template(template_name = nil)
-    template_name ||= Whatsapp::CsatTemplateNameService.csat_template_name(whatsapp_channel.inbox.id)
+    template_name ||= CsatTemplateNameService.csat_template_name(whatsapp_channel.inbox.id)
     csat_template_service.delete_template(template_name)
   end
 
@@ -77,10 +77,8 @@ class Whatsapp::Providers::WhatsappCloudService < Whatsapp::Providers::BaseServi
     csat_template_service.get_template_status(template_name)
   end
 
-  def media_url(media_id, phone_number_id = nil)
-    url = "#{api_base_path}/v13.0/#{media_id}"
-    url += "?phone_number_id=#{phone_number_id}" if phone_number_id
-    url
+  def media_url(media_id)
+    "#{api_base_path}/v13.0/#{media_id}"
   end
 
   def toggle_typing_status(typing_status, last_message:, **)
@@ -164,8 +162,10 @@ class Whatsapp::Providers::WhatsappCloudService < Whatsapp::Providers::BaseServi
     }
     type_content['caption'] = message.outgoing_content unless %w[audio sticker].include?(type)
     type_content['filename'] = attachment.file.filename if type == 'document'
+    # FIXME: This requires transcoding to opus/ogg.
+    # type_content['voice'] = true if type == 'audio' && attachment.meta&.dig('is_recorded_audio')
     response = HTTParty.post(
-      "#{phone_id_path}/messages",
+      "#{phone_id_path('v24.0')}/messages",
       headers: api_headers,
       body: {
         :messaging_product => 'whatsapp',

@@ -94,6 +94,7 @@ import ContextMenu from 'dashboard/modules/conversations/components/MessageConte
  * @property {boolean} [isEmailInbox=false] - Whether the message is from an email inbox
  * @property {number} conversationId - The ID of the conversation to which the message belongs
  * @property {number} inboxId - The ID of the inbox to which the message belongs
+ * @property {Object} [additionalAttributes={}] - Additional attributes of the message
  */
 
 // eslint-disable-next-line vue/define-macros-order
@@ -117,12 +118,15 @@ const props = defineProps({
     default: 'text',
     validator: value => Object.values(CONTENT_TYPES).includes(value),
   },
+  // eslint-disable-next-line vue/no-unused-properties
+  additionalAttributes: { type: Object, default: () => ({}) },
   conversationId: { type: Number, required: true },
   createdAt: { type: Number, required: true }, // eslint-disable-line vue/no-unused-properties
   currentUserId: { type: Number, required: true }, // eslint-disable-line vue/no-unused-properties
   groupWithNext: { type: Boolean, default: false },
   inboxId: { type: Number, default: null }, // eslint-disable-line vue/no-unused-properties
   inboxSupportsReplyTo: { type: Object, default: () => ({}) },
+  inboxSupportsEdit: { type: Boolean, default: false },
   inReplyTo: { type: Object, default: null }, // eslint-disable-line vue/no-unused-properties
   isEmailInbox: { type: Boolean, default: false },
   private: { type: Boolean, default: false },
@@ -371,6 +375,12 @@ const contextMenuEnabledOptions = computed(() => {
       !props.private &&
       props.inboxSupportsReplyTo.outgoing &&
       !isFailedOrProcessing,
+    edit:
+      isOutgoing &&
+      hasText &&
+      !isFailedOrProcessing &&
+      !isMessageDeleted.value &&
+      props.inboxSupportsEdit,
   };
 });
 
@@ -423,8 +433,16 @@ function handleReplyTo() {
 }
 
 const avatarInfo = computed(() => {
-  // If no sender, return bot info
+  // If no sender, check for external sender name
   if (!props.sender) {
+    const externalSenderName = props.contentAttributes?.externalSenderName;
+    if (externalSenderName === 'WhatsApp') {
+      return {
+        name: t('CONVERSATION.WHATSAPP'),
+        src: '',
+        iconName: 'i-woot-whatsapp',
+      };
+    }
     return {
       name: t('CONVERSATION.BOT'),
       src: '',

@@ -1,6 +1,7 @@
 <script>
 import AutomationActionTeamMessageInput from './AutomationActionTeamMessageInput.vue';
 import AutomationActionFileInput from './AutomationFileInput.vue';
+import AutomationActionScheduledMessageInput from './AutomationActionScheduledMessageInput.vue';
 import WootMessageEditor from 'dashboard/components/widgets/WootWriter/Editor.vue';
 import NextButton from 'dashboard/components-next/button/Button.vue';
 
@@ -8,6 +9,7 @@ export default {
   components: {
     AutomationActionTeamMessageInput,
     AutomationActionFileInput,
+    AutomationActionScheduledMessageInput,
     WootMessageEditor,
     NextButton,
   },
@@ -39,6 +41,10 @@ export default {
     isMacro: {
       type: Boolean,
       default: false,
+    },
+    conditions: {
+      type: Array,
+      default: () => [],
     },
   },
   emits: ['update:modelValue', 'input', 'removeAction', 'resetAction'],
@@ -78,9 +84,10 @@ export default {
     castMessageVmodel: {
       get() {
         if (Array.isArray(this.action_params)) {
-          return this.action_params[0];
+          const value = this.action_params[0];
+          return typeof value === 'string' ? value : '';
         }
-        return this.action_params;
+        return typeof this.action_params === 'string' ? this.action_params : '';
       },
       set(value) {
         this.action_params = value;
@@ -204,6 +211,12 @@ export default {
       enable-variables
       :placeholder="$t('AUTOMATION.ACTION.TEAM_MESSAGE_INPUT_PLACEHOLDER')"
       class="action-message"
+    />
+    <AutomationActionScheduledMessageInput
+      v-if="inputType === 'scheduled_message'"
+      v-model="action_params"
+      :initial-file-name="initialFileName"
+      :conditions="conditions"
     />
     <p v-if="errorMessage" class="filter-error">
       {{ errorMessage }}

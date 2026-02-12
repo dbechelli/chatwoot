@@ -117,13 +117,14 @@ describe ActionCableListener do
   describe '#contact_deleted' do
     let(:event_name) { :'contact.deleted' }
     let!(:contact) { create(:contact, account: account) }
-    let!(:event) { Events::Base.new(event_name, Time.zone.now, contact: contact) }
+    let(:contact_data) { contact.push_event_data.merge(account_id: contact.account_id) }
+    let!(:event) { Events::Base.new(event_name, Time.zone.now, contact_data: contact_data) }
 
     it 'sends message to account admins, inbox agents' do
       expect(ActionCableBroadcastJob).to receive(:perform_later).with(
         ["account_#{account.id}"],
         'contact.deleted',
-        contact.push_event_data.merge(account_id: account.id)
+        contact_data
       )
       listener.contact_deleted(event)
     end
@@ -132,7 +133,14 @@ describe ActionCableListener do
   describe '#notification_deleted' do
     let(:event_name) { :'notification.deleted' }
     let!(:notification) { create(:notification, account: account, user: agent) }
-    let!(:event) { Events::Base.new(event_name, Time.zone.now, notification: notification) }
+    let(:notification_data) do
+      {
+        id: notification.id,
+        user_id: agent.id,
+        account_id: account.id
+      }
+    end
+    let!(:event) { Events::Base.new(event_name, Time.zone.now, notification_data: notification_data) }
 
     it 'sends message to account admins, inbox agents' do
       expect(ActionCableBroadcastJob).to receive(:perform_later).with(
@@ -202,5 +210,32 @@ describe ActionCableListener do
       )
       listener.conversation_updated(event)
     end
+  end
+
+  shared_examples 'scheduled message event broadcast' do |method_name, event_name|
+    it 'broadcasts to account admins and inbox members' do
+      scheduled_message = create(:scheduled_message, account: account, inbox: inbox, conversation: conversation, author: agent)
+      event = Events::Base.new(event_name, Time.zone.now, scheduled_message: scheduled_message)
+
+      expect(ActionCableBroadcastJob).to receive(:perform_later).with(
+        a_collection_containing_exactly(agent.pubsub_token, admin.pubsub_token),
+        event_name,
+        scheduled_message.push_event_data.merge(account_id: account.id)
+      )
+
+      listener.public_send(method_name, event)
+    end
+  end
+
+  describe '#scheduled_message_created' do
+    it_behaves_like 'scheduled message event broadcast', :scheduled_message_created, 'scheduled_message.created'
+  end
+
+  describe '#scheduled_message_updated' do
+    it_behaves_like 'scheduled message event broadcast', :scheduled_message_updated, 'scheduled_message.updated'
+  end
+
+  describe '#scheduled_message_deleted' do
+    it_behaves_like 'scheduled message event broadcast', :scheduled_message_deleted, 'scheduled_message.deleted'
   end
 end

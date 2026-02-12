@@ -40,6 +40,8 @@ conversation:
   $ref: ./resource/conversation.yml
 message:
   $ref: ./resource/message.yml
+scheduled_message:
+  $ref: ./resource/scheduled_message.yml
 user:
   $ref: ./resource/user.yml
 agent:
@@ -132,6 +134,10 @@ conversation_create_payload:
 conversation_message_create_payload:
   $ref: ./request/conversation/create_message_payload.yml
 
+## Scheduled Message
+scheduled_message_create_update_payload:
+  $ref: ./request/scheduled_message/create_update_payload.yml
+
 # Inbox
 inbox_create_payload:
   $ref: ./request/inbox/create_payload.yml
@@ -223,6 +229,8 @@ account_summary:
   $ref: './resource/reports/summary.yml'
 agent_conversation_metrics:
   $ref: './resource/reports/conversation/agent.yml'
+channel_summary:
+  $ref: './resource/reports/channel_summary.yml'
 
 contact_detail:
   $ref: ./resource/contact_detail.yml

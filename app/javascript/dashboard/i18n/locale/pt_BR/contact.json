@@ -18,8 +18,8 @@
     "CREATED_AT_LABEL": "Criado",
     "NEW_MESSAGE": "Nova Mensagem",
     "CALL": "Chamada",
-    "CALL_INITIATED": "Calling the contact…",
-    "CALL_FAILED": "Unable to start the call. Please try again.",
+    "CALL_INITIATED": "Efetuando chamada…",
+    "CALL_FAILED": "Não foi possível iniciar a chamada. Tente novamente.",
     "VOICE_INBOX_PICKER": {
       "TITLE": "Escolha uma caixa de entrada de voz"
     },
@@ -61,7 +61,13 @@
   "EDIT_CONTACT": {
     "BUTTON_LABEL": "Editar Contato",
     "TITLE": "Editar contato",
-    "DESC": "Alterar detalhes do contato"
+    "DESC": "Alterar detalhes do contato",
+    "CONFIRM_DISCARD": {
+      "TITLE": "Descartar alterações?",
+      "MESSAGE": "Você tem alterações não salvas. Tem certeza de que deseja descartá-las?",
+      "YES": "Descartar",
+      "NO": "Continuar editando"
+    }
   },
   "DELETE_CONTACT": {
     "BUTTON_LABEL": "Excluir Contato",
@@ -458,7 +464,7 @@
             "PLACEHOLDER": "Adicionar Instagram"
           },
           "TIKTOK": {
-            "PLACEHOLDER": "Add TikTok"
+            "PLACEHOLDER": "Adicionar TikTok"
           },
           "LINKEDIN": {
             "PLACEHOLDER": "Adicionar LinkedIn"

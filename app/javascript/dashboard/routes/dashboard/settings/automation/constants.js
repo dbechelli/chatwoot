@@ -101,6 +101,10 @@ export const AUTOMATIONS = {
         name: 'SEND_MESSAGE',
       },
       {
+        key: 'create_scheduled_message',
+        name: 'CREATE_SCHEDULED_MESSAGE',
+      },
+      {
         key: 'send_email_transcript',
         name: 'SEND_EMAIL_TRANSCRIPT',
       },
@@ -219,6 +223,10 @@ export const AUTOMATIONS = {
       {
         key: 'send_message',
         name: 'SEND_MESSAGE',
+      },
+      {
+        key: 'create_scheduled_message',
+        name: 'CREATE_SCHEDULED_MESSAGE',
       },
       {
         key: 'send_email_transcript',
@@ -349,6 +357,10 @@ export const AUTOMATIONS = {
         name: 'SEND_MESSAGE',
       },
       {
+        key: 'create_scheduled_message',
+        name: 'CREATE_SCHEDULED_MESSAGE',
+      },
+      {
         key: 'send_email_transcript',
         name: 'SEND_EMAIL_TRANSCRIPT',
       },
@@ -471,6 +483,10 @@ export const AUTOMATIONS = {
         name: 'SEND_MESSAGE',
       },
       {
+        key: 'create_scheduled_message',
+        name: 'CREATE_SCHEDULED_MESSAGE',
+      },
+      {
         key: 'send_email_transcript',
         name: 'SEND_EMAIL_TRANSCRIPT',
       },
@@ -579,6 +595,10 @@ export const AUTOMATIONS = {
         name: 'SEND_MESSAGE',
       },
       {
+        key: 'create_scheduled_message',
+        name: 'CREATE_SCHEDULED_MESSAGE',
+      },
+      {
         key: 'send_email_transcript',
         name: 'SEND_EMAIL_TRANSCRIPT',
       },
@@ -684,6 +704,11 @@ export const AUTOMATION_ACTION_TYPES = [
     inputType: 'textarea',
   },
   {
+    key: 'create_scheduled_message',
+    label: 'CREATE_SCHEDULED_MESSAGE',
+    inputType: 'scheduled_message',
+  },
+  {
     key: 'add_private_note',
     label: 'ADD_PRIVATE_NOTE',
     inputType: 'textarea',
@@ -699,3 +724,6 @@ export const AUTOMATION_ACTION_TYPES = [
     inputType: 'search_select',
   },
 ];
+
+// Default delay for scheduled messages (24 hours in minutes)
+export const DEFAULT_SCHEDULED_MESSAGE_DELAY_MINUTES = 24 * 60;

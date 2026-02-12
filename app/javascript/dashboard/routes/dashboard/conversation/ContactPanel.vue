@@ -15,6 +15,7 @@ import ConversationAction from './ConversationAction.vue';
 import ConversationParticipant from './ConversationParticipant.vue';
 import ContactInfo from './contact/ContactInfo.vue';
 import ContactNotes from './contact/ContactNotes.vue';
+import ScheduledMessages from './scheduledMessages/ScheduledMessages.vue';
 import ConversationInfo from './ConversationInfo.vue';
 import CustomAttributes from './customAttributes/CustomAttributes.vue';
 import Draggable from 'vuedraggable';
@@ -150,7 +151,26 @@ onMounted(() => {
       >
         <template #item="{ element }">
           <div
-            v-if="element.name === 'conversation_actions'"
+            v-if="element.name === 'scheduled_messages'"
+            class="conversation--actions"
+          >
+            <AccordionItem
+              :title="$t('CONVERSATION_SIDEBAR.ACCORDION.SCHEDULED_MESSAGES')"
+              :is-open="isContactSidebarItemOpen('is_scheduled_messages_open')"
+              compact
+              @toggle="
+                value =>
+                  toggleSidebarUIState('is_scheduled_messages_open', value)
+              "
+            >
+              <ScheduledMessages
+                :conversation-id="conversationId"
+                :inbox-id="inboxId"
+              />
+            </AccordionItem>
+          </div>
+          <div
+            v-else-if="element.name === 'conversation_actions'"
             class="conversation--actions"
           >
             <AccordionItem
