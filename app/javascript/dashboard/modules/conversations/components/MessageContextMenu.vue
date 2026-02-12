@@ -15,6 +15,8 @@ import {
 import MenuItem from '../../../components/widgets/conversation/contextMenu/menuItem.vue';
 import { useTrack } from 'dashboard/composables';
 import NextButton from 'dashboard/components-next/button/Button.vue';
+import Editor from 'dashboard/components-next/Editor/Editor.vue';
+import { useUISettings } from 'dashboard/composables/useUISettings';
 
 export default {
   components: {
@@ -23,6 +25,7 @@ export default {
     MenuItem,
     ContextMenu,
     NextButton,
+    Editor,
   },
   props: {
     message: {
@@ -49,9 +52,11 @@ export default {
   emits: ['open', 'close', 'replyTo'],
   setup() {
     const { getPlainText } = useMessageFormatter();
+    const { isEditorHotKeyEnabled } = useUISettings();
 
     return {
       getPlainText,
+      isEditorHotKeyEnabled,
     };
   },
   data() {
@@ -59,6 +64,9 @@ export default {
       isCannedResponseModalOpen: false,
       showDeleteModal: false,
       showForwardModal: false,
+      showEditModal: false,
+      editedContent: '',
+      isEditingMessage: false,
     };
   },
   computed: {
@@ -86,6 +94,17 @@ export default {
     },
   },
   methods: {
+    handleEnterKey(e) {
+      if (this.isEditorHotKeyEnabled('enter')) {
+        e.preventDefault();
+        this.confirmEdit();
+      }
+    },
+    handleCmdEnterKey() {
+      if (this.isEditorHotKeyEnabled('cmd_enter')) {
+        this.confirmEdit();
+      }
+    },
     async copyLinkToMessage() {
       const fullConversationURL =
         window.chatwootConfig.hostURL +
@@ -162,6 +181,40 @@ export default {
     closeForwardModal() {
       this.showForwardModal = false;
     },
+    openEditModal() {
+      this.handleClose();
+      this.editedContent = this.messageContent;
+      this.showEditModal = true;
+    },
+    closeEditModal() {
+      this.showEditModal = false;
+      this.editedContent = '';
+    },
+    async confirmEdit() {
+      const trimmedContent = this.editedContent.trim();
+      if (!trimmedContent) {
+        useAlert(this.$t('CONVERSATION.CONTEXT_MENU.EDIT.EMPTY_CONTENT'));
+        return;
+      }
+      if (trimmedContent === (this.messageContent || '').trim()) {
+        this.closeEditModal();
+        return;
+      }
+      this.isEditingMessage = true;
+      try {
+        await this.$store.dispatch('editMessage', {
+          conversationId: this.conversationId,
+          messageId: this.messageId,
+          content: trimmedContent,
+        });
+        useAlert(this.$t('CONVERSATION.CONTEXT_MENU.EDIT.SUCCESS'));
+        this.closeEditModal();
+      } catch (error) {
+        useAlert(this.$t('CONVERSATION.CONTEXT_MENU.EDIT.ERROR'));
+      } finally {
+        this.isEditingMessage = false;
+      }
+    },
   },
 };
 </script>
@@ -199,6 +252,52 @@ export default {
       :confirm-text="$t('CONVERSATION.CONTEXT_MENU.DELETE_CONFIRMATION.DELETE')"
       :reject-text="$t('CONVERSATION.CONTEXT_MENU.DELETE_CONFIRMATION.CANCEL')"
     />
+    <!-- Edit Message Modal -->
+    <woot-modal
+      v-if="showEditModal"
+      v-model:show="showEditModal"
+      :on-close="closeEditModal"
+    >
+      <div class="flex flex-col h-auto overflow-auto">
+        <woot-modal-header
+          :header-title="$t('CONVERSATION.CONTEXT_MENU.EDIT.TITLE')"
+        />
+        <form
+          class="flex flex-col w-full"
+          @submit.prevent="confirmEdit"
+          @keydown.enter.exact="handleEnterKey"
+          @keydown.meta.enter="handleCmdEnterKey"
+          @keydown.ctrl.enter="handleCmdEnterKey"
+        >
+          <Editor
+            v-model="editedContent"
+            :label="$t('CONVERSATION.CONTEXT_MENU.EDIT.PLACEHOLDER')"
+            :placeholder="$t('CONVERSATION.CONTEXT_MENU.EDIT.PLACEHOLDER')"
+            :max-length="4096"
+            :show-character-count="false"
+            :enable-canned-responses="false"
+            focus-on-mount
+          />
+          <div class="flex flex-row justify-end w-full gap-2 px-0 py-2">
+            <NextButton
+              faded
+              slate
+              type="reset"
+              :label="$t('CONVERSATION.CONTEXT_MENU.EDIT.CANCEL')"
+              @click.prevent="closeEditModal"
+            />
+            <NextButton
+              type="submit"
+              :label="$t('CONVERSATION.CONTEXT_MENU.EDIT.SAVE')"
+              :disabled="!editedContent.trim()"
+              :is-loading="isEditingMessage"
+              icon="i-lucide-corner-down-left"
+              trailing-icon
+            />
+          </div>
+        </form>
+      </div>
+    </woot-modal>
     <NextButton
       v-if="!hideButton"
       ghost
@@ -269,6 +368,15 @@ export default {
           }"
           variant="icon"
           @click.stop="showCannedResponseModal"
+        />
+        <MenuItem
+          v-if="enabledOptions['edit']"
+          :option="{
+            icon: 'edit',
+            label: $t('CONVERSATION.CONTEXT_MENU.EDIT.LABEL'),
+          }"
+          variant="icon"
+          @click.stop="openEditModal"
         />
         <hr v-if="enabledOptions['delete']" />
         <MenuItem

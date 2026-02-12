@@ -20,7 +20,7 @@ module Whatsapp::BaileysHandlers::MessagesUpsert # rubocop:disable Metrics/Modul
     end
   end
 
-  def handle_message # rubocop:disable Metrics/CyclomaticComplexity,Metrics/PerceivedComplexity
+  def handle_message # rubocop:disable Metrics/CyclomaticComplexity,Metrics/PerceivedComplexity,Metrics/MethodLength
     @lock_acquired = false
 
     return unless %w[lid user group].include?(jid_type)
@@ -35,6 +35,13 @@ module Whatsapp::BaileysHandlers::MessagesUpsert # rubocop:disable Metrics/Modul
     # from the same contact arrive simultaneously (e.g., WhatsApp albums).
     contact_phone = extract_from_jid(type: 'pn') || extract_from_jid(type: 'lid')
     with_contact_lock(contact_phone) do
+      # Re-check after acquiring lock to handle race conditions where:
+      # 1. An agent sends a message from Chatwoot (slow API call)
+      # 2. WhatsApp sends webhook before source_id is saved
+      # 3. Webhook handler times out waiting for channel lock and proceeds
+      # 4. By now, source_id should be set, so we can find the message
+      return if find_message_by_source_id(raw_message_id)
+
       set_contact
 
       unless @contact
@@ -63,7 +70,12 @@ module Whatsapp::BaileysHandlers::MessagesUpsert # rubocop:disable Metrics/Modul
     source_id = extract_from_jid(type: 'lid')
     identifier = "#{source_id}@lid"
 
-    update_existing_contact_inbox(phone, source_id, identifier) if phone
+    Whatsapp::ContactInboxConsolidationService.new(
+      inbox: inbox,
+      phone: phone,
+      lid: source_id,
+      identifier: identifier
+    ).perform
 
     contact_inbox = ::ContactInboxWithContactBuilder.new(
       source_id: source_id,
@@ -120,6 +132,7 @@ module Whatsapp::BaileysHandlers::MessagesUpsert # rubocop:disable Metrics/Modul
     end
   end
 
+
   def update_contact_info(phone, source_id, identifier)
     update_params = {}
     update_params[:phone_number] = "+#{phone}" if phone
@@ -140,8 +153,7 @@ module Whatsapp::BaileysHandlers::MessagesUpsert # rubocop:disable Metrics/Modul
       account_id: @inbox.account_id,
       inbox_id: @inbox.id,
       source_id: raw_message_id,
-      sender: incoming? ? @contact : @inbox.account.account_users.first.user,
-      sender_type: incoming? ? 'Contact' : 'User',
+      sender: incoming? ? @contact : nil,
       message_type: incoming? ? :incoming : :outgoing,
       content_attributes: message_content_attributes
     )
@@ -156,11 +168,16 @@ module Whatsapp::BaileysHandlers::MessagesUpsert # rubocop:disable Metrics/Modul
   def message_content_attributes
     type = message_type
     msg = unwrap_ephemeral_message(@raw_message[:message])
+<<<<<<< HEAD
     content_attributes = {
       external_created_at: baileys_extract_message_timestamp(@raw_message[:messageTimestamp]),
       # Store the original WAMessage for forward functionality
       wamessage: @raw_message
     }
+=======
+    content_attributes = { external_created_at: baileys_extract_message_timestamp(@raw_message[:messageTimestamp]) }
+    content_attributes[:external_sender_name] = 'WhatsApp' unless incoming?
+>>>>>>> main
     if type == 'reaction'
       content_attributes[:in_reply_to_external_id] = msg.dig(:reactionMessage, :key, :id)
       content_attributes[:is_reaction] = true

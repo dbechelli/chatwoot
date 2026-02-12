@@ -28,7 +28,6 @@ module Whatsapp::ZapiHandlers::ReceivedCallback # rubocop:disable Metrics/Module
       end
 
       set_conversation
-      update_conversation_group_metadata if @raw_message[:isGroup]
       handle_create_message
     end
   ensure
@@ -36,8 +35,8 @@ module Whatsapp::ZapiHandlers::ReceivedCallback # rubocop:disable Metrics/Module
   end
 
   def should_process_message?
-    # Accept group messages now
-    !@raw_message[:isNewsletter] &&
+    !@raw_message[:isGroup] &&
+      !@raw_message[:isNewsletter] &&
       !@raw_message[:broadcast] &&
       !@raw_message[:isStatusReply] &&
       !@raw_message.key?(:notification)
@@ -77,40 +76,7 @@ module Whatsapp::ZapiHandlers::ReceivedCallback # rubocop:disable Metrics/Module
     @raw_message[:senderName] || @raw_message[:chatName] || @raw_message[:phone]
   end
 
-  def set_contact
-    if @raw_message[:isGroup]
-      set_group_contact
-    else
-      set_individual_contact
-    end
-  end
-
-  def set_group_contact
-    # Contact do grupo
-    group_source_id = @raw_message[:chatLid]
-    group_name = @raw_message[:chatName] || 'WhatsApp Group'
-
-    group_contact_attributes = {
-      name: group_name,
-      identifier: group_source_id,
-      is_whatsapp_group: true
-    }
-
-    group_contact_inbox = ::ContactInboxWithContactBuilder.new(
-      source_id: group_source_id,
-      inbox: inbox,
-      contact_attributes: group_contact_attributes
-    ).perform
-
-    @contact_inbox = group_contact_inbox
-    @contact = group_contact_inbox.contact
-
-    # Armazenar informações do remetente (quem enviou no grupo)
-    @sender_phone = @raw_message[:author] || @raw_message[:phone]
-    @sender_name = @raw_message[:senderName]
-  end
-
-  def set_individual_contact
+  def set_contact # rubocop:disable Metrics/MethodLength
     push_name = contact_name
     source_id = @raw_message[:chatLid].to_s.gsub(/[^\d]/, '')
     identifier = @raw_message[:chatLid]
@@ -119,7 +85,12 @@ module Whatsapp::ZapiHandlers::ReceivedCallback # rubocop:disable Metrics/Module
 
     unless @raw_message[:phone].ends_with?('@lid')
       contact_attributes[:phone_number] = "+#{@raw_message[:phone]}"
-      update_existing_contact_inbox(@raw_message[:phone], source_id, identifier)
+      Whatsapp::ContactInboxConsolidationService.new(
+        inbox: inbox,
+        phone: @raw_message[:phone],
+        lid: source_id,
+        identifier: identifier
+      ).perform
     end
 
     contact_inbox = ::ContactInboxWithContactBuilder.new(
@@ -136,20 +107,6 @@ module Whatsapp::ZapiHandlers::ReceivedCallback # rubocop:disable Metrics/Module
     try_update_contact_avatar
   end
 
-  def update_existing_contact_inbox(phone, source_id, identifier)
-    # NOTE: This is useful when we create a new contact manually, so we don't have information about contact LID;
-    # With this, when we receive a message from that contact, we can link it properly.
-    existing_contact = inbox.account.contacts.find_by(phone_number: "+#{phone}")
-    return unless existing_contact
-
-    existing_contact_inbox = existing_contact.contact_inboxes.find_by(inbox_id: inbox.id)
-
-    ActiveRecord::Base.transaction do
-      existing_contact.update!(identifier: identifier)
-      existing_contact_inbox&.update!(source_id: source_id)
-    end
-  end
-
   def update_contact_phone_number
     return if @contact.phone_number.present?
     return if @raw_message[:phone].ends_with?('@lid')
@@ -162,27 +119,6 @@ module Whatsapp::ZapiHandlers::ReceivedCallback # rubocop:disable Metrics/Module
     return unless avatar_url.present? && avatar_url.start_with?('http')
 
     Avatar::AvatarFromUrlJob.perform_later(@contact, avatar_url)
-  end
-
-  def update_conversation_group_metadata
-    group_data = {
-      id: @raw_message[:chatLid],
-      name: @raw_message[:chatName],
-      participant_count: @raw_message[:participantCount]
-    }
-
-    @conversation.update_whatsapp_group_info(group_data)
-    sync_group_members if @raw_message[:participants].present?
-  end
-
-  def sync_group_members
-    @raw_message[:participants].each do |participant|
-      @conversation.add_whatsapp_group_member(
-        participant[:id],
-        name: participant[:name],
-        is_admin: participant[:isAdmin] || participant[:isSuperAdmin]
-      )
-    end
   end
 
   def handle_create_message
@@ -220,8 +156,7 @@ module Whatsapp::ZapiHandlers::ReceivedCallback # rubocop:disable Metrics/Module
       account_id: @inbox.account_id,
       inbox_id: @inbox.id,
       source_id: raw_message_id,
-      sender: incoming_message? ? @contact : @inbox.account.account_users.first.user,
-      sender_type: incoming_message? ? 'Contact' : 'User',
+      sender: incoming_message? ? @contact : nil,
       message_type: incoming_message? ? :incoming : :outgoing,
       content_attributes: message_content_attributes
     )
@@ -234,6 +169,7 @@ module Whatsapp::ZapiHandlers::ReceivedCallback # rubocop:disable Metrics/Module
   def message_content_attributes
     type = message_type
     content_attributes = { external_created_at: @raw_message[:momment] / 1000 }
+    content_attributes[:external_sender_name] = 'WhatsApp' unless incoming_message?
 
     if type == 'reaction'
       content_attributes[:in_reply_to_external_id] = @raw_message.dig(:reaction, :referencedMessage, :messageId)
@@ -243,14 +179,6 @@ module Whatsapp::ZapiHandlers::ReceivedCallback # rubocop:disable Metrics/Module
     end
 
     content_attributes[:in_reply_to_external_id] = @raw_message[:referenceMessageId] if @raw_message[:referenceMessageId].present?
-
-    # Add group sender information for attribution
-    if @raw_message[:isGroup] && @sender_phone.present?
-      content_attributes[:whatsapp_group_sender] = {
-        phone: @sender_phone,
-        name: @sender_name
-      }
-    end
 
     content_attributes
   end
@@ -338,10 +266,12 @@ module Whatsapp::ZapiHandlers::ReceivedCallback # rubocop:disable Metrics/Module
     @message = find_message_by_source_id(@raw_message[:messageId])
     return unless @message
 
+    # Preserve original previous_content if message was already edited
+    previous_content_to_save = @message.is_edited ? @message.previous_content : @message.content
     @message.update!(
       content: message_content,
       is_edited: true,
-      previous_content: @message.content
+      previous_content: previous_content_to_save
     )
   end
 end

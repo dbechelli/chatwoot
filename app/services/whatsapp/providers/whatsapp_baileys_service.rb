@@ -40,7 +40,7 @@ class Whatsapp::Providers::WhatsappBaileysService < Whatsapp::Providers::BaseSer
         webhookUrl: whatsapp_channel.inbox.callback_webhook_url,
         webhookVerifyToken: whatsapp_channel.provider_config['webhook_verify_token'],
         # TODO: Remove on Baileys v2, default will be false
-        includeMedia: true
+        includeMedia: false
       }.compact.to_json
     )
 
@@ -67,9 +67,9 @@ class Whatsapp::Providers::WhatsappBaileysService < Whatsapp::Providers::BaseSer
     if @message.content_attributes[:is_reaction]
       @message_content = reaction_message_content
     elsif @message.attachments.present?
-      @message_content = attachment_message_content
+      @message_content = attachment_message_content.merge(reply_context)
     elsif @message.outgoing_content.present?
-      @message_content = { text: @message.outgoing_content }
+      @message_content = { text: @message.outgoing_content }.merge(reply_context)
     else
       @message.update!(is_unsupported: true)
       return
@@ -241,6 +241,49 @@ class Whatsapp::Providers::WhatsappBaileysService < Whatsapp::Providers::BaseSer
     response.parsed_response&.first || { 'jid' => remote_jid, 'exists' => false }
   end
 
+  def delete_message(recipient_id, message)
+    @recipient_id = recipient_id
+
+    response = HTTParty.delete(
+      "#{provider_url}/connections/#{whatsapp_channel.phone_number}/messages",
+      headers: api_headers,
+      body: {
+        jid: remote_jid,
+        key: {
+          id: message.source_id,
+          remoteJid: remote_jid,
+          fromMe: message.message_type == 'outgoing'
+        }
+      }.to_json
+    )
+
+    raise ProviderUnavailableError unless process_response(response)
+
+    true
+  end
+
+  def edit_message(recipient_id, message, new_content)
+    @recipient_id = recipient_id
+
+    response = HTTParty.patch(
+      "#{provider_url}/connections/#{whatsapp_channel.phone_number}/messages",
+      headers: api_headers,
+      body: {
+        jid: remote_jid,
+        key: {
+          id: message.source_id,
+          remoteJid: remote_jid,
+          fromMe: message.message_type == 'outgoing'
+        },
+        messageContent: { text: new_content }
+      }.to_json
+    )
+
+    raise ProviderUnavailableError unless process_response(response)
+
+    true
+  end
+
   def forward_message(message, destination_jids)
     Rails.logger.info "Forward service: Starting forward for message #{message.id}"
 
@@ -360,6 +403,45 @@ class Whatsapp::Providers::WhatsappBaileysService < Whatsapp::Providers::BaseSer
     }
   end
 
+  def reply_context
+    reply_to_external_id = @message.content_attributes[:in_reply_to_external_id]
+    return {} if reply_to_external_id.blank?
+
+    reply_to_message = @message.conversation.messages.find_by(source_id: reply_to_external_id)
+    return {} unless reply_to_message
+
+    {
+      quotedMessage: {
+        key: {
+          id: reply_to_external_id,
+          remoteJid: remote_jid,
+          fromMe: reply_to_message.message_type == 'outgoing'
+        },
+        message: quoted_message_content(reply_to_message)
+      }
+    }
+  end
+
+  def quoted_message_content(message)
+    if message.attachments.present?
+      attachment = message.attachments.first
+      case attachment.file_type
+      when 'image'
+        { imageMessage: { caption: message.content } }
+      when 'video'
+        { videoMessage: { caption: message.content } }
+      when 'audio'
+        { audioMessage: {} }
+      when 'file'
+        { documentMessage: { caption: message.content, fileName: attachment.file.filename.to_s } }
+      else
+        { conversation: message.content.to_s }
+      end
+    else
+      { conversation: message.content.to_s }
+    end
+  end
+
   def attachment_message_content # rubocop:disable Metrics/MethodLength
     attachment = @message.attachments.first
     buffer = attachment_to_base64(attachment)
@@ -413,54 +495,6 @@ class Whatsapp::Providers::WhatsappBaileysService < Whatsapp::Providers::BaseSer
     "#{@recipient_id.delete('+')}@s.whatsapp.net"
   end
 
-  def build_wa_message_from_message(message)
-    # Build the key object
-    source_id = message.source_id || message.id.to_s
-    remote_jid = if message.conversation.contact.identifier.ends_with?('@lid')
-                   message.conversation.contact.identifier
-                 else
-                   "#{message.conversation.contact.identifier.delete('+')}@s.whatsapp.net"
-                 end
-
-    key = {
-      id: source_id,
-      remoteJid: remote_jid,
-      fromMe: message.message_type == 'outgoing'
-    }
-
-    # Build the message content
-    message_content = build_message_content_from_message(message)
-
-    {
-      key: key,
-      message: message_content
-    }
-  end
-
-  def build_message_content_from_message(message)
-    if message.attachments.present?
-      # For messages with attachments, we need to include the media reference
-      # Note: Baileys will handle downloading the media using the URL
-      attachment = message.attachments.first
-      case attachment.file_type
-      when 'image'
-        { imageMessage: { caption: message.content } }
-      when 'video'
-        { videoMessage: { caption: message.content } }
-      when 'audio'
-        { audioMessage: {} }
-      when 'file', 'sticker'
-        { documentMessage: { caption: message.content } }
-      else
-        { conversation: message.content }
-      end
-    elsif message.content.present?
-      { conversation: message.content }
-    else
-      { conversation: '' }
-    end
-  end
-
   def update_external_created_at(response)
     timestamp = response.parsed_response.dig('data', 'messageTimestamp')
     return unless timestamp
@@ -501,169 +535,6 @@ class Whatsapp::Providers::WhatsappBaileysService < Whatsapp::Providers::BaseSer
     end
   end
 
-  # WhatsApp Group Management Methods
-
-  def fetch_all_groups
-    # Fetches all groups the user is participating in
-    response = HTTParty.get(
-      "#{provider_url}/groups/#{whatsapp_channel.phone_number}/participating",
-      headers: api_headers
-    )
-
-    raise ProviderUnavailableError unless process_response(response)
-
-    response.parsed_response
-  end
-
-  def get_group_info(group_id)
-    # This endpoint was not explicitly documented but following the pattern:
-    # GET /groups/:phoneNumber/invite-code?id=... suggests fetching specific info
-    # We will try a hypothetical GET /groups/:phoneNumber/find?id=... or similar
-    # or fallback to fetch_all_groups filtering.
-    # Given the docs provided sync methods usually iterate all groups, getting single might be less critical 
-    # OR we use the invite-code endpoint as a proxy mostly? No, that's just invite code.
-    
-    # Let's keep the legacy path for this one if not provided, OR try to guess.
-    # Actually, often 'fetch_all_groups' is enough if the sync service filters it.
-    # But let's check if the user provided get info. No.
-    # Let's try to search in the all groups list if no specific endpoint exists,
-    # but for now let's assume the Pattern /groups/:phoneNumber/find?id=... exists
-    # Or just comment it out/leave legacy if not used by main sync path.
-    # The Sync Service calls fetch_all_groups.
-    
-    # For now, let's leave legacy path but warn, or just update to what we guess is /groups/...
-    # However, to be safe and fix the reported "Sync" error (which uses fetch_all_groups),
-    # I will focus on fetch_all_groups.
-    
-    # As the user provided docs for "endpoints criados" (created endpoints), 
-    # it implies others might NOT exist.
-    
-    response = HTTParty.get(
-      "#{provider_url}/groups/#{whatsapp_channel.phone_number}/find",
-      headers: api_headers,
-      query: { id: ensure_group_jid(group_id) }
-    )
-
-    if response.code == 404
-       # Fallback to legacy if new one doesn't exist
-       response = HTTParty.get(
-        "#{provider_url}/connections/#{whatsapp_channel.phone_number}/group-metadata",
-        headers: api_headers,
-        query: { jid: ensure_group_jid(group_id) }
-       )
-    end
-    
-    # If the response handles standard error
-    raise ProviderUnavailableError unless process_response(response)
-
-    response.parsed_response
-  end
-
-  def update_group_name(group_id, new_name)
-    response = HTTParty.post(
-      "#{provider_url}/groups/#{whatsapp_channel.phone_number}/update-subject",
-      headers: api_headers,
-      body: {
-        id: ensure_group_jid(group_id),
-        subject: new_name
-      }.to_json
-    )
-
-    raise ProviderUnavailableError unless process_response(response)
-
-    true
-  end
-
-  def update_group_description(group_id, new_description)
-    response = HTTParty.post(
-      "#{provider_url}/groups/#{whatsapp_channel.phone_number}/update-description",
-      headers: api_headers,
-      body: {
-        id: ensure_group_jid(group_id),
-        description: new_description
-      }.to_json
-    )
-
-    raise ProviderUnavailableError unless process_response(response)
-
-    true
-  end
-
-  def add_group_participant(group_id, phone_number)
-    response = HTTParty.post(
-      "#{provider_url}/groups/#{whatsapp_channel.phone_number}/participants-update",
-      headers: api_headers,
-      body: {
-        id: ensure_group_jid(group_id),
-        participants: [format_phone_to_jid(phone_number)],
-        action: 'add'
-      }.to_json
-    )
-
-    raise ProviderUnavailableError unless process_response(response)
-
-    true
-  end
-
-  def remove_group_participant(group_id, phone_number)
-    response = HTTParty.post(
-      "#{provider_url}/groups/#{whatsapp_channel.phone_number}/participants-update",
-      headers: api_headers,
-      body: {
-        id: ensure_group_jid(group_id),
-        participants: [format_phone_to_jid(phone_number)],
-        action: 'remove'
-      }.to_json
-    )
-
-    raise ProviderUnavailableError unless process_response(response)
-
-    true
-  end
-
-  def promote_group_admin(group_id, phone_number)
-    response = HTTParty.patch(
-      "#{provider_url}/connections/#{whatsapp_channel.phone_number}/modify-group-participants",
-      headers: api_headers,
-      body: {
-        jid: ensure_group_jid(group_id),
-        participants: [format_phone_to_jid(phone_number)],
-        action: 'promote'
-      }.to_json
-    )
-
-    raise ProviderUnavailableError unless process_response(response)
-
-    true
-  end
-
-  def demote_group_admin(group_id, phone_number)
-    response = HTTParty.patch(
-      "#{provider_url}/connections/#{whatsapp_channel.phone_number}/modify-group-participants",
-      headers: api_headers,
-      body: {
-        jid: ensure_group_jid(group_id),
-        participants: [format_phone_to_jid(phone_number)],
-        action: 'demote'
-      }.to_json
-    )
-
-    raise ProviderUnavailableError unless process_response(response)
-
-    true
-  end
-
-  def ensure_group_jid(group_id)
-    return group_id if group_id.ends_with?('@g.us')
-
-    "#{group_id}@g.us"
-  end
-
-  def format_phone_to_jid(phone_number)
-    clean_phone = phone_number.delete('+')
-    "#{clean_phone}@s.whatsapp.net"
-  end
-
   with_error_handling :setup_channel_provider,
                       :disconnect_channel_provider,
                       :send_message,
@@ -673,11 +544,6 @@ class Whatsapp::Providers::WhatsappBaileysService < Whatsapp::Providers::BaseSer
                       :unread_message,
                       :received_messages,
                       :on_whatsapp,
-                      :get_group_info,
-                      :update_group_name,
-                      :update_group_description,
-                      :add_group_participant,
-                      :remove_group_participant,
-                      :promote_group_admin,
-                      :demote_group_admin
+                      :delete_message,
+                      :edit_message
 end

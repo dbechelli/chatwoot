@@ -308,6 +308,7 @@ export default {
                   automation.actions[i].action_name
                 )
               "
+              :conditions="automation.conditions"
               :error-message="
                 errors[`action_${i}`]
                   ? $t(`AUTOMATION.ERRORS.${errors[`action_${i}`]}`)

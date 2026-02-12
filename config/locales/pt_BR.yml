@@ -50,6 +50,10 @@ pt_BR:
       not_found: Política de atribuição não encontrada
     attachments:
       invalid: Anexo inválido
+    automation:
+      scheduled_message:
+        delay_out_of_range: O atraso deve ser entre 1 minuto e 999 dias
+        content_attachment_or_template_required: A mensagem agendada deve ter conteúdo, anexo ou template
     saml:
       feature_not_enabled: SAML não está habilitado para esta conta
       sso_not_enabled: O SSO via SAML não está habilitado para esta instalação
