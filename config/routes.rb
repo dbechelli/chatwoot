@@ -126,6 +126,7 @@ Rails.application.routes.draw do
                   post :translate
                   post :retry
                   patch :edit_content
+                  post :forward
                 end
                 resources :attachments, only: [:update]
               end
