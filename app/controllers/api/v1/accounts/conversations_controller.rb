@@ -136,7 +136,6 @@ class Api::V1::Accounts::ConversationsController < Api::V1::Accounts::BaseContro
   end
 
   def previous_resolved
-    # Get the contact from the current conversation
     contact = @current_conversation.contact
     if contact.blank?
       @previous_conversations = []
@@ -144,14 +143,11 @@ class Api::V1::Accounts::ConversationsController < Api::V1::Accounts::BaseContro
       return
     end
 
-    # Find previous resolved conversations for this contact
-    # excluding the current conversation and ordered by created_at desc
     query = Current.account.conversations
-                   .where(contact_id: contact.id, status: 'resolved')
+                   .where(contact_id: contact.id, status: :resolved)
                    .where.not(id: @current_conversation.id)
 
-    # If before_id is provided, only get conversations older than that conversation
-    if params[:before_id].present?
+    if params[:before_id].present? && params[:before_id] != 'null'
       before_conversation = Current.account.conversations.find_by(id: params[:before_id])
       query = query.where('created_at < ?', before_conversation.created_at) if before_conversation
     end
@@ -159,10 +155,9 @@ class Api::V1::Accounts::ConversationsController < Api::V1::Accounts::BaseContro
     @previous_conversations = query.order(created_at: :desc)
                                    .limit(params[:limit] || 1)
 
-    # Get all messages from these conversations
     conversation_ids = @previous_conversations.pluck(:id)
     @messages = Message.where(conversation_id: conversation_ids)
-                       .includes(:sender, :attachments)
+                       .includes(:sender, :attachments, :conversation)
                        .order(created_at: :asc)
   end
 

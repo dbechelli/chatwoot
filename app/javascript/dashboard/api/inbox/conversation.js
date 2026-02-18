@@ -119,6 +119,12 @@ class ConversationApi extends ApiClient {
     });
   }
 
+  getPreviousResolvedConversations(conversationId, limit, beforeId) {
+    return axios.get(`${this.url}/${conversationId}/previous_resolved`, {
+      params: { limit, before_id: beforeId },
+    });
+  }
+
   fetchParticipants(conversationId) {
     return axios.get(`${this.url}/${conversationId}/participants`);
   }
