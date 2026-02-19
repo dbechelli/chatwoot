@@ -1347,6 +1347,7 @@ export default {
           @toggle-variables-menu="toggleVariablesMenu"
           @clear-selection="clearEditorSelection"
           @execute-copilot-action="executeCopilotAction"
+          @on-attach="onAttach"
         />
 
         <QuotedEmailPreview

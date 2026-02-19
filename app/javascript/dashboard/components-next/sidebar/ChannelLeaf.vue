@@ -8,7 +8,6 @@ const props = defineProps({
     type: String,
     required: true,
   },
-  // eslint-disable-next-line vue/no-unused-properties
   active: {
     type: Boolean,
     default: false,
@@ -25,7 +24,10 @@ const reauthorizationRequired = computed(() => {
 </script>
 
 <template>
-  <span class="size-5 grid place-content-center rounded-full bg-n-alpha-2">
+  <span
+    class="size-5 grid place-content-center rounded-full bg-n-alpha-2"
+    :class="{ 'bg-n-solid-blue': active }"
+  >
     <ChannelIcon :inbox="inbox" class="size-3" />
   </span>
   <div class="flex-1 truncate min-w-0">{{ label }}</div>
