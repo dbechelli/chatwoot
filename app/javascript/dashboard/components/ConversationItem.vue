@@ -12,6 +12,7 @@ export default {
     'assignLabels',
     'assignSalesStage',
     'forwardMessage',
+    'removeLabels',
     'updateConversationStatus',
     'toggleContextMenu',
     'markAsUnread',
@@ -67,6 +68,7 @@ export default {
     @assign-label="assignLabels"
     @assign-sales-stage="assignSalesStage"
     @forward-message="forwardMessage"
+    @remove-label="removeLabels"
     @update-conversation-status="updateConversationStatus"
     @context-menu-toggle="toggleContextMenu"
     @mark-as-unread="markAsUnread"

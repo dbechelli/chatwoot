@@ -15,7 +15,6 @@ import NextButton from 'dashboard/components-next/button/Button.vue';
 import AccountId from './components/AccountId.vue';
 import BuildInfo from './components/BuildInfo.vue';
 import AccountDelete from './components/AccountDelete.vue';
-import AutoResolve from './components/AutoResolve.vue';
 import AudioTranscription from './components/AudioTranscription.vue';
 import SectionLayout from './components/SectionLayout.vue';
 
@@ -26,7 +25,6 @@ export default {
     AccountId,
     BuildInfo,
     AccountDelete,
-    AutoResolve,
     AudioTranscription,
     SectionLayout,
     WithLabel,
@@ -66,12 +64,6 @@ export default {
       isFeatureEnabledonAccount: 'accounts/isFeatureEnabledonAccount',
       isOnChatwootCloud: 'globalConfig/isOnChatwootCloud',
     }),
-    showAutoResolutionConfig() {
-      return this.isFeatureEnabledonAccount(
-        this.accountId,
-        FEATURE_FLAGS.AUTO_RESOLVE_CONVERSATIONS
-      );
-    },
     showAudioTranscriptionConfig() {
       return this.isFeatureEnabledonAccount(
         this.accountId,
@@ -241,7 +233,6 @@ export default {
 
       <woot-loading-state v-if="uiFlags.isFetchingItem" />
     </div>
-    <AutoResolve v-if="showAutoResolutionConfig" />
     <AudioTranscription v-if="showAudioTranscriptionConfig" />
     <AccountId />
     <div v-if="!uiFlags.isFetchingItem && isOnChatwootCloud">
