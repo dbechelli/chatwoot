@@ -127,6 +127,7 @@ Rails.application.routes.draw do
               get :meta
               get :search
               post :filter
+              get :whatsapp_groups
             end
             scope module: :conversations do
               resources :messages, only: [:index, :create, :destroy, :update] do

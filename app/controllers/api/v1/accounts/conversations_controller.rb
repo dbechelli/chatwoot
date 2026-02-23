@@ -26,6 +26,11 @@ class Api::V1::Accounts::ConversationsController < Api::V1::Accounts::BaseContro
     @conversations_count = result[:count]
   end
 
+  def whatsapp_groups
+    @groups = whatsapp_group_conversations
+    @groups_count = @groups.count
+  end
+
   def attachments
     @attachments_count = @conversation.attachments.count
     @attachments = @conversation.attachments
@@ -187,6 +192,21 @@ class Api::V1::Accounts::ConversationsController < Api::V1::Accounts::BaseContro
 
   def attachment_params
     params.permit(:page)
+  end
+
+  def whatsapp_group_conversations
+    Current.account.conversations
+           .joins(:contact)
+           .joins('INNER JOIN inboxes ON inboxes.id = conversations.inbox_id')
+           .joins('INNER JOIN channel_whatsapp ON channel_whatsapp.id = inboxes.channel_id')
+           .where(inboxes: { channel_type: 'Channel::Whatsapp' })
+           .where(channel_whatsapp: { provider: 'zapi' })
+           .where("conversations.additional_attributes ->> 'is_whatsapp_group' = 'true' OR \
+                   conversations.additional_attributes ->> 'type' = 'group' OR \
+                   contacts.identifier LIKE '%@g.us'")
+           .includes(:contact)
+           .distinct
+           .order(last_activity_at: :desc)
   end
 
   def update_last_seen_on_conversation(last_seen_at, update_assignee)

@@ -44,6 +44,8 @@ const hasChildren = computed(
 const accessibleItems = computed(() => {
   if (!hasChildren.value) return [];
   return props.children.filter(child => {
+    if (child.onClick && !child.to) return true;
+
     // If a item has no link, it means it's just a subgroup header
     // So we don't need to check for permissions here, because there's nothing to
     // access here anyway
@@ -183,7 +185,7 @@ watch(
           :active-child="activeChild"
         />
         <SidebarGroupLeaf
-          v-else-if="isAllowed(child.to)"
+          v-else-if="child.onClick || isAllowed(child.to)"
           v-show="isExpanded || activeChild?.name === child.name"
           v-bind="child"
           :active="activeChild?.name === child.name"

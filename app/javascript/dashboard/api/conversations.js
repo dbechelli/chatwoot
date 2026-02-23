@@ -23,6 +23,10 @@ class ConversationApi extends ApiClient {
       params,
     });
   }
+
+  getWhatsappGroups() {
+    return axios.get(`${this.url}/whatsapp_groups`);
+  }
 }
 
 export default new ConversationApi();

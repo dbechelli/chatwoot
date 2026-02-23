@@ -12,6 +12,7 @@ import { vOnClickOutside } from '@vueuse/components';
 import { useStorage } from '@vueuse/core';
 import { emitter } from 'shared/helpers/mitt';
 import { BUS_EVENTS } from 'shared/constants/busEvents';
+import ConversationApi from 'dashboard/api/conversations';
 
 import Button from 'dashboard/components-next/button/Button.vue';
 import SidebarGroup from './SidebarGroup.vue';
@@ -56,6 +57,7 @@ const toggleShortcutModalFn = show => {
 useSidebarKeyboardShortcuts(toggleShortcutModalFn);
 
 const expandedItem = ref(null);
+const whatsappGroups = ref([]);
 
 const setExpandedItem = name => {
   expandedItem.value = expandedItem.value === name ? null : name;
@@ -95,6 +97,15 @@ const loadKanbanBoards = async () => {
   store.dispatch('kanban/fetch');
 };
 
+const fetchWhatsappGroups = async () => {
+  try {
+    const { data } = await ConversationApi.getWhatsappGroups();
+    whatsappGroups.value = data?.payload || [];
+  } catch (error) {
+    whatsappGroups.value = [];
+  }
+};
+
 onMounted(() => {
   store.dispatch('labels/get');
   store.dispatch('inboxes/get');
@@ -105,6 +116,7 @@ onMounted(() => {
   store.dispatch('customViews/get', 'contact');
   store.dispatch('dashboardApps/get');
   loadKanbanBoards();
+  fetchWhatsappGroups();
 });
 
 const sortedInboxes = computed(() =>
@@ -154,10 +166,13 @@ const newReportRoutes = () => [
 const reportRoutes = computed(() => newReportRoutes());
 
 const syncWhatsappGroups = async () => {
-  const whatsappInboxes = inboxes.value.filter(inbox => inbox.channel_type === 'Channel::Whatsapp');
+  const whatsappInboxes = inboxes.value.filter(
+    inbox =>
+      inbox.channel_type === 'Channel::Whatsapp' && inbox.provider === 'zapi'
+  );
   
   if (whatsappInboxes.length === 0) {
-    useAlert('Nenhuma caixa de entrada do WhatsApp encontrada');
+    useAlert(t('SIDEBAR.WHATSAPP_GROUPS_SYNC_EMPTY'));
     return;
   }
 
@@ -174,11 +189,26 @@ const syncWhatsappGroups = async () => {
   }
   
   if (successCount > 0) {
-    useAlert('Grupos sincronizados com sucesso!');
+    useAlert(t('SIDEBAR.WHATSAPP_GROUPS_SYNC_SUCCESS'));
+    fetchWhatsappGroups();
   } else {
-    useAlert('Falha ao sincronizar grupos.');
+    useAlert(t('SIDEBAR.WHATSAPP_GROUPS_SYNC_FAILURE'));
   }
 };
+
+const whatsappGroupItems = computed(() => {
+  return whatsappGroups.value
+    .slice()
+    .sort((a, b) => (a.name || '').localeCompare(b.name || ''))
+    .map(group => ({
+      name: `WhatsappGroup-${group.id}`,
+      label: group.name || `#${group.display_id || group.id}`,
+      to: accountScopedRoute('inbox_view_conversation', {
+        type: 'conversation',
+        id: group.id,
+      }),
+    }));
+});
 
 const menuItems = computed(() => {
   const items = [
@@ -298,9 +328,17 @@ const menuItems = computed(() => {
     },
     {
       name: 'WhatsApp Groups',
-      label: 'Sincronizar Grupos',
+      label: t('SIDEBAR.WHATSAPP_GROUPS'),
       icon: 'i-lucide-users',
-      onClick: syncWhatsappGroups,
+      children: [
+        {
+          name: 'SyncWhatsappGroups',
+          label: t('SIDEBAR.WHATSAPP_GROUPS_SYNC'),
+          icon: 'i-lucide-refresh-ccw',
+          onClick: syncWhatsappGroups,
+        },
+        ...whatsappGroupItems.value,
+      ],
     },
     {
       name: 'Contacts',

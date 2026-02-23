@@ -6,10 +6,11 @@ import { useSidebarContext } from './provider';
 
 const props = defineProps({
   label: { type: String, required: true },
-  to: { type: [String, Object], required: true },
+  to: { type: [String, Object], default: null },
   icon: { type: [String, Object], default: null },
   active: { type: Boolean, default: false },
   component: { type: Function, default: null },
+  onClick: { type: Function, default: null },
 });
 
 const { resolvePermissions, resolveFeatureFlag, isSidebarCollapsed } = useSidebarContext();
@@ -28,8 +29,9 @@ const shouldRenderComponent = computed(() => {
     class="py-0.5 ltr:pl-3 rtl:pr-3 rtl:mr-3 ltr:ml-3 relative text-n-slate-11 child-item before:bg-n-slate-4 after:bg-transparent after:border-n-slate-4 before:left-0 rtl:before:right-0"
   >
     <component
-      :is="to ? 'router-link' : 'div'"
+      :is="to ? 'router-link' : 'button'"
       :to="to"
+      type="button"
       v-tooltip="isSidebarCollapsed ? label : ''"
       :title="label"
       class="flex h-8 items-center gap-2 px-2 py-1 rounded-lg max-w-[9.438rem] hover:bg-gradient-to-r from-transparent via-n-slate-3/70 to-n-slate-3/70 group"
@@ -37,6 +39,7 @@ const shouldRenderComponent = computed(() => {
         'text-n-blue-text bg-n-alpha-2 active': active,
         'justify-center': isSidebarCollapsed,
       }"
+      @click="onClick"
     >
       <component
         :is="component"
