@@ -237,6 +237,12 @@ export const mutations = {
     );
   },
 
+  [types.DELETE_MESSAGE](_state, { conversationId, messageId }) {
+    const chat = _state.allConversations.find(c => c.id === conversationId);
+    if (!chat) return;
+    chat.messages = chat.messages.filter(m => m.id !== messageId);
+  },
+
   [types.UPDATE_CONVERSATION](_state, conversation) {
     const { allConversations } = _state;
     const index = allConversations.findIndex(c => c.id === conversation.id);

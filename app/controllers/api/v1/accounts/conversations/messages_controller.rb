@@ -24,11 +24,9 @@ class Api::V1::Accounts::Conversations::MessagesController < Api::V1::Accounts::
   end
 
   def destroy
-    ActiveRecord::Base.transaction do
-      message.update!(content: I18n.t('conversations.messages.deleted'), content_type: :text, content_attributes: { deleted: true })
-      message.attachments.destroy_all
-    end
     delete_message_on_channel
+    @message = message
+    @message.destroy!
   end
 
   def retry

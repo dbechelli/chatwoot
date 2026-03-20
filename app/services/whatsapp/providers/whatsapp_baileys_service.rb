@@ -265,19 +265,36 @@ class Whatsapp::Providers::WhatsappBaileysService < Whatsapp::Providers::BaseSer
   def edit_message(recipient_id, message, new_content)
     @recipient_id = recipient_id
 
+    key = {
+      id: message.source_id,
+      remoteJid: remote_jid,
+      fromMe: message.message_type == 'outgoing'
+    }
+
     response = HTTParty.patch(
       "#{provider_url}/connections/#{whatsapp_channel.phone_number}/messages",
       headers: api_headers,
       body: {
         jid: remote_jid,
-        key: {
-          id: message.source_id,
-          remoteJid: remote_jid,
-          fromMe: message.message_type == 'outgoing'
-        },
+        key: key,
         messageContent: { text: new_content }
       }.to_json
     )
+
+    # Fallback to the native Baileys format via send-message if the PATCH endpoint is not supported
+    unless response.success?
+      response = HTTParty.post(
+        "#{provider_url}/connections/#{whatsapp_channel.phone_number}/send-message",
+        headers: api_headers,
+        body: {
+          jid: remote_jid,
+          messageContent: {
+            text: new_content,
+            edit: key
+          }
+        }.to_json
+      )
+    end
 
     raise ProviderUnavailableError unless process_response(response)
 

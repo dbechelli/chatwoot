@@ -148,7 +148,7 @@ class Api::V1::Accounts::ConversationsController < Api::V1::Accounts::BaseContro
 
   def destroy
     authorize @conversation, :destroy?
-    ::DeleteObjectJob.perform_later(@conversation, Current.user, request.ip)
+    ::DeleteObjectJob.perform_now(@conversation, Current.user, request.ip)
     head :ok
   end
 
