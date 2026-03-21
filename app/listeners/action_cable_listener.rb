@@ -54,6 +54,14 @@ class ActionCableListener < BaseListener # rubocop:disable Metrics/ClassLength
     broadcast(account, tokens, MESSAGE_UPDATED, message.push_event_data.merge(previous_changes: event.data[:previous_changes]))
   end
 
+  def message_deleted(event)
+    message, account = extract_message_and_account(event)
+    conversation = message.conversation
+    tokens = user_tokens(account, conversation.inbox.members) + contact_tokens(conversation.contact_inbox, message)
+
+    broadcast(account, tokens, MESSAGE_DELETED, message.push_event_data)
+  end
+
   def scheduled_message_created(event)
     scheduled_message = event.data[:scheduled_message]
     account = scheduled_message.account

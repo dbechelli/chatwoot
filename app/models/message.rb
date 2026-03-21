@@ -144,6 +144,7 @@ class Message < ApplicationRecord
   after_create_commit :execute_after_create_commit_callbacks
 
   after_update_commit :dispatch_update_event
+  after_destroy_commit :dispatch_destroy_event
   after_commit :reindex_for_search, if: :should_index?, on: [:create, :update]
 
   def channel_token
@@ -383,6 +384,10 @@ class Message < ApplicationRecord
     return if previous_changes.blank?
 
     send_update_event
+  end
+
+  def dispatch_destroy_event
+    Rails.configuration.dispatcher.dispatch(MESSAGE_DELETED, Time.zone.now, message: self, performed_by: Current.executed_by)
   end
 
   def send_reply

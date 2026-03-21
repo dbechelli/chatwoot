@@ -264,8 +264,8 @@ export default {
       return { incoming, outgoing };
     },
     inboxSupportsEdit() {
-      // Currently only Baileys WhatsApp channel supports message editing
-      return this.isAWhatsAppBaileysChannel;
+      // Temporarily unlocking for all channels or user complaint
+      return true;
     },
     inboxProviderConnection() {
       return this.currentInbox.provider_connection?.connection;
