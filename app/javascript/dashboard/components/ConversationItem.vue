@@ -52,7 +52,6 @@ export default {
 
 <template>
   <ConversationCard
-    :key="source.id"
     :active-label="label"
     :team-id="teamId"
     :folders-id="foldersId"

@@ -1,5 +1,9 @@
-module Whatsapp::BaileysHandlers::MessagesUpsert # rubocop:disable Metrics/ModuleLength
+module Whatsapp::BaileysHandlers::MessagesUpsert
   include Whatsapp::BaileysHandlers::Helpers
+  include Whatsapp::BaileysHandlers::Concerns::GroupContactMessageHandler
+  include Whatsapp::BaileysHandlers::Concerns::IndividualContactMessageHandler
+  include Whatsapp::BaileysHandlers::Concerns::GroupEventHelper
+  include Whatsapp::BaileysHandlers::Concerns::GroupStubMessageHandler
   include BaileysHelper
 
   private
@@ -20,246 +24,37 @@ module Whatsapp::BaileysHandlers::MessagesUpsert # rubocop:disable Metrics/Modul
     end
   end
 
-  def handle_message # rubocop:disable Metrics/CyclomaticComplexity,Metrics/PerceivedComplexity,Metrics/MethodLength
+  def handle_message
     @lock_acquired = false
 
-    return unless %w[lid user group].include?(jid_type)
-    return unless extract_from_jid(type: 'lid')
+    return handle_message_stub if message_stub?
+
     return if ignore_message?
     return if find_message_by_source_id(raw_message_id)
+
+    return handle_individual_contact_message if %w[lid user].include?(jid_type)
+    return handle_group_contact_message if jid_type == 'group' && Whatsapp::Providers::WhatsappBaileysService.groups_enabled?
+  end
+
+  def message_stub?
+    @raw_message[:messageStubType].present?
+  end
+
+  def handle_message_stub
+    return unless jid_type == 'group'
 
     @lock_acquired = acquire_message_processing_lock
     return unless @lock_acquired
 
-    # Lock by contact phone to prevent race conditions when multiple messages
-    # from the same contact arrive simultaneously (e.g., WhatsApp albums).
-    contact_phone = extract_from_jid(type: 'pn') || extract_from_jid(type: 'lid')
-    with_contact_lock(contact_phone) do
-      # Re-check after acquiring lock to handle race conditions where:
-      # 1. An agent sends a message from Chatwoot (slow API call)
-      # 2. WhatsApp sends webhook before source_id is saved
-      # 3. Webhook handler times out waiting for channel lock and proceeds
-      # 4. By now, source_id should be set, so we can find the message
-      return if find_message_by_source_id(raw_message_id)
-
-      set_contact
-
-      unless @contact
-        Rails.logger.warn "Contact not found for message: #{raw_message_id}"
-        return
-      end
-
-      set_conversation
-      update_conversation_group_metadata if is_group?
-      handle_create_message
+    case @raw_message[:messageStubType]
+    when MEMBERSHIP_REQUEST_STUB
+      handle_membership_request_stub
+    when ICON_CHANGE_STUB
+      handle_icon_change_stub
+    when GROUP_CREATE_STUB
+      handle_group_create_stub
     end
   ensure
     clear_message_source_id_from_redis if @lock_acquired
-  end
-
-  def set_contact
-    if is_group?
-      set_group_contact
-    else
-      set_individual_contact
-    end
-  end
-
-  def set_individual_contact
-    phone = extract_from_jid(type: 'pn')
-    source_id = extract_from_jid(type: 'lid')
-    identifier = "#{source_id}@lid"
-
-    Whatsapp::ContactInboxConsolidationService.new(
-      inbox: inbox,
-      phone: phone,
-      lid: source_id,
-      identifier: identifier
-    ).perform
-
-    contact_inbox = ::ContactInboxWithContactBuilder.new(
-      source_id: source_id,
-      inbox: inbox,
-      contact_attributes: { name: contact_name, phone_number: ("+#{phone}" if phone), identifier: identifier }
-    ).perform
-
-    @contact_inbox = contact_inbox
-    @contact = contact_inbox.contact
-
-    update_contact_info(phone, source_id, identifier)
-  end
-
-  def set_group_contact
-    group_jid = @raw_message[:key][:remoteJid]
-    source_id = extract_from_jid(type: 'lid')
-    group_name = @raw_message[:pushName] || group_jid
-
-    # Store sender information for message attribution
-    @sender_jid = @raw_message[:key][:participant]
-    @sender_name = @raw_message[:pushName]
-
-    contact_inbox = ::ContactInboxWithContactBuilder.new(
-      source_id: source_id,
-      inbox: inbox,
-      contact_attributes: {
-        name: group_name,
-        identifier: group_jid,
-        is_whatsapp_group: true
-      }
-    ).perform
-
-    @contact_inbox = contact_inbox
-    @contact = contact_inbox.contact
-  end
-
-  def update_existing_contact_inbox(phone, source_id, identifier)
-    # NOTE: This is useful when we create a new contact manually, so we don't have information about contact LID;
-    # With this, when we receive a message from that contact, we can link it properly.
-    existing_contact_inbox = inbox.contact_inboxes.find_by(source_id: phone)
-    return unless existing_contact_inbox
-    return if inbox.contact_inboxes.exists?(source_id: source_id)
-
-    existing_contact = existing_contact_inbox.contact
-    conflicting_identifier = inbox.account.contacts.find_by(identifier: identifier)
-    conflicting_phone = inbox.account.contacts.find_by(phone_number: "+#{phone}")
-
-    return if conflicting_identifier && conflicting_identifier.id != existing_contact.id
-    return if conflicting_phone && conflicting_phone.id != existing_contact.id
-
-    ActiveRecord::Base.transaction do
-      existing_contact_inbox.update!(source_id: source_id)
-      existing_contact.update!(identifier: identifier, phone_number: "+#{phone}")
-    end
-  end
-
-
-  def update_contact_info(phone, source_id, identifier)
-    update_params = {}
-    update_params[:phone_number] = "+#{phone}" if phone
-    update_params[:identifier] = identifier
-    update_params[:name] = contact_name if @contact.name.in?([phone, source_id, identifier])
-
-    @contact.update!(update_params) if update_params.present?
-    try_update_contact_avatar
-  end
-
-  def handle_create_message
-    create_message(attach_media: %w[image file video audio sticker].include?(message_type))
-  end
-
-  def create_message(attach_media: false)
-    @message = @conversation.messages.build(
-      content: message_content,
-      account_id: @inbox.account_id,
-      inbox_id: @inbox.id,
-      source_id: raw_message_id,
-      sender: incoming? ? @contact : nil,
-      message_type: incoming? ? :incoming : :outgoing,
-      content_attributes: message_content_attributes
-    )
-
-    handle_attach_media if attach_media
-
-    @message.save!
-
-    inbox.channel.received_messages([@message], @conversation) if incoming?
-  end
-
-  def message_content_attributes
-    type = message_type
-    msg = unwrap_ephemeral_message(@raw_message[:message])
-    content_attributes = {
-      external_created_at: baileys_extract_message_timestamp(@raw_message[:messageTimestamp]),
-      # Store the original WAMessage for forward functionality
-      wamessage: @raw_message
-    }
-    content_attributes[:external_sender_name] = 'WhatsApp' unless incoming?
-    if type == 'reaction'
-      content_attributes[:in_reply_to_external_id] = msg.dig(:reactionMessage, :key, :id)
-      content_attributes[:is_reaction] = true
-    elsif reply_to_message_id
-      content_attributes[:in_reply_to_external_id] = reply_to_message_id
-    elsif type == 'unsupported'
-      content_attributes[:is_unsupported] = true
-    end
-
-    # Add group sender information for attribution
-    if is_group? && @sender_jid.present?
-      sender_phone = @sender_jid.split('@').first
-      content_attributes[:whatsapp_group_sender] = {
-        phone: sender_phone,
-        name: @sender_name
-      }
-    end
-
-    content_attributes
-  end
-
-  def is_group?
-    jid_type == 'group'
-  end
-
-  def update_conversation_group_metadata
-    # Fetch group metadata from Baileys
-    group_jid = @raw_message[:key][:remoteJid]
-
-    begin
-      group_info = inbox.channel.provider_service.get_group_info(group_jid)
-
-      group_data = {
-        id: group_jid,
-        name: group_info.dig('data', 'subject'),
-        participant_count: group_info.dig('data', 'participants')&.size
-      }
-
-      @conversation.update_whatsapp_group_info(group_data)
-
-      # Sync members if available
-      if group_info.dig('data', 'participants').present?
-        sync_group_members(group_info.dig('data', 'participants'))
-      end
-    rescue StandardError => e
-      Rails.logger.error "Failed to fetch group metadata for #{group_jid}: #{e.message}"
-    end
-  end
-
-  def sync_group_members(participants)
-    participants.each do |participant|
-      phone = participant[:id].split('@').first
-      @conversation.add_whatsapp_group_member(
-        phone,
-        name: nil,
-        is_admin: participant[:admin].present?
-      )
-    end
-  end
-
-  def handle_attach_media
-    attachment_file = download_attachment_file
-    msg = unwrap_ephemeral_message(@raw_message[:message])
-
-    attachment = @message.attachments.build(
-      account_id: @message.account_id,
-      file_type: file_content_type.to_s,
-      file: { io: attachment_file, filename: filename, content_type: message_mimetype }
-    )
-    attachment.meta = { is_recorded_audio: true } if msg.dig(:audioMessage, :ptt)
-  rescue Down::Error => e
-    @message.update!(is_unsupported: true)
-
-    Rails.logger.error "Failed to download attachment for message #{raw_message_id}: #{e.message}"
-  end
-
-  def download_attachment_file
-    Down.download(@conversation.inbox.channel.media_url(@raw_message.dig(:key, :id)), headers: @conversation.inbox.channel.api_headers)
-  end
-
-  def filename
-    msg = unwrap_ephemeral_message(@raw_message[:message])
-    filename = msg.dig(:documentMessage, :fileName) || msg.dig(:documentWithCaptionMessage, :message, :documentMessage, :fileName)
-    return filename if filename.present?
-
-    ext = ".#{message_mimetype.split(';').first.split('/').last}" if message_mimetype.present?
-    "#{file_content_type}_#{raw_message_id}_#{Time.current.strftime('%Y%m%d')}#{ext}"
   end
 end

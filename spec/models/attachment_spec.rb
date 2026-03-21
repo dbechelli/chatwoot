@@ -30,6 +30,20 @@ RSpec.describe Attachment do
       attachment.file.attach(io: Rails.root.join('spec/assets/avatar.png').open, filename: 'avatar.png', content_type: 'image/png')
       expect(attachment.download_url).not_to be_nil
     end
+
+    it 'normalizes audio/opus to audio/ogg in blob content_type' do
+      attachment = message.attachments.new(account_id: message.account_id, file_type: :audio)
+      attachment.file.attach(io: Rails.root.join('spec/assets/sample.ogg').open, filename: 'sample.ogg', content_type: 'audio/ogg')
+      attachment.save!
+      # Simulate Marcel detecting audio/opus
+      attachment.file.blob.update_column(:content_type, 'audio/opus') # rubocop:disable Rails/SkipsModelValidations
+      attachment.file.blob.reload
+
+      expect(attachment.file.blob.content_type).to eq('audio/opus')
+      attachment.download_url
+      expect(attachment.file.blob.content_type).to eq('audio/ogg')
+      expect(attachment.file.blob.reload.content_type).to eq('audio/ogg')
+    end
   end
 
   describe 'with_attached_file?' do
@@ -154,6 +168,30 @@ RSpec.describe Attachment do
         expect(image_attachment.file.filename.to_s).to eq('avatar.png')
         expect(image_attachment.file.content_type).to eq('image/png')
       end
+    end
+  end
+
+  describe 'push_event_data for ig_reel attachments' do
+    it 'returns external_url as data_url when no file is attached' do
+      attachment = message.attachments.create!(
+        account_id: message.account_id,
+        file_type: :ig_reel,
+        external_url: 'https://www.facebook.com/reel/123456'
+      )
+
+      event_data = attachment.push_event_data
+      expect(event_data[:data_url]).to eq('https://www.facebook.com/reel/123456')
+      expect(event_data[:thumb_url]).to eq('')
+    end
+
+    it 'returns file_url as data_url when file is attached' do
+      attachment = message.attachments.new(account_id: message.account_id, file_type: :ig_reel,
+                                           external_url: 'https://www.instagram.com/reel/123')
+      attachment.file.attach(io: Rails.root.join('spec/assets/avatar.png').open, filename: 'avatar.png', content_type: 'image/png')
+      attachment.save!
+
+      event_data = attachment.push_event_data
+      expect(event_data[:data_url]).to be_present
     end
   end
 

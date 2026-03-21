@@ -5,7 +5,7 @@ import { useKeyboardEvents } from 'dashboard/composables/useKeyboardEvents';
 import { useLabelSuggestions } from 'dashboard/composables/useLabelSuggestions';
 import { useSnakeCase } from 'dashboard/composables/useTransformKeys';
 import { useAdmin } from 'dashboard/composables/useAdmin';
-import { useAlert } from 'dashboard/composables';
+import { useAlert, usePendingAlert } from 'dashboard/composables';
 
 // components
 import ReplyBox from './ReplyBox.vue';
@@ -39,6 +39,7 @@ import wootConstants from 'dashboard/constants/globals';
 import { LOCAL_STORAGE_KEYS } from 'dashboard/constants/localStorage';
 import { INBOX_TYPES } from 'dashboard/helper/inbox';
 import WhatsappLinkDeviceModal from '../../../routes/dashboard/settings/inbox/components/WhatsappLinkDeviceModal.vue';
+import { isInboxAdminInGroup } from 'dashboard/helper/phoneHelper';
 
 export default {
   components: {
@@ -105,8 +106,10 @@ export default {
     ...mapGetters({
       currentChat: 'getSelectedChat',
       currentUserId: 'getCurrentUserID',
+      currentUser: 'getCurrentUser',
       listLoadingStatus: 'getAllMessagesLoaded',
       currentAccountId: 'getCurrentAccountId',
+      globalConfig: 'globalConfig/get',
     }),
     currentInbox() {
       return this.$store.getters['inboxes/getInbox'](this.currentChat.inbox_id);
@@ -267,6 +270,69 @@ export default {
       // Temporarily unlocking for all channels or user complaint
       return true;
     },
+    currentContact() {
+      const senderId = this.currentChat?.meta?.sender?.id;
+      if (!senderId) return {};
+      return this.$store.getters['contacts/getContact'](senderId);
+    },
+    isGroupConversation() {
+      return this.currentChat?.group_type === 'group';
+    },
+    groupContactId() {
+      return this.currentChat?.meta?.sender?.id || null;
+    },
+    groupMembers() {
+      if (!this.groupContactId) return [];
+      return (
+        this.$store.getters['groupMembers/getGroupMembers'](
+          this.groupContactId
+        ) || []
+      );
+    },
+    groupMembersMeta() {
+      if (!this.groupContactId) return {};
+      return (
+        this.$store.getters['groupMembers/getGroupMembersMeta'](
+          this.groupContactId
+        ) || {}
+      );
+    },
+    isInboxAdminInCurrentGroup() {
+      const meta = this.groupMembersMeta;
+      if (meta.is_inbox_admin != null) return meta.is_inbox_admin;
+      const inboxPhone = meta.inbox_phone_number || this.inbox?.phone_number;
+      return isInboxAdminInGroup(inboxPhone, this.groupMembers);
+    },
+    isGroupMembersLoaded() {
+      const meta = this.groupMembersMeta;
+      return meta.is_inbox_admin != null || this.groupMembers.length > 0;
+    },
+    isAnnouncementModeRestricted() {
+      return (
+        this.isAWhatsAppBaileysChannel &&
+        this.isGroupConversation &&
+        this.currentContact?.additional_attributes?.announce === true &&
+        this.isGroupMembersLoaded &&
+        !this.isInboxAdminInCurrentGroup
+      );
+    },
+    isGroupLeft() {
+      return (
+        this.isAWhatsAppBaileysChannel &&
+        this.isGroupConversation &&
+        this.currentContact?.additional_attributes?.group_left === true
+      );
+    },
+    isGroupsDisabled() {
+      return (
+        this.isAWhatsAppBaileysChannel &&
+        this.isGroupConversation &&
+        !this.globalConfig.baileysWhatsappGroupsEnabled
+      );
+    },
+    isSuperAdmin() {
+      return this.currentUser.type === 'SuperAdmin';
+    },
     inboxProviderConnection() {
       return this.currentInbox.provider_connection?.connection;
     },
@@ -288,6 +354,21 @@ export default {
       this.hasCheckedForPrevious = false;
       // Check if there are previous conversations
       this.checkForPreviousConversations();
+    },
+    groupContactId: {
+      immediate: true,
+      handler(contactId) {
+        if (
+          contactId &&
+          this.isAWhatsAppBaileysChannel &&
+          this.isGroupConversation &&
+          !this.isGroupMembersLoaded
+        ) {
+          this.$store.dispatch('groupMembers/fetch', {
+            contactId,
+          });
+        }
+      },
     },
   },
 
@@ -450,12 +531,41 @@ export default {
         if (messageElement) {
           this.isProgrammaticScroll = true;
           messageElement.scrollIntoView({ behavior: 'smooth' });
-          this.fetchPreviousMessages();
+          if (messageId) {
+            emitter.emit(BUS_EVENTS.HIGHLIGHT_MESSAGE, { messageId });
+          }
+        } else if (messageId) {
+          this.fetchAndScrollToMessage(messageId);
         } else {
           this.scrollToBottom();
         }
       });
       this.makeMessagesRead();
+    },
+    async fetchAndScrollToMessage(messageId) {
+      const dismissSearch = usePendingAlert(
+        this.$t('SCHEDULED_MESSAGES.ITEM.SEARCHING_MESSAGE')
+      );
+      try {
+        await this.$store.dispatch('fetchPreviousMessages', {
+          conversationId: this.currentChat.id,
+          after: messageId,
+        });
+        this.$nextTick(() => {
+          dismissSearch();
+          const messageElement = document.getElementById('message' + messageId);
+          if (messageElement) {
+            this.isProgrammaticScroll = true;
+            messageElement.scrollIntoView({ behavior: 'smooth' });
+            emitter.emit(BUS_EVENTS.HIGHLIGHT_MESSAGE, { messageId });
+          } else {
+            useAlert(this.$t('SCHEDULED_MESSAGES.ITEM.MESSAGE_NOT_FOUND'));
+          }
+        });
+      } catch {
+        dismissSearch();
+        useAlert(this.$t('SCHEDULED_MESSAGES.ITEM.MESSAGE_NOT_FOUND'));
+      }
     },
     addScrollListener() {
       this.conversationPanel = this.$el.querySelector('.conversation-panel');
@@ -568,6 +678,9 @@ export default {
         return false;
       });
     },
+    onOpenGroupsEnabledLink() {
+      window.open(wootConstants.FAZER_AI_GUIDES_URL, '_blank');
+    },
     onOpenLinkDeviceModal() {
       this.showLinkDeviceModal = true;
     },
@@ -638,6 +751,33 @@ export default {
       color-scheme="alert"
       class="mx-2 mt-2 overflow-hidden rounded-lg"
       :banner-message="$t('CONVERSATION.OLD_INSTAGRAM_INBOX_REPLY_BANNER')"
+    />
+    <Banner
+      v-else-if="isGroupLeft"
+      color-scheme="alert"
+      class="mx-2 mt-2 overflow-hidden rounded-lg"
+      :banner-message="$t('CONVERSATION.GROUP_LEFT_BANNER')"
+    />
+    <Banner
+      v-else-if="isAnnouncementModeRestricted"
+      color-scheme="alert"
+      class="mx-2 mt-2 overflow-hidden rounded-lg"
+      :banner-message="$t('CONVERSATION.ANNOUNCEMENT_MODE_BANNER')"
+    />
+    <Banner
+      v-if="isGroupsDisabled && isSuperAdmin"
+      color-scheme="warning"
+      class="mx-2 mt-2 overflow-hidden rounded-lg"
+      :banner-message="$t('CONVERSATION.GROUPS_DISABLED_BANNER')"
+      has-action-button
+      :action-button-label="$t('CONVERSATION.GROUPS_DISABLED_CTA')"
+      @primary-action="onOpenGroupsEnabledLink"
+    />
+    <Banner
+      v-else-if="isGroupsDisabled"
+      color-scheme="warning"
+      class="mx-2 mt-2 overflow-hidden rounded-lg"
+      :banner-message="$t('CONVERSATION.GROUPS_DISABLED_BANNER_NON_ADMIN')"
     />
     <MessageList
       ref="conversationPanelRef"
