@@ -259,7 +259,7 @@ describe WebhookListener do
       end
 
       it 'skips the API inbox webhook when the event requested synchronous delivery only' do
-        channel_api = create(:channel_api, account: account)
+        channel_api = create(:channel_api, account: account, additional_attributes: { provider: 'uazapi', uazapi_base_url: 'https://demo.uazapi.com' })
         api_inbox = channel_api.inbox
         api_conversation = create(:conversation, account: account, inbox: api_inbox, assignee: user)
         api_message = create(:message, message_type: 'outgoing', account: account, inbox: api_inbox, conversation: api_conversation)

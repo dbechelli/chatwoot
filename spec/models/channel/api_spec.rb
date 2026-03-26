@@ -20,4 +20,35 @@ RSpec.describe Channel::Api do
       end
     end
   end
+
+  describe '#edit_message' do
+    let(:channel_api) do
+      create(
+        :channel_api,
+        additional_attributes: {
+          provider: 'uazapi',
+          uazapi_base_url: 'https://demo.uazapi.com',
+          uazapi_token: 'secret-token'
+        }
+      )
+    end
+    let(:message) { create(:message, inbox: channel_api.inbox, account: channel_api.account, source_id: 'uazapi-msg-1', content: 'Novo texto') }
+
+    it 'calls the UAZAPI edit endpoint and syncs the new source_id' do
+      stub_request(:post, 'https://demo.uazapi.com/message/edit')
+        .with(
+          headers: {
+            'Accept' => 'application/json',
+            'Content-Type' => 'application/json',
+            'Token' => 'secret-token'
+          },
+          body: { id: 'uazapi-msg-1', text: 'Novo texto' }
+        )
+        .to_return(status: 200, body: { id: 'uazapi-msg-2' }.to_json, headers: { 'Content-Type' => 'application/json' })
+
+      channel_api.edit_message(message, message.content)
+
+      expect(message.reload.source_id).to eq('uazapi-msg-2')
+    end
+  end
 end

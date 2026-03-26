@@ -105,7 +105,7 @@ class Api::V1::Accounts::Conversations::MessagesController < Api::V1::Accounts::
     return render json: { error: 'Only outgoing messages can be edited' }, status: :forbidden unless message.outgoing?
 
     original_content = message.content
-    message.skip_api_inbox_webhook_dispatch = @conversation.inbox.api?
+    message.skip_api_inbox_webhook_dispatch = @conversation.inbox.api? && @conversation.inbox.channel.try(:uazapi_enabled?)
     # Only save previous_content on first edit to preserve the original message
     previous_content_to_save = message.is_edited ? message.previous_content : original_content
     message.update!(content: new_content, is_edited: true, previous_content: previous_content_to_save)
@@ -114,7 +114,7 @@ class Api::V1::Accounts::Conversations::MessagesController < Api::V1::Accounts::
 
     @message = message.reload
   ensure
-    message.skip_api_inbox_webhook_dispatch = false if @message.present? || defined?(@message)
+    message.skip_api_inbox_webhook_dispatch = false
   end
 
   private

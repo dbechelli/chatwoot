@@ -33,27 +33,71 @@ class Channel::Api < ApplicationRecord
     'API'
   end
 
-  def edit_message(message, _new_content, original_content: nil, conversation: nil)
-    return if webhook_url.blank?
+  def edit_message(message, _new_content, **)
+    return unless uazapi_enabled?
 
-    payload = message.webhook_data.merge(
-      event: 'message_updated',
-      changed_attributes: [
-        { 'content' => { previous_value: original_content, current_value: message.content } },
-        {
-          'content_attributes' => {
-            previous_value: { 'is_edited' => false, 'previous_content' => nil },
-            current_value: { 'is_edited' => true, 'previous_content' => original_content }
-          }
-        }
-      ]
-    )
-    payload[:conversation] = conversation.webhook_data if conversation.present?
+    validate_uazapi_configuration!
 
-    Webhooks::Trigger.execute(webhook_url, payload, :account_webhook, delivery_id: SecureRandom.uuid)
+    response = uazapi_client.edit_message(message_id: message.source_id, text: message.content)
+    updated_source_id = extract_message_id(response)
+    message.update!(source_id: updated_source_id) if updated_source_id.present? && updated_source_id != message.source_id
+  end
+
+  def delete_message(message, **)
+    return unless uazapi_enabled?
+
+    validate_uazapi_configuration!
+
+    uazapi_client.delete_message(message_id: message.source_id)
+  end
+
+  def uazapi_enabled?
+    uazapi_base_url.present? || additional_attributes&.dig('provider') == 'uazapi'
+  end
+
+  def uazapi_base_url
+    additional_attributes&.dig('uazapi_base_url').presence || derived_uazapi_base_url
+  end
+
+  def uazapi_token
+    additional_attributes&.dig('uazapi_token').presence
   end
 
   private
+
+  def uazapi_client
+    @uazapi_client ||= Uazapi::Client.new(base_url: uazapi_base_url, token: uazapi_token)
+  end
+
+  def validate_uazapi_configuration!
+    return if uazapi_base_url.present? && uazapi_token.present?
+
+    raise 'UAZAPI is not fully configured for this API inbox'
+  end
+
+  def derived_uazapi_base_url
+    return if webhook_url.blank?
+
+    uri = URI.parse(webhook_url)
+    return unless uri.host&.include?('uazapi.com')
+
+    "#{uri.scheme}://#{uri.host}"
+  rescue URI::InvalidURIError
+    nil
+  end
+
+  def extract_message_id(response)
+    candidates = [
+      response['id'],
+      response.dig('message', 'id'),
+      response.dig('data', 'id'),
+      response.dig('message', 'key', 'id'),
+      response.dig('data', 'message', 'id'),
+      response.dig('data', 'key', 'id')
+    ]
+
+    candidates.compact.first
+  end
 
   def ensure_valid_agent_reply_time_window
     return if additional_attributes['agent_reply_time_window'].blank?

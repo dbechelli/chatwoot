@@ -531,7 +531,17 @@ RSpec.describe 'Conversation Messages API', type: :request do
   end
 
   describe 'PATCH /api/v1/accounts/{account.id}/conversations/:conversation_id/messages/:id/edit_content' do
-    let(:api_channel) { create(:channel_api, account: account, webhook_url: 'https://bridge.example.com/webhooks/chatwoot') }
+    let(:api_channel) do
+      create(
+        :channel_api,
+        account: account,
+        additional_attributes: {
+          provider: 'uazapi',
+          uazapi_base_url: 'https://demo.uazapi.com',
+          uazapi_token: 'secret-token'
+        }
+      )
+    end
     let(:api_inbox) { create(:inbox, channel: api_channel, account: account) }
     let(:agent) { create(:user, account: account, role: :agent) }
     let!(:conversation) { create(:conversation, inbox: api_inbox, account: account) }
@@ -548,18 +558,17 @@ RSpec.describe 'Conversation Messages API', type: :request do
 
     before { create(:inbox_member, inbox: api_inbox, user: agent) }
 
-    it 'calls the API inbox webhook synchronously when editing a message' do
-      expect(Webhooks::Trigger).to receive(:execute).with(
-        api_channel.webhook_url,
-        hash_including(
-          event: 'message_updated',
-          id: message.id,
-          source_id: 'uazapi-msg-1',
-          content: 'Texto editado'
-        ),
-        :account_webhook,
-        delivery_id: instance_of(String)
-      )
+    it 'calls the UAZAPI edit endpoint when editing a message' do
+      stub_request(:post, 'https://demo.uazapi.com/message/edit')
+        .with(
+          headers: {
+            'Accept' => 'application/json',
+            'Content-Type' => 'application/json',
+            'Token' => 'secret-token'
+          },
+          body: { id: 'uazapi-msg-1', text: 'Texto editado' }
+        )
+        .to_return(status: 200, body: { id: 'uazapi-msg-2' }.to_json, headers: { 'Content-Type' => 'application/json' })
 
       patch edit_content_api_v1_account_conversation_message_url(
         account_id: account.id,
@@ -571,10 +580,12 @@ RSpec.describe 'Conversation Messages API', type: :request do
       expect(message.reload.content).to eq('Texto editado')
       expect(message.is_edited).to be(true)
       expect(message.previous_content).to eq('Texto original')
+      expect(message.source_id).to eq('uazapi-msg-2')
     end
 
-    it 'rolls back the edit when the API inbox webhook fails' do
-      allow(Webhooks::Trigger).to receive(:execute).and_raise(StandardError, 'UAZAPI edit failed')
+    it 'rolls back the edit when the UAZAPI request fails' do
+      stub_request(:post, 'https://demo.uazapi.com/message/edit')
+        .to_return(status: 500, body: 'UAZAPI edit failed')
 
       patch edit_content_api_v1_account_conversation_message_url(
         account_id: account.id,
