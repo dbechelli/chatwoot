@@ -99,11 +99,11 @@ pt_BR:
       unsupported_attachment_type: Este tipo de anexo não é suportado pela UAZAPI.
       public_url_missing: Não foi possível gerar uma URL pública para este anexo.
     forward:
-      no_contacts: Nenhum contato informado
-      unsupported_channel: O encaminhamento é suportado apenas para canais WhatsApp Baileys ou caixas de entrada API com UAZAPI configurada
-      missing_source_id: Não foi possível encaminhar a mensagem porque o source_id está ausente
-      no_valid_contacts: Nenhum contato válido encontrado
-      unsupported_message: Só é possível encaminhar mensagens de texto e com anexos
+      no_contacts: 'Nenhum contato informado'
+      unsupported_channel: 'O encaminhamento é suportado apenas para canais WhatsApp Baileys ou caixas de entrada API com UAZAPI configurada'
+      missing_source_id: 'Não foi possível encaminhar a mensagem porque o source_id está ausente'
+      no_valid_contacts: 'Nenhum contato válido encontrado'
+      unsupported_message: 'Só é possível encaminhar mensagens de texto e com anexos'
     inboxes:
       imap:
         socket_error: Por favor, verifique a conexão de rede, endereço IMAP e tente novamente.
