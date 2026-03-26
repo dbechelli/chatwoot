@@ -585,12 +585,16 @@ export default {
       // so we need to handle them separately
       let labelSuggestions =
         this.conversationPanel.querySelector('.label-suggestion');
+      const allMessageElements = Array.from(
+        this.conversationPanel.querySelectorAll('[data-message-id]')
+      );
 
       // if there are unread messages, scroll to the first unread message
-      if (this.unreadMessageCount > 0) {
-        // capturing only the unread messages
-        relevantMessages =
-          this.conversationPanel.querySelectorAll('.message--unread');
+      if (this.unreadMessageCount > 0 && this.unReadMessages[0]?.id) {
+        const firstUnreadMessage = this.conversationPanel.querySelector(
+          `[data-message-id="${this.unReadMessages[0].id}"]`
+        );
+        relevantMessages = firstUnreadMessage ? [firstUnreadMessage] : [];
       } else if (labelSuggestions) {
         // when scrolling to the bottom, the label suggestions is below the last message
         // so we scroll there if there are no unread messages
@@ -599,9 +603,12 @@ export default {
       } else {
         // if there are no unread messages or label suggestion, scroll to the last message
         // capturing last message from the messages list
-        relevantMessages = Array.from(
-          this.conversationPanel.querySelectorAll('.message--read')
-        ).slice(-1);
+        relevantMessages = allMessageElements.slice(-1);
+      }
+
+      if (!relevantMessages.length) {
+        this.conversationPanel.scrollTop = this.conversationPanel.scrollHeight;
+        return;
       }
 
       this.conversationPanel.scrollTop = calculateScrollTop(
