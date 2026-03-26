@@ -62,11 +62,13 @@ RSpec.describe 'Canned Responses API', type: :request do
       let(:agent) { create(:user, account: account, role: :agent) }
 
       it 'creates a new canned response' do
-         params = { canned_response: { short_code: 'short', content: 'content' } }
+        expect_any_instance_of(CannedResponses::SyncToUazapiService).not_to receive(:perform!) # rubocop:disable RSpec/AnyInstance
+
+        params = { canned_response: { short_code: 'short', content: 'content' } }
 
         post "/api/v1/accounts/#{account.id}/canned_responses",
              params: params,
-           headers: agent.create_new_auth_token
+             headers: agent.create_new_auth_token
 
         expect(response).to have_http_status(:success)
         expect(account.canned_responses.count).to eq(2)
@@ -100,6 +102,8 @@ RSpec.describe 'Canned Responses API', type: :request do
       let(:agent) { create(:user, account: account, role: :agent) }
 
       it 'updates an existing canned response' do
+        expect_any_instance_of(CannedResponses::SyncToUazapiService).not_to receive(:perform!) # rubocop:disable RSpec/AnyInstance
+
         params = { canned_response: { short_code: 'B' } }
 
         put "/api/v1/accounts/#{account.id}/canned_responses/#{canned_response.id}",
@@ -138,6 +142,8 @@ RSpec.describe 'Canned Responses API', type: :request do
       let(:agent) { create(:user, account: account, role: :agent) }
 
       it 'destroys the canned response' do
+        expect_any_instance_of(CannedResponses::SyncToUazapiService).not_to receive(:destroy!) # rubocop:disable RSpec/AnyInstance
+
         delete "/api/v1/accounts/#{account.id}/canned_responses/#{canned_response.id}",
                headers: agent.create_new_auth_token,
                as: :json

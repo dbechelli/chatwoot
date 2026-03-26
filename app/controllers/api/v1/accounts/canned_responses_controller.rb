@@ -10,7 +10,6 @@ class Api::V1::Accounts::CannedResponsesController < Api::V1::Accounts::BaseCont
     ActiveRecord::Base.transaction do
       @canned_response = Current.account.canned_responses.new(canned_response_params.except(:retained_attachment_ids, :retain_remote_media))
       @canned_response.save!
-      CannedResponses::SyncToUazapiService.new(canned_response: @canned_response).perform!
     end
 
     render json: serialized_canned_response(@canned_response)
@@ -25,7 +24,6 @@ class Api::V1::Accounts::CannedResponsesController < Api::V1::Accounts::BaseCont
       @canned_response.update!(canned_response_params.except(:retained_attachment_ids, :retain_remote_media))
       purge_removed_attachments!
       clear_remote_media! if retain_remote_media? == false
-      CannedResponses::SyncToUazapiService.new(canned_response: @canned_response).perform!
     end
 
     render json: serialized_canned_response(@canned_response.reload)
@@ -37,7 +35,6 @@ class Api::V1::Accounts::CannedResponsesController < Api::V1::Accounts::BaseCont
 
   def destroy
     ActiveRecord::Base.transaction do
-      CannedResponses::SyncToUazapiService.new(canned_response: @canned_response).destroy!
       @canned_response.destroy!
     end
 
