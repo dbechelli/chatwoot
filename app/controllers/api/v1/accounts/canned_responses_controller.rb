@@ -82,7 +82,7 @@ class Api::V1::Accounts::CannedResponsesController < Api::V1::Accounts::BaseCont
   end
 
   def clear_remote_media!
-    attributes = (@canned_response.additional_attributes || {}).merge(
+    attributes = normalized_additional_attributes_for(@canned_response).merge(
       'uazapi_remote_file_url' => nil,
       'uazapi_remote_doc_name' => nil,
       'uazapi_remote_content_type' => nil,
@@ -102,5 +102,22 @@ class Api::V1::Accounts::CannedResponsesController < Api::V1::Accounts::BaseCont
     CannedResponses::ImportFromUazapiService.new(account: Current.account).perform
   rescue StandardError
     nil
+  end
+
+  def normalized_additional_attributes_for(canned_response)
+    value = canned_response[:additional_attributes]
+
+    case value
+    when Hash
+      value.stringify_keys
+    when ActionController::Parameters
+      value.to_unsafe_h.stringify_keys
+    when String
+      JSON.parse(value).stringify_keys
+    else
+      {}
+    end
+  rescue JSON::ParserError
+    {}
   end
 end
