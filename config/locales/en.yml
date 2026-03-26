@@ -110,6 +110,13 @@ en:
       reauthorization:
         generic: 'Failed to reauthorize WhatsApp. Please try again.'
         not_supported: 'Reauthorization is not supported for this type of WhatsApp channel.'
+    uazapi:
+      not_configured: UAZAPI is not fully configured for this API inbox
+      recipient_missing: UAZAPI recipient is missing for this conversation
+      message_required: UAZAPI direct delivery requires message content or a supported attachment.
+      multiple_attachments_not_supported: Sending multiple attachments in a single UAZAPI message is not supported.
+      unsupported_attachment_type: This attachment type is not supported by UAZAPI.
+      public_url_missing: Unable to generate a public URL for this attachment.
     inboxes:
       imap:
         socket_error: Please check the network connection, IMAP address and try again.

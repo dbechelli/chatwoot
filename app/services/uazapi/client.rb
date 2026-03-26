@@ -11,6 +11,30 @@ module Uazapi
       post('/message/edit', { id: message_id, text: text })
     end
 
+    def send_text_message(recipient_id:, text:, quoted_message_id: nil)
+      payload = { phone: recipient_id, message: text }
+      payload[:messageId] = quoted_message_id if quoted_message_id.present?
+
+      post('/message/send-text', payload)
+    end
+
+    def send_media_message(recipient_id:, media_type:, file_url:, text: nil, doc_name: nil, mime_type: nil, reply_id: nil,
+                           track_id: nil)
+      payload = {
+        number: recipient_id,
+        type: media_type,
+        file: file_url,
+        text: text,
+        docName: doc_name,
+        mimetype: mime_type,
+        replyid: reply_id,
+        track_source: 'chatwoot',
+        track_id: track_id
+      }
+
+      post('/send/media', payload.compact)
+    end
+
     def delete_message(message_id:)
       post('/message/delete', { id: message_id })
     end

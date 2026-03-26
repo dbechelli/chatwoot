@@ -52,6 +52,69 @@ RSpec.describe Channel::Api do
     end
   end
 
+  describe '#send_message' do
+    let(:channel_api) do
+      create(
+        :channel_api,
+        additional_attributes: {
+          provider: 'uazapi',
+          uazapi_base_url: 'https://demo.uazapi.com',
+          uazapi_token: 'secret-token'
+        }
+      )
+    end
+    let(:contact) { create(:contact, account: channel_api.account, phone_number: '+5511999999999') }
+    let(:contact_inbox) { create(:contact_inbox, inbox: channel_api.inbox, contact: contact, source_id: '5511999999999') }
+    let(:conversation) { create(:conversation, inbox: channel_api.inbox, account: channel_api.account, contact: contact, contact_inbox: contact_inbox) }
+
+    it 'calls the UAZAPI send text endpoint and returns the provider message id' do
+      message = create(:message, inbox: channel_api.inbox, account: channel_api.account, conversation: conversation, content: 'Nova mensagem')
+
+      stub_request(:post, 'https://demo.uazapi.com/message/send-text')
+        .with(
+          headers: {
+            'Accept' => 'application/json',
+            'Content-Type' => 'application/json',
+            'Token' => 'secret-token'
+          },
+          body: { phone: '5511999999999', message: 'Nova mensagem' }
+        )
+        .to_return(status: 200, body: { messageId: 'uazapi-msg-1' }.to_json, headers: { 'Content-Type' => 'application/json' })
+
+      expect(channel_api.send_message(message)).to eq('uazapi-msg-1')
+    end
+
+    it 'calls the UAZAPI send media endpoint for image attachments' do
+      message = create(:message, inbox: channel_api.inbox, account: channel_api.account, conversation: conversation, content: 'Veja o anexo')
+      attachment = message.attachments.build(account_id: message.account_id, file_type: :image)
+      attachment.file.attach(io: Rails.root.join('spec/assets/avatar.png').open, filename: 'avatar.png', content_type: 'image/png')
+      message.save!
+      message.attachments.load
+      allow(message.attachments.first).to receive(:download_url).and_return('https://files.example.com/avatar.png')
+
+      stub_request(:post, 'https://demo.uazapi.com/send/media')
+        .with(
+          headers: {
+            'Accept' => 'application/json',
+            'Content-Type' => 'application/json',
+            'Token' => 'secret-token'
+          },
+          body: {
+            number: '5511999999999',
+            type: 'image',
+            file: 'https://files.example.com/avatar.png',
+            text: 'Veja o anexo',
+            mimetype: 'image/png',
+            track_source: 'chatwoot',
+            track_id: message.id.to_s
+          }
+        )
+        .to_return(status: 200, body: { id: 'uazapi-media-1' }.to_json, headers: { 'Content-Type' => 'application/json' })
+
+      expect(channel_api.send_message(message)).to eq('uazapi-media-1')
+    end
+  end
+
   describe '#delete_message' do
     let(:channel_api) do
       create(

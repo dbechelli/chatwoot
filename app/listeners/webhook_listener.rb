@@ -48,7 +48,11 @@ class WebhookListener < BaseListener
     return unless message.webhook_sendable?
 
     payload = message.webhook_data.merge(event: __method__.to_s)
-    deliver_webhook_payloads(payload, inbox)
+    if skip_api_inbox_webhook_for_uazapi_outgoing_message?(message)
+      deliver_account_webhooks(payload, inbox.account)
+    else
+      deliver_webhook_payloads(payload, inbox)
+    end
 
     message_incoming(event)
     message_outgoing(event)
@@ -201,5 +205,13 @@ class WebhookListener < BaseListener
   def deliver_webhook_payloads(payload, inbox)
     deliver_account_webhooks(payload, inbox.account)
     deliver_api_inbox_webhooks(payload, inbox)
+  end
+
+  def skip_api_inbox_webhook_for_uazapi_outgoing_message?(message)
+    inbox = message.inbox
+    return false unless message.outgoing?
+    return false unless inbox.channel_type == 'Channel::Api'
+
+    inbox.channel.respond_to?(:uazapi_direct_message_delivery?) && inbox.channel.uazapi_direct_message_delivery?(message)
   end
 end

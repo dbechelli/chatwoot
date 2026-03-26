@@ -91,6 +91,13 @@ pt_BR:
       reauthorization:
         generic: 'Falha ao reautenticar o WhatsApp. Por favor, tente novamente.'
         not_supported: 'Reautenticação não é suportado por este tipo de canal WhatsApp.'
+    uazapi:
+      not_configured: A UAZAPI não está totalmente configurada para esta caixa de entrada API
+      recipient_missing: O destinatário da UAZAPI está ausente para esta conversa
+      message_required: O envio direto da UAZAPI exige conteúdo da mensagem ou um anexo suportado.
+      multiple_attachments_not_supported: O envio de múltiplos anexos em uma única mensagem da UAZAPI não é suportado.
+      unsupported_attachment_type: Este tipo de anexo não é suportado pela UAZAPI.
+      public_url_missing: Não foi possível gerar uma URL pública para este anexo.
     inboxes:
       imap:
         socket_error: Por favor, verifique a conexão de rede, endereço IMAP e tente novamente.
