@@ -131,18 +131,16 @@ const forwardToContacts = async () => {
 
     // Show result
     if (successCount > 0) {
-      useAlert(
-        t('CONVERSATION.FORWARD_MESSAGE.SUCCESS', { count: successCount })
-      );
+      useAlert(t('FORWARD_MESSAGE.SUCCESS', { count: successCount }));
     }
 
     if (errorCount > 0) {
       const failureCount = errorCount;
       if (successCount === 0) {
-        useAlert(t('CONVERSATION.FORWARD_MESSAGE.ERROR'));
+        useAlert(t('FORWARD_MESSAGE.ERROR'));
       } else {
         useAlert(
-          t('CONVERSATION.FORWARD_MESSAGE.PARTIAL_ERROR', {
+          t('FORWARD_MESSAGE.PARTIAL_ERROR', {
             count: failureCount,
           })
         );
@@ -158,7 +156,7 @@ const forwardToContacts = async () => {
     closeModal();
   } catch (error) {
     console.error('Error forwarding message:', error);
-    const errorMessage = error.response?.data?.error || error.message || t('CONVERSATION.FORWARD_MESSAGE.ERROR');
+    const errorMessage = error.response?.data?.error || error.message || t('FORWARD_MESSAGE.ERROR');
     useAlert(errorMessage);
   } finally {
     isForwarding.value = false;
