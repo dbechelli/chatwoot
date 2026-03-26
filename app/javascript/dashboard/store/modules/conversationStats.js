@@ -54,10 +54,10 @@ export const mutations = {
   [types.SET_CONV_TAB_META](
     $state,
     {
-      mine_count: mineCount,
-      unassigned_count: unAssignedCount,
-      all_count: allCount,
-      resolved_count: resolvedCount,
+      mine_count: mineCount = $state.mineCount,
+      unassigned_count: unAssignedCount = $state.unAssignedCount,
+      all_count: allCount = $state.allCount,
+      resolved_count: resolvedCount = $state.resolvedCount,
     } = {}
   ) {
     $state.mineCount = mineCount;

@@ -31,6 +31,18 @@ describe ConversationFinder do
         result = conversation_finder.perform
         expect(result[:conversations].length).to be 2
       end
+
+      it 'keeps tab counts synchronized regardless of the active tab filter' do
+        result = conversation_finder.perform
+
+        expect(result[:count]).to eq({
+                                       mine_count: 2,
+                                       assigned_count: 3,
+                                       unassigned_count: 1,
+                                       all_count: 4,
+                                       resolved_count: 1
+                                     })
+      end
     end
 
     context 'with inbox' do
@@ -206,7 +218,8 @@ describe ConversationFinder do
                                        mine_count: 2,
                                        assigned_count: 3,
                                        unassigned_count: 1,
-                                       all_count: 4
+                                       all_count: 4,
+                                       resolved_count: 1
                                      })
       end
 

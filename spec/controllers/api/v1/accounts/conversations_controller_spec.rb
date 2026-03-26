@@ -95,8 +95,24 @@ RSpec.describe 'Conversations API', type: :request do
 
         expect(response).to have_http_status(:success)
         body = JSON.parse(response.body, symbolize_names: true)
-        expect(body[:meta].keys).to include(:all_count, :mine_count, :assigned_count, :unassigned_count)
+        expect(body[:meta].keys).to include(:all_count, :mine_count, :assigned_count, :unassigned_count, :resolved_count)
         expect(body[:meta][:all_count]).to eq(1)
+        expect(body[:meta][:resolved_count]).to eq(0)
+      end
+
+      it 'keeps all KPI counts when requesting metadata for a specific tab' do
+        resolved_conversation = create(:conversation, account: account, status: 'resolved')
+        create(:inbox_member, user: agent, inbox: resolved_conversation.inbox)
+
+        get "/api/v1/accounts/#{account.id}/conversations/meta",
+            headers: agent.create_new_auth_token,
+            params: { status: 'resolved', assignee_type: 'all' },
+            as: :json
+
+        expect(response).to have_http_status(:success)
+        body = JSON.parse(response.body, symbolize_names: true)
+        expect(body[:meta][:all_count]).to eq(1)
+        expect(body[:meta][:resolved_count]).to eq(1)
       end
     end
   end

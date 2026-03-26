@@ -60,9 +60,9 @@ class ConversationFinder
   end
 
   def perform_meta_only
-    set_up
+    set_up_base_filters
 
-    mine_count, unassigned_count, all_count, = set_count_for_all_conversations
+    mine_count, unassigned_count, all_count, resolved_count = set_count_for_all_conversations
     assigned_count = all_count - unassigned_count
 
     {
@@ -70,7 +70,8 @@ class ConversationFinder
         mine_count: mine_count,
         assigned_count: assigned_count,
         unassigned_count: unassigned_count,
-        all_count: all_count
+        all_count: all_count,
+        resolved_count: resolved_count
       }
     }
   end
@@ -83,7 +84,6 @@ class ConversationFinder
     set_assignee_type
 
     find_all_conversations
-    filter_by_status unless params[:q]
     filter_by_group_type
     filter_by_team
     filter_by_labels
