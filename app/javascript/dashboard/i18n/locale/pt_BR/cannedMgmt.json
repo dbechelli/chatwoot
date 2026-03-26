@@ -34,7 +34,7 @@
           "PLACEHOLDER": "Por favor, escreva a mensagem que deseja salvar como um modelo para usar posteriormente.",
           "ERROR": "A mensagem ou um anexo é obrigatório."
         },
-        "SUBMIT": "Enviar"
+        "SUBMIT": "Salvar"
       },
       "API": {
         "SUCCESS_MESSAGE": "Resposta pronta adicionada com sucesso.",
@@ -55,7 +55,7 @@
           "PLACEHOLDER": "Por favor, escreva a mensagem que deseja salvar como um modelo para usar posteriormente.",
           "ERROR": "A mensagem ou um anexo é obrigatório."
         },
-        "SUBMIT": "Enviar"
+        "SUBMIT": "Salvar"
       },
       "BUTTON_TEXT": "Alterar",
       "API": {

@@ -65,7 +65,9 @@ module Uazapi
         docName: doc_name
       }
 
-      post('/quickreply/edit', payload.compact)
+      timeout = file.present? ? media_timeout : request_timeout
+
+      post('/quickreply/edit', payload.compact, timeout: timeout)
     end
 
     private

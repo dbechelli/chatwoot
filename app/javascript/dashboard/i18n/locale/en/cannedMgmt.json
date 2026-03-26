@@ -34,7 +34,7 @@
           "PLACEHOLDER": "Please write the message you want to save as a template to use later.",
           "ERROR": "Message or attachment is required."
         },
-        "SUBMIT": "Submit"
+        "SUBMIT": "Save"
       },
       "API": {
         "SUCCESS_MESSAGE": "Canned response added successfully.",
@@ -55,7 +55,7 @@
           "PLACEHOLDER": "Please write the message you want to save as a template to use later.",
           "ERROR": "Message or attachment is required."
         },
-        "SUBMIT": "Submit"
+        "SUBMIT": "Save"
       },
       "BUTTON_TEXT": "Edit",
       "API": {
