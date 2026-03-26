@@ -113,6 +113,8 @@ class Api::V1::Accounts::Conversations::MessagesController < Api::V1::Accounts::
     edit_message_on_channel(new_content, original_content)
 
     @message = message.reload
+  rescue StandardError => e
+    render json: { error: e.message }, status: :unprocessable_entity
   ensure
     message.skip_api_inbox_webhook_dispatch = false
   end
