@@ -87,6 +87,7 @@ class Message < ApplicationRecord
 
   # NOTE: Allow skipping message flooding validation for bulk operations like imports/cloning
   attr_accessor :skip_message_flooding_validation
+  attr_accessor :skip_api_inbox_webhook_dispatch
 
   enum message_type: { incoming: 0, outgoing: 1, activity: 2, template: 3 }
   enum content_type: {
@@ -243,7 +244,8 @@ class Message < ApplicationRecord
 
   def send_update_event
     Rails.configuration.dispatcher.dispatch(MESSAGE_UPDATED, Time.zone.now, message: self, performed_by: Current.executed_by,
-                                                                            previous_changes: previous_changes)
+                                                                            previous_changes: previous_changes,
+                                                                            skip_api_inbox_webhook: skip_api_inbox_webhook_dispatch)
   end
 
   def should_index?

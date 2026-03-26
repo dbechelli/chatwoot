@@ -529,4 +529,63 @@ RSpec.describe 'Conversation Messages API', type: :request do
       end
     end
   end
+
+  describe 'PATCH /api/v1/accounts/{account.id}/conversations/:conversation_id/messages/:id/edit_content' do
+    let(:api_channel) { create(:channel_api, account: account, webhook_url: 'https://bridge.example.com/webhooks/chatwoot') }
+    let(:api_inbox) { create(:inbox, channel: api_channel, account: account) }
+    let(:agent) { create(:user, account: account, role: :agent) }
+    let!(:conversation) { create(:conversation, inbox: api_inbox, account: account) }
+    let!(:message) do
+      create(:message,
+             conversation: conversation,
+             inbox: api_inbox,
+             account: account,
+             status: :sent,
+             message_type: :outgoing,
+             content: 'Texto original',
+             source_id: 'uazapi-msg-1')
+    end
+
+    before { create(:inbox_member, inbox: api_inbox, user: agent) }
+
+    it 'calls the API inbox webhook synchronously when editing a message' do
+      expect(Webhooks::Trigger).to receive(:execute).with(
+        api_channel.webhook_url,
+        hash_including(
+          event: 'message_updated',
+          id: message.id,
+          source_id: 'uazapi-msg-1',
+          content: 'Texto editado'
+        ),
+        :account_webhook,
+        delivery_id: instance_of(String)
+      )
+
+      patch edit_content_api_v1_account_conversation_message_url(
+        account_id: account.id,
+        conversation_id: conversation.display_id,
+        id: message.id
+      ), params: { content: 'Texto editado' }, headers: agent.create_new_auth_token, as: :json
+
+      expect(response).to have_http_status(:success)
+      expect(message.reload.content).to eq('Texto editado')
+      expect(message.is_edited).to be(true)
+      expect(message.previous_content).to eq('Texto original')
+    end
+
+    it 'rolls back the edit when the API inbox webhook fails' do
+      allow(Webhooks::Trigger).to receive(:execute).and_raise(StandardError, 'UAZAPI edit failed')
+
+      patch edit_content_api_v1_account_conversation_message_url(
+        account_id: account.id,
+        conversation_id: conversation.display_id,
+        id: message.id
+      ), params: { content: 'Texto editado' }, headers: agent.create_new_auth_token, as: :json
+
+      expect(response).to have_http_status(:unprocessable_entity)
+      expect(message.reload.content).to eq('Texto original')
+      expect(message.is_edited).to be(false)
+      expect(message.previous_content).to be_nil
+    end
+  end
 end

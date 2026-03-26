@@ -83,7 +83,12 @@ class WebhookListener < BaseListener
     changed_attributes = extract_changed_attributes(event)
     payload = message.webhook_data.merge(event: __method__.to_s)
     payload[:changed_attributes] = changed_attributes if changed_attributes.present?
-    deliver_webhook_payloads(payload, inbox)
+
+    if event.data[:skip_api_inbox_webhook]
+      deliver_account_webhooks(payload, inbox.account)
+    else
+      deliver_webhook_payloads(payload, inbox)
+    end
   end
 
   def message_deleted(event)

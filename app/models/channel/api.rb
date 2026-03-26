@@ -33,6 +33,26 @@ class Channel::Api < ApplicationRecord
     'API'
   end
 
+  def edit_message(message, _new_content, original_content: nil, conversation: nil)
+    return if webhook_url.blank?
+
+    payload = message.webhook_data.merge(
+      event: 'message_updated',
+      changed_attributes: [
+        { 'content' => { previous_value: original_content, current_value: message.content } },
+        {
+          'content_attributes' => {
+            previous_value: { 'is_edited' => false, 'previous_content' => nil },
+            current_value: { 'is_edited' => true, 'previous_content' => original_content }
+          }
+        }
+      ]
+    )
+    payload[:conversation] = conversation.webhook_data if conversation.present?
+
+    Webhooks::Trigger.execute(webhook_url, payload, :account_webhook, delivery_id: SecureRandom.uuid)
+  end
+
   private
 
   def ensure_valid_agent_reply_time_window

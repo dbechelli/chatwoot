@@ -105,6 +105,7 @@ class Api::V1::Accounts::Conversations::MessagesController < Api::V1::Accounts::
     return render json: { error: 'Only outgoing messages can be edited' }, status: :forbidden unless message.outgoing?
 
     original_content = message.content
+    message.skip_api_inbox_webhook_dispatch = @conversation.inbox.api?
     # Only save previous_content on first edit to preserve the original message
     previous_content_to_save = message.is_edited ? message.previous_content : original_content
     message.update!(content: new_content, is_edited: true, previous_content: previous_content_to_save)
@@ -112,6 +113,8 @@ class Api::V1::Accounts::Conversations::MessagesController < Api::V1::Accounts::
     edit_message_on_channel(new_content, original_content)
 
     @message = message.reload
+  ensure
+    message.skip_api_inbox_webhook_dispatch = false if @message.present? || defined?(@message)
   end
 
   private
@@ -165,7 +168,7 @@ class Api::V1::Accounts::Conversations::MessagesController < Api::V1::Accounts::
     return unless @conversation.inbox.channel.respond_to?(:edit_message)
     return if message.source_id.blank?
 
-    @conversation.inbox.channel.edit_message(message, new_content, conversation: @conversation)
+    @conversation.inbox.channel.edit_message(message, new_content, original_content: original_content, conversation: @conversation)
   rescue StandardError => e
     Rails.logger.error "Failed to edit message on channel: #{e.message}"
     was_already_edited = message.previous_content != original_content
