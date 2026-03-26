@@ -43,7 +43,8 @@ class Channel::Api < ApplicationRecord
       recipient_id: uazapi_recipient_id(message),
       text: message.outgoing_content,
       quoted_message_id: message.in_reply_to_external_id,
-      track_id: message.id.to_s
+      track_id: message.id.to_s,
+      forward: uazapi_forwarded?(message)
     )
 
     extract_message_id(response)
@@ -149,7 +150,8 @@ class Channel::Api < ApplicationRecord
       doc_name: uazapi_doc_name(attachment),
       mime_type: attachment.file.content_type.presence,
       reply_id: message.in_reply_to_external_id,
-      track_id: message.id.to_s
+      track_id: message.id.to_s,
+      forward: uazapi_forwarded?(message)
     )
 
     extract_message_id(response)
@@ -195,6 +197,10 @@ class Channel::Api < ApplicationRecord
     return unless attachment.file.attached?
 
     attachment.file.filename.to_s
+  end
+
+  def uazapi_forwarded?(message)
+    message.content_attributes.is_a?(Hash) && message.content_attributes['forward'] == true
   end
 
   def ensure_valid_agent_reply_time_window

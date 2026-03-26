@@ -12,12 +12,13 @@ module Uazapi
       post('/message/edit', { id: message_id, text: text })
     end
 
-    def send_text_message(recipient_id:, text:, quoted_message_id: nil, track_id: nil)
+    def send_text_message(recipient_id:, text:, quoted_message_id: nil, track_id: nil, forward: nil)
       payload = {
         number: recipient_id,
         text: text,
         replyid: quoted_message_id,
         async: true,
+        forward: forward,
         track_source: 'chatwoot',
         track_id: track_id
       }
@@ -26,7 +27,7 @@ module Uazapi
     end
 
     def send_media_message(recipient_id:, media_type:, file_url:, text: nil, doc_name: nil, mime_type: nil, reply_id: nil,
-                           track_id: nil)
+                           track_id: nil, forward: nil)
       payload = {
         number: recipient_id,
         type: media_type,
@@ -36,6 +37,7 @@ module Uazapi
         mimetype: mime_type,
         replyid: reply_id,
         async: true,
+        forward: forward,
         track_source: 'chatwoot',
         track_id: track_id
       }

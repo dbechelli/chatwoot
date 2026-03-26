@@ -117,6 +117,12 @@ en:
       multiple_attachments_not_supported: Sending multiple attachments in a single UAZAPI message is not supported.
       unsupported_attachment_type: This attachment type is not supported by UAZAPI.
       public_url_missing: Unable to generate a public URL for this attachment.
+    forward:
+      no_contacts: No contacts provided
+      unsupported_channel: Forward is only supported for WhatsApp Baileys channels or API inboxes with UAZAPI configured
+      missing_source_id: Cannot forward message: source_id is missing
+      no_valid_contacts: No valid contacts found
+      unsupported_message: Only text and attachment messages can be forwarded
     inboxes:
       imap:
         socket_error: Please check the network connection, IMAP address and try again.

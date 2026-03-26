@@ -475,6 +475,108 @@ RSpec.describe 'Conversation Messages API', type: :request do
     end
   end
 
+  describe 'POST /api/v1/accounts/{account.id}/conversations/:conversation_id/messages/:id/forward' do
+    let(:agent) { create(:user, account: account, role: :agent) }
+    let(:api_channel) do
+      create(
+        :channel_api,
+        account: account,
+        additional_attributes: {
+          provider: 'uazapi',
+          uazapi_base_url: 'https://demo.uazapi.com',
+          uazapi_token: 'secret-token'
+        }
+      )
+    end
+    let(:api_inbox) { create(:inbox, channel: api_channel, account: account) }
+    let(:source_contact) { create(:contact, account: account, phone_number: '+5511888888888') }
+    let(:source_contact_inbox) { create(:contact_inbox, inbox: api_inbox, contact: source_contact, source_id: '5511888888888') }
+    let(:conversation) { create(:conversation, inbox: api_inbox, account: account, contact: source_contact, contact_inbox: source_contact_inbox) }
+    let(:target_contact) { create(:contact, account: account, phone_number: '+5511999999999') }
+
+    before do
+      create(:inbox_member, inbox: api_inbox, user: agent)
+    end
+
+    it 'forwards a text message through the UAZAPI API inbox flow' do
+      message = create(:message, account: account, inbox: api_inbox, conversation: conversation, message_type: :incoming, content: 'Mensagem original')
+
+      text_request = stub_request(:post, 'https://demo.uazapi.com/send/text')
+        .with(
+          headers: {
+            'Accept' => 'application/json',
+            'Content-Type' => 'application/json',
+            'Token' => 'secret-token'
+          },
+          body: hash_including(
+            number: '5511999999999',
+            text: 'Mensagem original',
+            async: true,
+            forward: true,
+            track_source: 'chatwoot'
+          )
+        )
+        .to_return(status: 200, body: { messageId: 'forwarded-text-1' }.to_json, headers: { 'Content-Type' => 'application/json' })
+
+      perform_enqueued_jobs do
+        post "/api/v1/accounts/#{account.id}/conversations/#{conversation.display_id}/messages/#{message.id}/forward",
+             params: { contact_ids: [target_contact.id] },
+             headers: agent.create_new_auth_token,
+             as: :json
+      end
+
+      expect(response).to have_http_status(:success)
+      expect(text_request).to have_been_requested
+
+      forwarded_message = account.messages.where.not(id: message.id).order(created_at: :desc).first
+      expect(forwarded_message.content_attributes['forward']).to be true
+      expect(forwarded_message.source_id).to eq('forwarded-text-1')
+    end
+
+    it 'forwards an image attachment through the UAZAPI API inbox flow' do
+      message = create(:message, account: account, inbox: api_inbox, conversation: conversation, message_type: :incoming, content: 'Veja a imagem')
+      attachment = message.attachments.build(account_id: message.account_id, file_type: :image)
+      attachment.file.attach(io: Rails.root.join('spec/assets/avatar.png').open, filename: 'avatar.png', content_type: 'image/png')
+      message.save!
+      message.attachments.load
+      allow_any_instance_of(Attachment).to receive(:download_url).and_call_original
+      allow(message.attachments.first).to receive(:download_url).and_return('https://files.example.com/forward-avatar.png')
+
+      media_request = stub_request(:post, 'https://demo.uazapi.com/send/media')
+        .with(
+          headers: {
+            'Accept' => 'application/json',
+            'Content-Type' => 'application/json',
+            'Token' => 'secret-token'
+          },
+          body: hash_including(
+            number: '5511999999999',
+            type: 'image',
+            text: 'Veja a imagem',
+            async: true,
+            forward: true,
+            track_source: 'chatwoot'
+          )
+        )
+        .to_return(status: 200, body: { id: 'forwarded-media-1' }.to_json, headers: { 'Content-Type' => 'application/json' })
+
+      perform_enqueued_jobs do
+        post "/api/v1/accounts/#{account.id}/conversations/#{conversation.display_id}/messages/#{message.id}/forward",
+             params: { contact_ids: [target_contact.id] },
+             headers: agent.create_new_auth_token,
+             as: :json
+      end
+
+      expect(response).to have_http_status(:success)
+      expect(media_request).to have_been_requested
+
+      forwarded_message = account.messages.where.not(id: message.id).order(created_at: :desc).first
+      expect(forwarded_message.content_attributes['forward']).to be true
+      expect(forwarded_message.source_id).to eq('forwarded-media-1')
+      expect(forwarded_message.attachments.count).to eq(1)
+    end
+  end
+
   describe 'PATCH /api/v1/accounts/{account.id}/conversations/:conversation_id/messages/:id' do
     let(:api_channel) { create(:channel_api, account: account) }
     let(:api_inbox) { create(:inbox, channel: api_channel, account: account) }

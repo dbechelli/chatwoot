@@ -64,36 +64,19 @@ class Api::V1::Accounts::Conversations::MessagesController < Api::V1::Accounts::
 
   def forward
     contact_ids = forward_params[:contact_ids]
-    return render json: { error: 'No contacts provided' }, status: :unprocessable_entity if contact_ids.blank?
+    return render json: { error: I18n.t('errors.forward.no_contacts') }, status: :unprocessable_entity if contact_ids.blank?
 
-    # Only WhatsApp Baileys provider supports forward
     channel = @conversation.inbox.channel
-    unless channel.is_a?(Channel::Whatsapp) && channel.provider == 'baileys'
-      return render json: { error: 'Forward is only supported for WhatsApp Baileys channels' }, status: :unprocessable_entity
+    if channel.is_a?(Channel::Whatsapp) && channel.provider == 'baileys'
+      return forward_on_baileys(contact_ids)
     end
 
-    if @message.source_id.blank?
-      Rails.logger.warn "Forward: Message #{@message.id} missing source_id. Cannot forward."
-      return render json: { error: 'Cannot forward message: source_id is missing' }, status: :unprocessable_entity
+    if @conversation.inbox.api? && channel.try(:uazapi_enabled?)
+      results = Messages::ForwardOnApiService.new(message: @message, contact_ids: contact_ids, user: Current.user).perform
+      return render json: { results: results }
     end
 
-    # Get contacts and their identifiers
-    contacts = Current.account.contacts.where(id: contact_ids)
-    Rails.logger.info "Forward: Found #{contacts.count} contacts for IDs: #{contact_ids.inspect}"
-
-    destination_jids = contacts.map(&:identifier).compact
-    Rails.logger.info "Forward: Destination JIDs: #{destination_jids.inspect}"
-
-    return render json: { error: 'No valid contacts found' }, status: :unprocessable_entity if destination_jids.empty?
-
-    # Forward the message using the Baileys service
-    Rails.logger.info "Forward: Message ID: #{@message.id}, Content: #{@message.content}"
-    service = Whatsapp::Providers::WhatsappBaileysService.new(whatsapp_channel: channel)
-    results = service.forward_message(@message, destination_jids)
-
-    Rails.logger.info "Forward: Results: #{results.inspect}"
-
-    render json: { results: results }
+    render json: { error: I18n.t('errors.forward.unsupported_channel') }, status: :unprocessable_entity
   rescue StandardError => e
     Rails.logger.error "Forward error: #{e.class.name} - #{e.message}"
     Rails.logger.error e.backtrace.join("\n")
@@ -122,6 +105,32 @@ class Api::V1::Accounts::Conversations::MessagesController < Api::V1::Accounts::
   end
 
   private
+
+  def forward_on_baileys(contact_ids)
+    if @message.source_id.blank?
+      Rails.logger.warn "Forward: Message #{@message.id} missing source_id. Cannot forward."
+      return render json: { error: I18n.t('errors.forward.missing_source_id') }, status: :unprocessable_entity
+    end
+
+    # Get contacts and their identifiers
+    contacts = Current.account.contacts.where(id: contact_ids)
+    Rails.logger.info "Forward: Found #{contacts.count} contacts for IDs: #{contact_ids.inspect}"
+
+    destination_jids = contacts.map(&:identifier).compact
+    Rails.logger.info "Forward: Destination JIDs: #{destination_jids.inspect}"
+
+    return render json: { error: I18n.t('errors.forward.no_valid_contacts') }, status: :unprocessable_entity if destination_jids.empty?
+
+    # Forward the message using the Baileys service
+    Rails.logger.info "Forward: Message ID: #{@message.id}, Content: #{@message.content}"
+    channel = @conversation.inbox.channel
+    service = Whatsapp::Providers::WhatsappBaileysService.new(whatsapp_channel: channel)
+    results = service.forward_message(@message, destination_jids)
+
+    Rails.logger.info "Forward: Results: #{results.inspect}"
+
+    render json: { results: results }
+  end
 
   def set_message
     @message = @conversation.messages.find(params[:id])
