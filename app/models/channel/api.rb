@@ -42,7 +42,8 @@ class Channel::Api < ApplicationRecord
     response = uazapi_client.send_text_message(
       recipient_id: uazapi_recipient_id(message),
       text: message.outgoing_content,
-      quoted_message_id: message.in_reply_to_external_id
+      quoted_message_id: message.in_reply_to_external_id,
+      track_id: message.id.to_s
     )
 
     extract_message_id(response)

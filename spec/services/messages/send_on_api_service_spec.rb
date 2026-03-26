@@ -20,14 +20,20 @@ describe Messages::SendOnApiService do
       it 'sends the message through UAZAPI and stores the source_id' do
         message = create(:message, message_type: :outgoing, content: 'teste', conversation: conversation, inbox: channel_api.inbox, account: account)
 
-        stub_request(:post, 'https://demo.uazapi.com/message/send-text')
+        stub_request(:post, 'https://demo.uazapi.com/send/text')
           .with(
             headers: {
               'Accept' => 'application/json',
               'Content-Type' => 'application/json',
               'Token' => 'secret-token'
             },
-            body: { phone: '5511999999999', message: 'teste' }
+            body: {
+              number: '5511999999999',
+              text: 'teste',
+              async: true,
+              track_source: 'chatwoot',
+              track_id: message.id.to_s
+            }
           )
           .to_return(status: 200, body: { messageId: 'uazapi-msg-1' }.to_json, headers: { 'Content-Type' => 'application/json' })
 

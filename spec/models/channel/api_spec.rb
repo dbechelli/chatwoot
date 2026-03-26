@@ -70,14 +70,20 @@ RSpec.describe Channel::Api do
     it 'calls the UAZAPI send text endpoint and returns the provider message id' do
       message = create(:message, inbox: channel_api.inbox, account: channel_api.account, conversation: conversation, content: 'Nova mensagem')
 
-      stub_request(:post, 'https://demo.uazapi.com/message/send-text')
+      stub_request(:post, 'https://demo.uazapi.com/send/text')
         .with(
           headers: {
             'Accept' => 'application/json',
             'Content-Type' => 'application/json',
             'Token' => 'secret-token'
           },
-          body: { phone: '5511999999999', message: 'Nova mensagem' }
+          body: {
+            number: '5511999999999',
+            text: 'Nova mensagem',
+            async: true,
+            track_source: 'chatwoot',
+            track_id: message.id.to_s
+          }
         )
         .to_return(status: 200, body: { messageId: 'uazapi-msg-1' }.to_json, headers: { 'Content-Type' => 'application/json' })
 

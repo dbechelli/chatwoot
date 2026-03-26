@@ -12,11 +12,17 @@ module Uazapi
       post('/message/edit', { id: message_id, text: text })
     end
 
-    def send_text_message(recipient_id:, text:, quoted_message_id: nil)
-      payload = { phone: recipient_id, message: text }
-      payload[:messageId] = quoted_message_id if quoted_message_id.present?
+    def send_text_message(recipient_id:, text:, quoted_message_id: nil, track_id: nil)
+      payload = {
+        number: recipient_id,
+        text: text,
+        replyid: quoted_message_id,
+        async: true,
+        track_source: 'chatwoot',
+        track_id: track_id
+      }
 
-      post('/message/send-text', payload)
+      post('/send/text', payload.compact)
     end
 
     def send_media_message(recipient_id:, media_type:, file_url:, text: nil, doc_name: nil, mime_type: nil, reply_id: nil,
