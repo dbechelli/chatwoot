@@ -51,4 +51,35 @@ RSpec.describe Channel::Api do
       expect(message.reload.source_id).to eq('uazapi-msg-2')
     end
   end
+
+  describe '#delete_message' do
+    let(:channel_api) do
+      create(
+        :channel_api,
+        additional_attributes: {
+          provider: 'uazapi',
+          uazapi_base_url: 'https://demo.uazapi.com',
+          uazapi_token: 'secret-token'
+        }
+      )
+    end
+    let(:message) { create(:message, inbox: channel_api.inbox, account: channel_api.account, source_id: 'uazapi-msg-1') }
+
+    it 'calls the UAZAPI delete endpoint' do
+      delete_request = stub_request(:post, 'https://demo.uazapi.com/message/delete')
+                       .with(
+                         headers: {
+                           'Accept' => 'application/json',
+                           'Content-Type' => 'application/json',
+                           'Token' => 'secret-token'
+                         },
+                         body: { id: 'uazapi-msg-1' }
+                       )
+                       .to_return(status: 200, body: {}.to_json, headers: { 'Content-Type' => 'application/json' })
+
+      channel_api.delete_message(message)
+
+      expect(delete_request).to have_been_requested
+    end
+  end
 end

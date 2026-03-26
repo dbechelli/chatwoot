@@ -28,6 +28,8 @@ class Api::V1::Accounts::Conversations::MessagesController < Api::V1::Accounts::
     delete_message_on_channel
     @message = message
     @message.destroy!
+  rescue StandardError => e
+    render json: { error: e.message }, status: :unprocessable_entity
   end
 
   def retry
@@ -160,12 +162,14 @@ class Api::V1::Accounts::Conversations::MessagesController < Api::V1::Accounts::
   end
 
   def delete_message_on_channel
-    return unless @conversation.inbox.channel.respond_to?(:delete_message)
+    channel = @conversation.inbox.channel
+    return unless channel.respond_to?(:delete_message)
     return if message.source_id.blank?
 
-    @conversation.inbox.channel.delete_message(message, conversation: @conversation)
+    channel.delete_message(message, conversation: @conversation)
   rescue StandardError => e
     Rails.logger.error "Failed to delete message on channel: #{e.message}"
+    raise e if @conversation.inbox.api? && channel.try(:uazapi_enabled?)
   end
 
   def edit_message_on_channel(new_content, original_content)

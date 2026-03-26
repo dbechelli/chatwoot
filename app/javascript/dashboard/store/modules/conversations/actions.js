@@ -346,7 +346,7 @@ const actions = {
       commit(types.DELETE_MESSAGE, { conversationId, messageId });
       commit(types.DELETE_CONVERSATION_ATTACHMENTS, data);
     } catch (error) {
-      throw new Error(error);
+      throwErrorMessage(error);
     }
   },
 

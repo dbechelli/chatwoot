@@ -340,6 +340,37 @@ RSpec.describe 'Conversation Messages API', type: :request do
         expect(message_without_source.reload.deleted).to be true
         expect(delete_stub).not_to have_been_requested
       end
+
+      it 'does not delete locally when UAZAPI remote deletion fails' do
+        api_channel = create(
+          :channel_api,
+          account: account,
+          additional_attributes: {
+            provider: 'uazapi',
+            uazapi_base_url: 'https://demo.uazapi.com',
+            uazapi_token: 'secret-token'
+          }
+        )
+        api_inbox = create(:inbox, channel: api_channel, account: account)
+        api_conversation = create(:conversation, inbox: api_inbox, account: account)
+        api_message = create(:message,
+                             account: account,
+                             conversation: api_conversation,
+                             inbox: api_inbox,
+                             source_id: 'uazapi-msg-1',
+                             message_type: :outgoing)
+        create(:inbox_member, inbox: api_inbox, user: agent)
+
+        stub_request(:post, 'https://demo.uazapi.com/message/delete')
+          .to_return(status: 500, body: 'UAZAPI delete failed')
+
+        delete "/api/v1/accounts/#{account.id}/conversations/#{api_conversation.display_id}/messages/#{api_message.id}",
+               headers: agent.create_new_auth_token,
+               as: :json
+
+        expect(response).to have_http_status(:unprocessable_entity)
+        expect(api_message.reload.deleted).to be(false)
+      end
     end
 
     context 'when channel does not support delete_message' do
