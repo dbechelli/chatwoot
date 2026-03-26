@@ -19,6 +19,10 @@ class CannedResponse extends ApiClient {
         [...params[key]].forEach(file => {
           formData.append('canned_response[attachments][]', file);
         });
+      } else if (key === 'retained_attachment_ids') {
+        params[key].forEach(id => {
+          formData.append('canned_response[retained_attachment_ids][]', id);
+        });
       } else {
         formData.append(`canned_response[${key}]`, params[key]);
       }
@@ -32,6 +36,10 @@ class CannedResponse extends ApiClient {
       if (key === 'attachments') {
         [...params[key]].forEach(file => {
           formData.append('canned_response[attachments][]', file);
+        });
+      } else if (key === 'retained_attachment_ids') {
+        params[key].forEach(retainedId => {
+          formData.append('canned_response[retained_attachment_ids][]', retainedId);
         });
       } else {
         formData.append(`canned_response[${key}]`, params[key]);

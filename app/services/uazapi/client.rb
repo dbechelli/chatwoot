@@ -49,6 +49,25 @@ module Uazapi
       post('/message/delete', { id: message_id })
     end
 
+    def list_quick_replies
+      response = get('/quickreply/list')
+      extract_collection(response)
+    end
+
+    def edit_quick_reply(id: nil, delete: nil, short_cut:, type:, text: nil, file: nil, doc_name: nil)
+      payload = {
+        id: id,
+        delete: delete,
+        shortCut: short_cut,
+        type: type,
+        text: text,
+        file: file,
+        docName: doc_name
+      }
+
+      post('/quickreply/edit', payload.compact)
+    end
+
     private
 
     attr_reader :base_url, :token
@@ -60,6 +79,22 @@ module Uazapi
         payload: payload.to_json,
         headers: {
           content_type: :json,
+          accept: :json,
+          token: token
+        },
+        timeout: timeout
+      )
+
+      parse_response(response.body)
+    rescue RestClient::ExceptionWithResponse => e
+      raise "UAZAPI request failed: #{error_message(e)}"
+    end
+
+    def get(path, timeout: request_timeout)
+      response = RestClient::Request.execute(
+        method: :get,
+        url: "#{base_url}#{path}",
+        headers: {
           accept: :json,
           token: token
         },
@@ -95,6 +130,20 @@ module Uazapi
 
     def media_timeout
       [request_timeout, DEFAULT_MEDIA_TIMEOUT].max
+    end
+
+    def extract_collection(response)
+      collection = [
+        response['data'],
+        response['quickReplies'],
+        response['quick_replies'],
+        response['message'],
+        response['result']
+      ].find { |value| value.is_a?(Array) }
+
+      return collection if collection.present?
+
+      response.values.find { |value| value.is_a?(Array) } || []
     end
   end
 end

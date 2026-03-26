@@ -20,7 +20,7 @@ export default {
         label: cannedMessage.short_code,
         key: cannedMessage.short_code,
         description: cannedMessage.content,
-        files: cannedMessage.file_urls,
+        files: cannedMessage.canned_files || cannedMessage.file_urls,
       }));
     },
   },

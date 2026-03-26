@@ -98,6 +98,7 @@ pt_BR:
       multiple_attachments_not_supported: O envio de múltiplos anexos em uma única mensagem da UAZAPI não é suportado.
       unsupported_attachment_type: Este tipo de anexo não é suportado pela UAZAPI.
       public_url_missing: Não foi possível gerar uma URL pública para este anexo.
+      quick_reply_locked: Esta resposta rápida foi criada no WhatsApp e não pode ser alterada pelo Chatwoot.
     forward:
       no_contacts: 'Nenhum contato informado'
       unsupported_channel: 'O encaminhamento é suportado apenas para canais WhatsApp Baileys ou caixas de entrada API com UAZAPI configurada'

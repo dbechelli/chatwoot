@@ -857,6 +857,39 @@ export default {
           this.onFileUpload({ name, type, size, file });
         });
     },
+    async onAttach(files = []) {
+      const attachments = Array.isArray(files) ? files : [files];
+
+      for (const attachment of attachments) {
+        try {
+          const normalizedFile = await this.normalizeAttachmentFile(attachment);
+          if (!normalizedFile) continue;
+
+          const isAllowed = isFileTypeAllowedForChannel(normalizedFile.file, {
+            channelType: this.channelType || this.inbox?.channel_type,
+            medium: this.inbox?.medium,
+            conversationType: this.conversationType,
+            isInstagramChannel: this.isAnInstagramChannel,
+            isOnPrivateNote: this.isOnPrivateNote,
+          });
+
+          if (!isAllowed) {
+            useAlert(
+              this.$t('CONVERSATION.FILE_TYPE_NOT_SUPPORTED', {
+                fileName: normalizedFile.name,
+              })
+            );
+            continue;
+          }
+
+          this.onFileUpload(normalizedFile);
+        } catch (error) {
+          useAlert(
+            error?.message || this.$t('CANNED_MGMT.ATTACHMENTS.FETCH_ERROR')
+          );
+        }
+      }
+    },
     toggleUserMention(currentMentionState) {
       this.showUserMentions = currentMentionState;
     },
@@ -1175,6 +1208,41 @@ export default {
           blobSignedId: blob ? blob.signed_id : undefined,
           isRecordedAudio: file?.isRecordedAudio || false,
         });
+      };
+    },
+    async normalizeAttachmentFile(attachment) {
+      if (!attachment) return null;
+
+      if (attachment.file instanceof File) {
+        return attachment;
+      }
+
+      if (attachment instanceof File) {
+        return {
+          name: attachment.name,
+          type: attachment.type,
+          size: attachment.size,
+          file: attachment,
+        };
+      }
+
+      if (!attachment.url) return null;
+
+      const response = await fetch(attachment.url);
+      if (!response.ok) {
+        throw new Error(this.$t('CANNED_MGMT.ATTACHMENTS.FETCH_ERROR'));
+      }
+
+      const blob = await response.blob();
+      const file = new File([blob], attachment.filename || 'attachment', {
+        type: attachment.content_type || blob.type || 'application/octet-stream',
+      });
+
+      return {
+        name: file.name,
+        type: file.type,
+        size: file.size,
+        file,
       };
     },
     removeAttachment(attachments) {

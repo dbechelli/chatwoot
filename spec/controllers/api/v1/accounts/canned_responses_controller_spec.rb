@@ -25,7 +25,7 @@ RSpec.describe 'Canned Responses API', type: :request do
             as: :json
 
         expect(response).to have_http_status(:success)
-        expect(response.parsed_body).to eq(account.canned_responses.as_json)
+        expect(response.parsed_body).to eq(account.canned_responses.map { |canned_response| canned_response.as_json(methods: [:file_urls, :canned_files]) })
       end
 
       it 'returns all the canned responses the user searched for' do
@@ -43,7 +43,7 @@ RSpec.describe 'Canned Responses API', type: :request do
 
         expect(response).to have_http_status(:success)
         expect(response.parsed_body).to eq(
-          [cr3, cr2, cr1].as_json
+          [cr3, cr2, cr1].map { |canned_response| canned_response.as_json(methods: [:file_urls, :canned_files]) }
         )
       end
     end
@@ -62,15 +62,25 @@ RSpec.describe 'Canned Responses API', type: :request do
       let(:agent) { create(:user, account: account, role: :agent) }
 
       it 'creates a new canned response' do
-        params = { short_code: 'short', content: 'content' }
+         params = { canned_response: { short_code: 'short', content: 'content' } }
 
         post "/api/v1/accounts/#{account.id}/canned_responses",
              params: params,
-             headers: agent.create_new_auth_token,
-             as: :json
+           headers: agent.create_new_auth_token
 
         expect(response).to have_http_status(:success)
         expect(account.canned_responses.count).to eq(2)
+      end
+
+      it 'creates a canned response with attachment and no content' do
+        file = fixture_file_upload(Rails.root.join('spec/assets/avatar.png'), 'image/png')
+
+        post "/api/v1/accounts/#{account.id}/canned_responses",
+             params: { canned_response: { short_code: 'media-only', content: '', attachments: [file] } },
+             headers: agent.create_new_auth_token
+
+        expect(response).to have_http_status(:success)
+        expect(CannedResponse.last.attachments).to be_attached
       end
     end
   end
@@ -90,12 +100,11 @@ RSpec.describe 'Canned Responses API', type: :request do
       let(:agent) { create(:user, account: account, role: :agent) }
 
       it 'updates an existing canned response' do
-        params = { short_code: 'B' }
+        params = { canned_response: { short_code: 'B' } }
 
         put "/api/v1/accounts/#{account.id}/canned_responses/#{canned_response.id}",
             params: params,
-            headers: agent.create_new_auth_token,
-            as: :json
+            headers: agent.create_new_auth_token
 
         expect(response).to have_http_status(:success)
         expect(canned_response.reload.short_code).to eq('B')
