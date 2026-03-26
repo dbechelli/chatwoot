@@ -148,6 +148,11 @@ export default {
           <input
             v-model="uazapiBaseUrl"
             type="text"
+            name="uazapi_base_url"
+            autocomplete="off"
+            autocapitalize="off"
+            autocorrect="off"
+            spellcheck="false"
             :placeholder="
               $t('INBOX_MGMT.ADD.API_CHANNEL.UAZAPI_BASE_URL.PLACEHOLDER')
             "
@@ -169,6 +174,11 @@ export default {
           <input
             v-model="uazapiToken"
             type="password"
+            name="uazapi_token"
+            autocomplete="new-password"
+            autocapitalize="off"
+            autocorrect="off"
+            spellcheck="false"
             :placeholder="
               $t('INBOX_MGMT.ADD.API_CHANNEL.UAZAPI_TOKEN.PLACEHOLDER')
             "

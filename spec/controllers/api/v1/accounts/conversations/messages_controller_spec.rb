@@ -515,6 +515,37 @@ RSpec.describe 'Conversation Messages API', type: :request do
           expect(message.reload.source_id).to eq('uazapi-edited-message-id')
         end
 
+        it 'syncs a pending UAZAPI edit when source_id arrives after a local edit' do
+          api_channel.update!(additional_attributes: {
+                                provider: 'uazapi',
+                                uazapi_base_url: 'https://demo.uazapi.com',
+                                uazapi_token: 'secret-token'
+                              })
+          message.update!(source_id: nil, content: 'Texto editado localmente', is_edited: true, previous_content: 'Texto original')
+
+          stub_request(:post, 'https://demo.uazapi.com/message/edit')
+            .with(
+              headers: {
+                'Accept' => 'application/json',
+                'Content-Type' => 'application/json',
+                'Token' => 'secret-token'
+              },
+              body: { id: 'uazapi-msg-1', text: 'Texto editado localmente' }
+            )
+            .to_return(status: 200, body: { id: 'uazapi-msg-2' }.to_json, headers: { 'Content-Type' => 'application/json' })
+
+          patch api_v1_account_conversation_message_url(
+            account_id: account.id,
+            conversation_id: conversation.display_id,
+            id: message.id
+          ), params: { source_id: 'uazapi-msg-1' }, headers: agent.create_new_auth_token, as: :json
+
+          expect(response).to have_http_status(:success)
+          expect(message.reload.source_id).to eq('uazapi-msg-2')
+          expect(message.content).to eq('Texto editado localmente')
+          expect(message.previous_content).to eq('Texto original')
+        end
+
         it 'updates status and source_id in the same request' do
           patch api_v1_account_conversation_message_url(
             account_id: account.id,

@@ -154,7 +154,9 @@ class Api::V1::Accounts::Conversations::MessagesController < Api::V1::Accounts::
   def update_api_inbox_message_metadata
     return unless params.key?(:source_id)
 
+    previous_source_id = message.source_id
     message.update!(source_id: permitted_params[:source_id])
+    sync_pending_uazapi_edit(previous_source_id)
   end
 
   def delete_message_on_channel
@@ -180,6 +182,18 @@ class Api::V1::Accounts::Conversations::MessagesController < Api::V1::Accounts::
       message.update!(content: original_content, is_edited: false, previous_content: nil)
     end
     raise e
+  end
+
+  def sync_pending_uazapi_edit(previous_source_id)
+    channel = @conversation.inbox.channel
+    return unless channel.try(:uazapi_enabled?)
+    return unless previous_source_id.blank?
+    return if message.source_id.blank?
+    return unless message.outgoing?
+    return unless message.is_edited?
+    return if message.previous_content.blank?
+
+    edit_message_on_channel(message.content, message.previous_content)
   end
 
   # API inbox check
