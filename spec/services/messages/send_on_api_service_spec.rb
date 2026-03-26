@@ -58,6 +58,7 @@ describe Messages::SendOnApiService do
               file: 'https://files.example.com/avatar.png',
               text: 'arquivo',
               mimetype: 'image/png',
+              async: true,
               track_source: 'chatwoot',
               track_id: message.id.to_s
             }
@@ -92,6 +93,7 @@ describe Messages::SendOnApiService do
               text: 'segue o pdf',
               docName: 'contrato.pdf',
               mimetype: 'application/pdf',
+              async: true,
               track_source: 'chatwoot',
               track_id: message.id.to_s
             }

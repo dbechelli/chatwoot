@@ -1,6 +1,7 @@
 module Uazapi
   class Client
     DEFAULT_TIMEOUT = 5
+    DEFAULT_MEDIA_TIMEOUT = 30
 
     def initialize(base_url:, token:)
       @base_url = base_url.to_s.sub(%r{/+$}, '')
@@ -28,11 +29,12 @@ module Uazapi
         docName: doc_name,
         mimetype: mime_type,
         replyid: reply_id,
+        async: true,
         track_source: 'chatwoot',
         track_id: track_id
       }
 
-      post('/send/media', payload.compact)
+      post('/send/media', payload.compact, timeout: media_timeout)
     end
 
     def delete_message(message_id:)
@@ -43,7 +45,7 @@ module Uazapi
 
     attr_reader :base_url, :token
 
-    def post(path, payload)
+    def post(path, payload, timeout: request_timeout)
       response = RestClient::Request.execute(
         method: :post,
         url: "#{base_url}#{path}",
@@ -76,11 +78,15 @@ module Uazapi
       error.message
     end
 
-    def timeout
+    def request_timeout
       raw_timeout = GlobalConfig.get_value('WEBHOOK_TIMEOUT')
       configured_timeout = raw_timeout.presence&.to_i
 
       configured_timeout&.positive? ? configured_timeout : DEFAULT_TIMEOUT
+    end
+
+    def media_timeout
+      [request_timeout, DEFAULT_MEDIA_TIMEOUT].max
     end
   end
 end

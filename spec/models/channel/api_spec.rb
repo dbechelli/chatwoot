@@ -105,6 +105,7 @@ RSpec.describe Channel::Api do
             file: 'https://files.example.com/avatar.png',
             text: 'Veja o anexo',
             mimetype: 'image/png',
+            async: true,
             track_source: 'chatwoot',
             track_id: message.id.to_s
           }
