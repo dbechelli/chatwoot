@@ -1219,7 +1219,7 @@ export default {
               <NextButton
                 v-if="isAPIInbox"
                 type="submit"
-                :disabled="v$.webhookUrl.$invalid"
+                :disabled="v$.$invalid"
                 :label="$t('INBOX_MGMT.SETTINGS_POPUP.UPDATE')"
                 :is-loading="uiFlags.isUpdating"
                 @click="updateInbox"
