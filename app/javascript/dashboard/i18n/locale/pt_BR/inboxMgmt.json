@@ -422,6 +422,17 @@
           "SUBTITLE": "Configure a URL onde você deseja receber callbacks em eventos.",
           "PLACEHOLDER": "URL do Webhook"
         },
+        "UAZAPI_BASE_URL": {
+          "LABEL": "URL base da UAZAPI",
+          "SUBTITLE": "Opcional. Configure a URL base da instância UAZAPI para habilitar edição e exclusão diretas de mensagens.",
+          "PLACEHOLDER": "https://seu-subdominio.uazapi.com"
+        },
+        "UAZAPI_TOKEN": {
+          "LABEL": "Token da UAZAPI",
+          "SUBTITLE": "Opcional. Informe o token da instância usado no cabeçalho `token` das requisições da UAZAPI.",
+          "PLACEHOLDER": "Token da UAZAPI"
+        },
+        "UAZAPI_ERROR": "Preencha a URL base da UAZAPI e o token da UAZAPI, ou deixe os dois em branco.",
         "SUBMIT_BUTTON": "Criar canal de API",
         "API": {
           "ERROR_MESSAGE": "Não foi possível salvar o canal de API"

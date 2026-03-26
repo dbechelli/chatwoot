@@ -89,6 +89,8 @@ export default {
       selectedInboxName: '',
       channelWebsiteUrl: '',
       webhookUrl: '',
+      uazapiBaseUrl: '',
+      uazapiToken: '',
       channelWelcomeTitle: '',
       channelWelcomeTagline: '',
       selectedFeatureFlags: [],
@@ -382,6 +384,8 @@ export default {
       this.avatarUrl = this.inbox.avatar_url;
       this.selectedInboxName = this.inbox.name;
       this.webhookUrl = this.inbox.webhook_url;
+      this.uazapiBaseUrl = this.inbox.additional_attributes?.uazapi_base_url || '';
+      this.uazapiToken = this.inbox.additional_attributes?.uazapi_token || '';
       this.greetingEnabled = this.inbox.greeting_enabled || false;
       this.greetingMessage = this.inbox.greeting_message || '';
       this.emailCollectEnabled = this.inbox.enable_email_collect;
@@ -497,6 +501,7 @@ export default {
       LocalStorage.set(this.widgetBuilderStorageKey, bubbleSettings);
 
       try {
+        const apiChannelAdditionalAttributes = this.buildApiChannelAdditionalAttributes();
         const payload = {
           id: this.currentInboxId,
           name: this.selectedInboxName?.trim(),
@@ -516,6 +521,7 @@ export default {
             widget_color: this.inbox.widget_color,
             website_url: this.channelWebsiteUrl,
             webhook_url: this.webhookUrl,
+            additional_attributes: apiChannelAdditionalAttributes,
             welcome_title: this.channelWelcomeTitle || '',
             welcome_tagline: this.channelWelcomeTagline || '',
             selectedFeatureFlags: this.selectedFeatureFlags,
@@ -554,6 +560,29 @@ export default {
         );
       }
     },
+    buildApiChannelAdditionalAttributes() {
+      const existingAttributes = { ...(this.inbox.additional_attributes || {}) };
+      const hasBaseUrl = !!this.uazapiBaseUrl?.trim();
+      const hasToken = !!this.uazapiToken?.trim();
+
+      if (hasBaseUrl && hasToken) {
+        return {
+          ...existingAttributes,
+          provider: 'uazapi',
+          uazapi_base_url: this.uazapiBaseUrl.trim(),
+          uazapi_token: this.uazapiToken,
+        };
+      }
+
+      const cleanedAttributes = { ...existingAttributes };
+      delete cleanedAttributes.uazapi_base_url;
+      delete cleanedAttributes.uazapi_token;
+      if (cleanedAttributes.provider === 'uazapi') {
+        delete cleanedAttributes.provider;
+      }
+
+      return cleanedAttributes;
+    },
     toggleSenderNameType(key) {
       this.senderNameType = key;
     },
@@ -573,6 +602,17 @@ export default {
   validations: {
     webhookUrl: {
       shouldBeUrl,
+    },
+    uazapiBaseUrl: {
+      shouldBeUrl,
+      isCompleteUazapiConfig(value) {
+        return !!value?.trim() === !!this.uazapiToken?.trim();
+      },
+    },
+    uazapiToken: {
+      isCompleteUazapiConfig(value) {
+        return !!value?.trim() === !!this.uazapiBaseUrl?.trim();
+      },
     },
     selectedInboxName: {},
   },
@@ -699,7 +739,7 @@ export default {
             <SettingsFieldSection
               v-if="isAPIInbox"
               :label="
-                $t('INBOX_MGMT.ADD.WEBSITE_CHANNEL.CHANNEL_WEBHOOK_URL.LABEL')
+                $t('INBOX_MGMT.ADD.API_CHANNEL.WEBHOOK_URL.LABEL')
               "
             >
               <woot-input
@@ -707,18 +747,53 @@ export default {
                 class="[&>input]:!mb-0"
                 :class="{ error: v$.webhookUrl.$error }"
                 :placeholder="
-                  $t(
-                    'INBOX_MGMT.ADD.WEBSITE_CHANNEL.CHANNEL_WEBHOOK_URL.PLACEHOLDER'
-                  )
+                  $t('INBOX_MGMT.ADD.API_CHANNEL.WEBHOOK_URL.PLACEHOLDER')
                 "
                 :error="
                   v$.webhookUrl.$error
-                    ? $t(
-                        'INBOX_MGMT.ADD.WEBSITE_CHANNEL.CHANNEL_WEBHOOK_URL.ERROR'
-                      )
+                    ? $t('INBOX_MGMT.ADD.WEBSITE_CHANNEL.CHANNEL_WEBHOOK_URL.ERROR')
                     : ''
                 "
                 @blur="v$.webhookUrl.$touch"
+              />
+            </SettingsFieldSection>
+
+            <SettingsFieldSection
+              v-if="isAPIInbox"
+              :label="$t('INBOX_MGMT.ADD.API_CHANNEL.UAZAPI_BASE_URL.LABEL')"
+              :help-text="$t('INBOX_MGMT.ADD.API_CHANNEL.UAZAPI_BASE_URL.SUBTITLE')"
+            >
+              <woot-input
+                v-model="uazapiBaseUrl"
+                class="[&>input]:!mb-0"
+                :class="{ error: v$.uazapiBaseUrl.$error || v$.uazapiToken.$error }"
+                :placeholder="$t('INBOX_MGMT.ADD.API_CHANNEL.UAZAPI_BASE_URL.PLACEHOLDER')"
+                :error="
+                  v$.uazapiBaseUrl.$error || v$.uazapiToken.$error
+                    ? $t('INBOX_MGMT.ADD.API_CHANNEL.UAZAPI_ERROR')
+                    : ''
+                "
+                @blur="v$.uazapiBaseUrl.$touch"
+              />
+            </SettingsFieldSection>
+
+            <SettingsFieldSection
+              v-if="isAPIInbox"
+              :label="$t('INBOX_MGMT.ADD.API_CHANNEL.UAZAPI_TOKEN.LABEL')"
+              :help-text="$t('INBOX_MGMT.ADD.API_CHANNEL.UAZAPI_TOKEN.SUBTITLE')"
+            >
+              <woot-input
+                v-model="uazapiToken"
+                type="password"
+                class="[&>input]:!mb-0"
+                :class="{ error: v$.uazapiBaseUrl.$error || v$.uazapiToken.$error }"
+                :placeholder="$t('INBOX_MGMT.ADD.API_CHANNEL.UAZAPI_TOKEN.PLACEHOLDER')"
+                :error="
+                  v$.uazapiBaseUrl.$error || v$.uazapiToken.$error
+                    ? $t('INBOX_MGMT.ADD.API_CHANNEL.UAZAPI_ERROR')
+                    : ''
+                "
+                @blur="v$.uazapiToken.$touch"
               />
             </SettingsFieldSection>
 

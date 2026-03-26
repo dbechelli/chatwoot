@@ -10,6 +10,15 @@ import NextButton from 'dashboard/components-next/button/Button.vue';
 const shouldBeWebhookUrl = (value = '') =>
   value ? value.startsWith('http') : true;
 
+const isBlank = value => !value || !value.trim();
+
+const isCompleteUazapiConfig = (_, vm) => {
+  const hasBaseUrl = !isBlank(vm.uazapiBaseUrl);
+  const hasToken = !isBlank(vm.uazapiToken);
+
+  return hasBaseUrl === hasToken;
+};
+
 export default {
   components: {
     PageHeader,
@@ -22,6 +31,8 @@ export default {
     return {
       channelName: '',
       webhookUrl: '',
+      uazapiBaseUrl: '',
+      uazapiToken: '',
     };
   },
   computed: {
@@ -32,8 +43,26 @@ export default {
   validations: {
     channelName: { required },
     webhookUrl: { shouldBeWebhookUrl },
+    uazapiBaseUrl: {
+      shouldBeWebhookUrl,
+      isCompleteUazapiConfig,
+    },
+    uazapiToken: {
+      isCompleteUazapiConfig,
+    },
   },
   methods: {
+    buildApiChannelAdditionalAttributes() {
+      if (isBlank(this.uazapiBaseUrl) && isBlank(this.uazapiToken)) {
+        return {};
+      }
+
+      return {
+        provider: 'uazapi',
+        uazapi_base_url: this.uazapiBaseUrl.trim(),
+        uazapi_token: this.uazapiToken,
+      };
+    },
     async createChannel() {
       this.v$.$touch();
       if (this.v$.$invalid) {
@@ -46,6 +75,7 @@ export default {
           channel: {
             type: 'api',
             webhook_url: this.webhookUrl,
+            additional_attributes: this.buildApiChannelAdditionalAttributes(),
           },
         });
 
@@ -105,6 +135,54 @@ export default {
         </label>
         <p class="help-text">
           {{ $t('INBOX_MGMT.ADD.API_CHANNEL.WEBHOOK_URL.SUBTITLE') }}
+        </p>
+      </div>
+
+      <div class="flex-shrink-0 flex-grow-0">
+        <label
+          :class="{
+            error: v$.uazapiBaseUrl.$error || v$.uazapiToken.$error,
+          }"
+        >
+          {{ $t('INBOX_MGMT.ADD.API_CHANNEL.UAZAPI_BASE_URL.LABEL') }}
+          <input
+            v-model="uazapiBaseUrl"
+            type="text"
+            :placeholder="
+              $t('INBOX_MGMT.ADD.API_CHANNEL.UAZAPI_BASE_URL.PLACEHOLDER')
+            "
+            @blur="v$.uazapiBaseUrl.$touch"
+          />
+        </label>
+        <p class="help-text">
+          {{ $t('INBOX_MGMT.ADD.API_CHANNEL.UAZAPI_BASE_URL.SUBTITLE') }}
+        </p>
+      </div>
+
+      <div class="flex-shrink-0 flex-grow-0">
+        <label
+          :class="{
+            error: v$.uazapiBaseUrl.$error || v$.uazapiToken.$error,
+          }"
+        >
+          {{ $t('INBOX_MGMT.ADD.API_CHANNEL.UAZAPI_TOKEN.LABEL') }}
+          <input
+            v-model="uazapiToken"
+            type="password"
+            :placeholder="
+              $t('INBOX_MGMT.ADD.API_CHANNEL.UAZAPI_TOKEN.PLACEHOLDER')
+            "
+            @blur="v$.uazapiToken.$touch"
+          />
+        </label>
+        <p class="help-text">
+          {{ $t('INBOX_MGMT.ADD.API_CHANNEL.UAZAPI_TOKEN.SUBTITLE') }}
+        </p>
+        <p
+          v-if="v$.uazapiBaseUrl.$error || v$.uazapiToken.$error"
+          class="help-text text-n-ruby-9"
+        >
+          {{ $t('INBOX_MGMT.ADD.API_CHANNEL.UAZAPI_ERROR') }}
         </p>
       </div>
 
