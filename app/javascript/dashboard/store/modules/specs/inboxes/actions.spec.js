@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { actions } from '../../inboxes';
+import { buildInboxData } from '../../inboxes/channelActions';
 import * as types from '../../../mutation-types';
 import inboxList from './fixtures';
 
@@ -132,6 +133,34 @@ describe('#actions', () => {
         [types.default.SET_INBOXES_UI_FLAG, { isUpdating: true }],
         [types.default.SET_INBOXES_UI_FLAG, { isUpdating: false }],
       ]);
+    });
+
+    it('serializes nested channel additional attributes in form data', () => {
+      const payload = buildInboxData({
+        name: 'API Inbox',
+        channel: {
+          webhook_url: 'https://example.test/webhook',
+          additional_attributes: {
+            provider: 'uazapi',
+            uazapi_base_url: 'https://example.uazapi.com',
+            uazapi_token: 'secret-token',
+          },
+        },
+      });
+
+      expect(payload.get('name')).toBe('API Inbox');
+      expect(payload.get('channel[webhook_url]')).toBe(
+        'https://example.test/webhook'
+      );
+      expect(
+        payload.get('channel[additional_attributes][provider]')
+      ).toBe('uazapi');
+      expect(
+        payload.get('channel[additional_attributes][uazapi_base_url]')
+      ).toBe('https://example.uazapi.com');
+      expect(
+        payload.get('channel[additional_attributes][uazapi_token]')
+      ).toBe('secret-token');
     });
   });
 

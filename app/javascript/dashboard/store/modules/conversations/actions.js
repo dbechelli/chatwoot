@@ -17,6 +17,7 @@ import {
   handleVoiceCallCreated,
   handleVoiceCallUpdated,
 } from 'dashboard/helper/voice';
+import { throwErrorMessage } from '../../utils/api';
 
 export const hasMessageFailedWithExternalError = pendingMessage => {
   // This helper is used to check if the message has failed with an external error.
@@ -362,7 +363,7 @@ const actions = {
       commit(types.ADD_MESSAGE, data);
       return data;
     } catch (error) {
-      throw new Error(error);
+      throwErrorMessage(error);
     }
   },
 
