@@ -109,6 +109,17 @@ RSpec.describe 'Canned Responses API', type: :request do
         expect(response).to have_http_status(:success)
         expect(canned_response.reload.short_code).to eq('B')
       end
+
+      it 'updates an existing canned response when additional_attributes is a JSON string' do
+        canned_response.update_column(:additional_attributes, '{"uazapi_remote_file_url":"https://files.example.com/manual.pdf"}')
+
+        patch "/api/v1/accounts/#{account.id}/canned_responses/#{canned_response.id}",
+              params: { canned_response: { short_code: 'legacy-json' } },
+              headers: agent.create_new_auth_token
+
+        expect(response).to have_http_status(:success)
+        expect(canned_response.reload.short_code).to eq('legacy-json')
+      end
     end
   end
 

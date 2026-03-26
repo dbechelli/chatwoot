@@ -1,6 +1,6 @@
-require 'base64'
-
 class CannedResponses::SyncToUazapiService
+  include Rails.application.routes.url_helpers
+
   def initialize(canned_response:)
     @canned_response = canned_response
   end
@@ -69,7 +69,7 @@ class CannedResponses::SyncToUazapiService
       {
         type: attachment_message_type(attachment),
         text: canned_response.content.presence,
-        file: Base64.strict_encode64(attachment.blob.download),
+        file: attachment_file_reference(attachment),
         doc_name: attachment.filename.to_s.presence
       }
     else
@@ -123,5 +123,10 @@ class CannedResponses::SyncToUazapiService
       response.dig('quickReply', 'id'),
       response.dig('message', 'id')
     ].compact.first
+  end
+
+  def attachment_file_reference(attachment)
+    ActiveStorage::Current.url_options = Rails.application.routes.default_url_options if ActiveStorage::Current.url_options.blank?
+    url_for(attachment)
   end
 end
