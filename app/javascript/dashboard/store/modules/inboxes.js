@@ -292,6 +292,7 @@ export const actions = {
       );
       commit(types.default.EDIT_INBOXES, response.data);
       commit(types.default.SET_INBOXES_UI_FLAG, { isUpdating: false });
+      return response.data;
     } catch (error) {
       commit(types.default.SET_INBOXES_UI_FLAG, { isUpdating: false });
       throwErrorMessage(error);

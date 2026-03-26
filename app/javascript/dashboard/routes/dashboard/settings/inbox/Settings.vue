@@ -532,7 +532,13 @@ export default {
         if (this.avatarFile) {
           payload.avatar = this.avatarFile;
         }
-        await this.$store.dispatch('inboxes/updateInbox', payload);
+        const updatedInbox = await this.$store.dispatch('inboxes/updateInbox', {
+          ...payload,
+          formData: !!this.avatarFile,
+        });
+        if (updatedInbox?.id === this.inbox.id) {
+          this.syncInboxData();
+        }
         useAlert(this.$t('INBOX_MGMT.EDIT.API.SUCCESS_MESSAGE'));
         this.showBusinessNameInput = false;
       } catch (error) {
