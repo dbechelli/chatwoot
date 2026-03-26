@@ -503,6 +503,29 @@ RSpec.describe 'Conversation Messages API', type: :request do
           expect(message.reload.status).to eq('failed')
           expect(message.reload.external_error).to eq('err123')
         end
+
+        it 'updates source_id for API inbox bridge callbacks' do
+          patch api_v1_account_conversation_message_url(
+            account_id: account.id,
+            conversation_id: conversation.display_id,
+            id: message.id
+          ), params: { source_id: 'uazapi-edited-message-id' }, headers: agent.create_new_auth_token, as: :json
+
+          expect(response).to have_http_status(:success)
+          expect(message.reload.source_id).to eq('uazapi-edited-message-id')
+        end
+
+        it 'updates status and source_id in the same request' do
+          patch api_v1_account_conversation_message_url(
+            account_id: account.id,
+            conversation_id: conversation.display_id,
+            id: message.id
+          ), params: { status: 'delivered', source_id: 'uazapi-message-id' }, headers: agent.create_new_auth_token, as: :json
+
+          expect(response).to have_http_status(:success)
+          expect(message.reload.status).to eq('delivered')
+          expect(message.reload.source_id).to eq('uazapi-message-id')
+        end
       end
     end
   end

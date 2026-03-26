@@ -193,6 +193,73 @@ describe WebhookListener do
     end
   end
 
+  describe '#message_updated' do
+    let(:event_name) { :'message.updated' }
+    let(:changed_attributes) do
+      {
+        'content' => ['Mensagem antiga', 'Mensagem editada'],
+        'content_attributes' => [{ 'is_edited' => false }, { 'is_edited' => true, 'previous_content' => 'Mensagem antiga' }]
+      }
+    end
+    let!(:message_updated_event) { Events::Base.new(event_name, Time.zone.now, message: message, changed_attributes: changed_attributes) }
+
+    context 'when webhook is configured' do
+      it 'includes changed_attributes in the webhook payload' do
+        webhook = create(:webhook, inbox: inbox, account: account, subscriptions: ['message_updated'])
+
+        expect(WebhookJob).to receive(:perform_later).with(
+          webhook.url,
+          message.webhook_data.merge(
+            event: 'message_updated',
+            changed_attributes: [
+              { 'content' => { previous_value: 'Mensagem antiga', current_value: 'Mensagem editada' } },
+              {
+                'content_attributes' => {
+                  previous_value: { 'is_edited' => false },
+                  current_value: { 'is_edited' => true, 'previous_content' => 'Mensagem antiga' }
+                }
+              }
+            ]
+          ),
+          :account_webhook,
+          secret: webhook.secret, delivery_id: instance_of(String)
+        ).once
+
+        listener.message_updated(message_updated_event)
+      end
+    end
+
+    context 'when inbox is an API Channel' do
+      it 'sends changed_attributes to the API inbox webhook' do
+        channel_api = create(:channel_api, account: account)
+        api_inbox = channel_api.inbox
+        api_conversation = create(:conversation, account: account, inbox: api_inbox, assignee: user)
+        api_message = create(:message, message_type: 'outgoing', account: account, inbox: api_inbox, conversation: api_conversation)
+        api_event = Events::Base.new(event_name, Time.zone.now, message: api_message, changed_attributes: changed_attributes)
+
+        expect(WebhookJob).to receive(:perform_later).with(
+          channel_api.webhook_url,
+          api_message.webhook_data.merge(
+            event: 'message_updated',
+            changed_attributes: [
+              { 'content' => { previous_value: 'Mensagem antiga', current_value: 'Mensagem editada' } },
+              {
+                'content_attributes' => {
+                  previous_value: { 'is_edited' => false },
+                  current_value: { 'is_edited' => true, 'previous_content' => 'Mensagem antiga' }
+                }
+              }
+            ]
+          ),
+          :api_inbox_webhook,
+          delivery_id: instance_of(String)
+        ).once
+
+        listener.message_updated(api_event)
+      end
+    end
+  end
+
   describe '#conversation_created' do
     let(:event_name) { :'conversation.created' }
 

@@ -80,7 +80,9 @@ class WebhookListener < BaseListener
 
     return unless message.webhook_sendable?
 
+    changed_attributes = extract_changed_attributes(event)
     payload = message.webhook_data.merge(event: __method__.to_s)
+    payload[:changed_attributes] = changed_attributes if changed_attributes.present?
     deliver_webhook_payloads(payload, inbox)
   end
 

@@ -19,8 +19,9 @@ class Api::V1::Accounts::Conversations::MessagesController < Api::V1::Accounts::
   end
 
   def update
-    Messages::StatusUpdateService.new(message, permitted_params[:status], permitted_params[:external_error]).perform
-    @message = message
+    update_message_status
+    update_api_inbox_message_metadata
+    @message = message.reload
   end
 
   def destroy
@@ -128,7 +129,7 @@ class Api::V1::Accounts::Conversations::MessagesController < Api::V1::Accounts::
   end
 
   def permitted_params
-    params.permit(:id, :target_language, :status, :external_error, :content)
+    params.permit(:id, :target_language, :status, :external_error, :content, :source_id)
   end
 
   def forward_params
@@ -137,6 +138,18 @@ class Api::V1::Accounts::Conversations::MessagesController < Api::V1::Accounts::
 
   def already_translated_content_available?
     message.translations.present? && message.translations[permitted_params[:target_language]].present?
+  end
+
+  def update_message_status
+    return if permitted_params[:status].blank?
+
+    Messages::StatusUpdateService.new(message, permitted_params[:status], permitted_params[:external_error]).perform
+  end
+
+  def update_api_inbox_message_metadata
+    return unless params.key?(:source_id)
+
+    message.update!(source_id: permitted_params[:source_id])
   end
 
   def delete_message_on_channel
