@@ -359,6 +359,40 @@ RSpec.describe 'Contacts API', type: :request do
         expect(response.body).not_to include(contact1.email)
       end
 
+      it 'matches the contact by phone number ignoring formatting characters' do
+        phone_contact = create(
+          :contact,
+          account: account,
+          name: 'Phone Contact',
+          phone_number: '+55 (11) 99888-7766'
+        )
+
+        get "/api/v1/accounts/#{account.id}/contacts/search",
+            params: { q: '5511998887766' },
+            headers: admin.create_new_auth_token,
+            as: :json
+
+        expect(response).to have_http_status(:success)
+        expect(response.body).to include(phone_contact.name)
+      end
+
+      it 'matches the contact by partial phone number with formatting in the query' do
+        phone_contact = create(
+          :contact,
+          account: account,
+          name: 'Partial Phone Contact',
+          phone_number: '+55 (11) 91234-5678'
+        )
+
+        get "/api/v1/accounts/#{account.id}/contacts/search",
+            params: { q: '(11) 91234' },
+            headers: admin.create_new_auth_token,
+            as: :json
+
+        expect(response).to have_http_status(:success)
+        expect(response.body).to include(phone_contact.name)
+      end
+
       it 'matches the resolved contact respecting the identifier character casing' do
         contact_normal = create(:contact, name: 'testcontact', account: account, identifier: 'testidentifer')
         contact_special = create(:contact, name: 'testcontact', account: account, identifier: 'TestIdentifier')

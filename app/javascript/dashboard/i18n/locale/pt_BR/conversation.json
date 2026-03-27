@@ -60,6 +60,13 @@
     "NO_CONTENT": "Nenhum conteúdo a ser exibido",
     "SHARED_ATTACHMENT": {
       "CONTACT": "{sender} compartilhou um contato",
+      "PIX": "{sender} enviou um botão PIX",
+      "PIX_TYPE": "Tipo de PIX",
+      "PIX_NAME": "Nome do recebedor",
+      "PIX_KEY": "Chave PIX",
+      "COPY_PIX_KEY": "Copiar chave PIX",
+      "PIX_KEY_COPIED": "Chave PIX copiada para a área de transferência",
+      "PIX_KEY_COPY_FAILED": "Não foi possível copiar a chave PIX",
       "LOCATION": "{sender} compartilhou uma localização",
       "FILE": "{sender} compartilhou um arquivo",
       "MEETING": "{sender} começou a reunião"
@@ -260,11 +267,17 @@
       "MORE_ACTIONS": {
         "SHARE_CONTACT": "Compartilhar contato",
         "SEND_PIX": "Enviar PIX",
-        "PIX_COMING_SOON": "O envio de PIX será adicionado na próxima etapa.",
         "CONTACT_MESSAGE_SUMMARY": "Contato compartilhado: {name}",
+        "PIX_MESSAGE_SUMMARY": "PIX enviado: {name}",
         "CONTACT_MODAL": {
           "TITLE": "Compartilhar contato",
           "DESCRIPTION": "Envie um cartão de contato do WhatsApp pela UAZAPI.",
+          "SEARCH_LABEL": "Localizar contato existente",
+          "SEARCH_PLACEHOLDER": "Pesquise por nome ou telefone",
+          "SEARCHING": "Buscando contatos...",
+          "NO_RESULTS": "Nenhum contato encontrado para esta busca.",
+          "NO_CONTACT_INFO": "Sem telefone ou e-mail disponível",
+          "USE_CONTACT": "Usar contato",
           "FULL_NAME": "Nome completo",
           "PHONE_NUMBER": "Telefone(s)",
           "PHONE_HELP": "Use o formato internacional. Você pode adicionar mais de um número separado por vírgulas.",
@@ -273,6 +286,23 @@
           "URL": "Site",
           "CANCEL": "Cancelar",
           "SUBMIT": "Compartilhar contato"
+        },
+        "PIX_MODAL": {
+          "TITLE": "Enviar PIX",
+          "DESCRIPTION": "Localize um contato profissional e envie o botão PIX dele pela UAZAPI.",
+          "SEARCH_LABEL": "Localizar profissional",
+          "SEARCH_PLACEHOLDER": "Pesquise por nome ou telefone",
+          "SEARCHING": "Buscando profissionais...",
+          "NO_RESULTS": "Nenhum contato profissional encontrado para esta busca.",
+          "NO_CONTACT_INFO": "Sem telefone ou e-mail disponível",
+          "USE_PROFESSIONAL": "Usar profissional",
+          "SELECTED_PROFESSIONAL": "Profissional selecionado",
+          "PIX_TYPE": "Tipo de PIX",
+          "PIX_NAME": "Nome do recebedor",
+          "PIX_KEY": "Chave PIX",
+          "MISSING_PIX_DATA": "Este profissional ainda não possui uma configuração PIX completa. Preencha pix_type e pix_key nos atributos customizados do contato.",
+          "CANCEL": "Cancelar",
+          "SUBMIT": "Enviar PIX"
         }
       },
       "QUOTED_REPLY": {

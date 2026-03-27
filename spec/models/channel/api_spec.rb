@@ -159,6 +159,46 @@ RSpec.describe Channel::Api do
 
       expect(channel_api.send_message(message)).to eq('uazapi-contact-1')
     end
+
+    it 'calls the UAZAPI send pix-button endpoint for pix messages' do
+      message = create(
+        :message,
+        inbox: channel_api.inbox,
+        account: channel_api.account,
+        conversation: conversation,
+        content: 'PIX sent: Dra. Maria',
+        content_attributes: {
+          uazapi_pix_button: {
+            professional_name: 'Dra. Maria',
+            professional_phone: '+55 11 97777-8888',
+            pix_type: 'EMAIL',
+            pix_key: 'dra.maria@clinica.com',
+            pix_name: 'Maria Clinica'
+          }
+        }
+      )
+
+      stub_request(:post, 'https://demo.uazapi.com/send/pix-button')
+        .with(
+          headers: {
+            'Accept' => 'application/json',
+            'Content-Type' => 'application/json',
+            'Token' => 'secret-token'
+          },
+          body: {
+            number: '5511999999999',
+            pixType: 'EMAIL',
+            pixKey: 'dra.maria@clinica.com',
+            pixName: 'Maria Clinica',
+            async: true,
+            track_source: 'chatwoot',
+            track_id: message.id.to_s
+          }
+        )
+        .to_return(status: 200, body: { id: 'uazapi-pix-1' }.to_json, headers: { 'Content-Type' => 'application/json' })
+
+      expect(channel_api.send_message(message)).to eq('uazapi-pix-1')
+    end
   end
 
   describe '#delete_message' do

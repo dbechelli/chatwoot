@@ -153,6 +153,38 @@ describe Messages::MessageBuilder do
       end
     end
 
+    context 'when content_attributes contains a UAZAPI pix button' do
+      let(:params) do
+        ActionController::Parameters.new({
+                                           content: 'PIX sent: Dra. Maria',
+                                           content_attributes: {
+                                             uazapi_pix_button: {
+                                               professional_name: 'Dra. Maria',
+                                               professional_phone: '+55 11 97777-8888',
+                                               pix_type: 'EMAIL',
+                                               pix_key: 'dra.maria@clinica.com',
+                                               pix_name: 'Maria Clinica'
+                                             }
+                                           }
+                                         })
+      end
+
+      it 'keeps the pix button data in message content attributes' do
+        message = message_builder
+
+        expect(message.attachments).to be_empty
+        expect(message.content_attributes).to include(
+          'uazapi_pix_button' => {
+            'professional_name' => 'Dra. Maria',
+            'professional_phone' => '+55 11 97777-8888',
+            'pix_type' => 'EMAIL',
+            'pix_key' => 'dra.maria@clinica.com',
+            'pix_name' => 'Maria Clinica'
+          }
+        )
+      end
+    end
+
     context 'when attachment messages' do
       let(:params) do
         ActionController::Parameters.new({

@@ -119,6 +119,9 @@ en:
       public_url_missing: Unable to generate a public URL for this attachment.
       contact_name_required: Contact name is required for sending a vCard.
       contact_phone_required: Contact phone number is required for sending a vCard.
+      pix_type_required: PIX key type is required for sending a PIX button.
+      pix_key_required: PIX key is required for sending a PIX button.
+      professional_name_required: Professional name is required for sending a PIX button.
       quick_reply_locked: This quick reply was created in WhatsApp and cannot be changed from Chatwoot.
     forward:
       no_contacts: 'No contacts provided'

@@ -37,6 +37,7 @@ class Channel::Api < ApplicationRecord
     validate_uazapi_configuration!
     validate_uazapi_message!(message)
 
+    return send_pix_message(message) if uazapi_pix_button?(message)
     return send_contact_message(message) if uazapi_contact_attachment?(message.attachments.first)
     return send_media_message(message) if message.attachments.present?
 
@@ -91,8 +92,9 @@ class Channel::Api < ApplicationRecord
   end
 
   def validate_uazapi_message!(message)
-    raise I18n.t('errors.uazapi.message_required') if message.outgoing_content.blank? && message.attachments.blank?
+    raise I18n.t('errors.uazapi.message_required') if message.outgoing_content.blank? && message.attachments.blank? && !uazapi_pix_button?(message)
     raise I18n.t('errors.uazapi.multiple_attachments_not_supported') if message.attachments.many?
+    return validate_uazapi_pix_button!(message) if uazapi_pix_button?(message)
 
     return if message.attachments.blank?
 
@@ -179,6 +181,22 @@ class Channel::Api < ApplicationRecord
     extract_message_id(response)
   end
 
+  def send_pix_message(message)
+    pix_data = message.content_attributes.to_h.with_indifferent_access[:uazapi_pix_button].to_h.with_indifferent_access
+
+    response = uazapi_client.send_pix_button(
+      recipient_id: uazapi_recipient_id(message),
+      pix_type: pix_data[:pix_type],
+      pix_key: pix_data[:pix_key],
+      pix_name: pix_data[:pix_name],
+      reply_id: message.in_reply_to_external_id,
+      track_id: message.id.to_s,
+      forward: uazapi_forwarded?(message)
+    )
+
+    extract_message_id(response)
+  end
+
   def uazapi_recipient_id(message)
     raw_recipient = [
       message.conversation.contact.phone_number,
@@ -201,6 +219,18 @@ class Channel::Api < ApplicationRecord
 
   def uazapi_contact_attachment?(attachment)
     attachment&.file_type == 'contact'
+  end
+
+  def uazapi_pix_button?(message)
+    message.content_attributes.to_h.with_indifferent_access[:uazapi_pix_button].present?
+  end
+
+  def validate_uazapi_pix_button!(message)
+    pix_data = message.content_attributes.to_h.with_indifferent_access[:uazapi_pix_button].to_h.with_indifferent_access
+
+    raise I18n.t('errors.uazapi.pix_type_required') if pix_data[:pix_type].to_s.strip.blank?
+    raise I18n.t('errors.uazapi.pix_key_required') if pix_data[:pix_key].to_s.strip.blank?
+    raise I18n.t('errors.uazapi.professional_name_required') if pix_data[:professional_name].to_s.strip.blank?
   end
 
   def validate_uazapi_contact_attachment!(attachment)

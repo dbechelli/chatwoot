@@ -64,6 +64,22 @@ module Uazapi
       post('/send/contact', payload.compact)
     end
 
+    def send_pix_button(recipient_id:, pix_type:, pix_key:, pix_name: nil, reply_id: nil, track_id: nil, forward: nil)
+      payload = {
+        number: recipient_id,
+        pixType: pix_type,
+        pixKey: pix_key,
+        pixName: pix_name,
+        replyid: reply_id,
+        async: true,
+        forward: forward,
+        track_source: 'chatwoot',
+        track_id: track_id
+      }
+
+      post('/send/pix-button', payload.compact)
+    end
+
     def delete_message(message_id:)
       post('/message/delete', { id: message_id })
     end

@@ -25,6 +25,7 @@ class Messages::MessageBuilder # rubocop:disable Metrics/ClassLength
     @items = @content_attributes&.dig(:items)
     @zapi_args = @content_attributes&.dig(:zapi_args)
     @uazapi_contact_card = ensure_indifferent_access(@content_attributes&.dig(:uazapi_contact_card))
+    @uazapi_pix_button = ensure_indifferent_access(@content_attributes&.dig(:uazapi_pix_button))
   end
 
   def perform
@@ -76,6 +77,7 @@ class Messages::MessageBuilder # rubocop:disable Metrics/ClassLength
   end
 
   def process_structured_attachments
+    validate_uazapi_pix_button!
     return if @uazapi_contact_card.blank?
     raise StandardError, I18n.t('errors.uazapi.multiple_attachments_not_supported') if @attachments.present?
 
@@ -100,6 +102,15 @@ class Messages::MessageBuilder # rubocop:disable Metrics/ClassLength
         url: @uazapi_contact_card[:url].to_s.strip.presence
       }.compact_blank
     )
+  end
+
+  def validate_uazapi_pix_button!
+    return if @uazapi_pix_button.blank?
+
+    raise StandardError, I18n.t('errors.uazapi.multiple_attachments_not_supported') if @attachments.present?
+    raise StandardError, I18n.t('errors.uazapi.pix_type_required') if @uazapi_pix_button[:pix_type].to_s.strip.blank?
+    raise StandardError, I18n.t('errors.uazapi.pix_key_required') if @uazapi_pix_button[:pix_key].to_s.strip.blank?
+    raise StandardError, I18n.t('errors.uazapi.professional_name_required') if @uazapi_pix_button[:professional_name].to_s.strip.blank?
   end
 
   def process_metadata(attachment)

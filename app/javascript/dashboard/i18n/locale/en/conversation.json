@@ -60,6 +60,13 @@
     "NO_CONTENT": "No content to display",
     "SHARED_ATTACHMENT": {
       "CONTACT": "{sender} has shared a contact",
+      "PIX": "{sender} has sent a PIX button",
+      "PIX_TYPE": "PIX type",
+      "PIX_NAME": "Receiver name",
+      "PIX_KEY": "PIX key",
+      "COPY_PIX_KEY": "Copy PIX key",
+      "PIX_KEY_COPIED": "PIX key copied to clipboard",
+      "PIX_KEY_COPY_FAILED": "Unable to copy the PIX key",
       "LOCATION": "{sender} has shared a location",
       "FILE": "{sender} has shared a file",
       "MEETING": "{sender} has started a meeting"
@@ -260,11 +267,17 @@
       "MORE_ACTIONS": {
         "SHARE_CONTACT": "Share contact",
         "SEND_PIX": "Send PIX",
-        "PIX_COMING_SOON": "PIX sending will be added next.",
         "CONTACT_MESSAGE_SUMMARY": "Shared contact: {name}",
+        "PIX_MESSAGE_SUMMARY": "PIX sent: {name}",
         "CONTACT_MODAL": {
           "TITLE": "Share contact",
           "DESCRIPTION": "Send a WhatsApp contact card through UAZAPI.",
+          "SEARCH_LABEL": "Find existing contact",
+          "SEARCH_PLACEHOLDER": "Search by name or phone",
+          "SEARCHING": "Searching contacts...",
+          "NO_RESULTS": "No contacts found for this search.",
+          "NO_CONTACT_INFO": "No phone or email available",
+          "USE_CONTACT": "Use contact",
           "FULL_NAME": "Full name",
           "PHONE_NUMBER": "Phone number(s)",
           "PHONE_HELP": "Use international format. You can add more than one number separated by commas.",
@@ -273,6 +286,23 @@
           "URL": "Website",
           "CANCEL": "Cancel",
           "SUBMIT": "Share contact"
+        },
+        "PIX_MODAL": {
+          "TITLE": "Send PIX",
+          "DESCRIPTION": "Find a professional contact and send their PIX button through UAZAPI.",
+          "SEARCH_LABEL": "Find professional",
+          "SEARCH_PLACEHOLDER": "Search by name or phone",
+          "SEARCHING": "Searching professionals...",
+          "NO_RESULTS": "No professional contact found for this search.",
+          "NO_CONTACT_INFO": "No phone or email available",
+          "USE_PROFESSIONAL": "Use professional",
+          "SELECTED_PROFESSIONAL": "Selected professional",
+          "PIX_TYPE": "PIX type",
+          "PIX_NAME": "Receiver name",
+          "PIX_KEY": "PIX key",
+          "MISSING_PIX_DATA": "This professional does not have a complete PIX configuration yet. Fill in pix_type and pix_key in the contact custom attributes.",
+          "CANCEL": "Cancel",
+          "SUBMIT": "Send PIX"
         }
       },
       "QUOTED_REPLY": {
