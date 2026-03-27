@@ -4,6 +4,7 @@ import { useStore } from 'dashboard/composables/store';
 import { useI18n } from 'vue-i18n';
 import { useAlert } from 'dashboard/composables';
 import Modal from 'dashboard/components/Modal.vue';
+import Button from 'dashboard/components-next/button/Button.vue';
 import TagMultiSelectComboBox from 'dashboard/components-next/combobox/TagMultiSelectComboBox.vue';
 import { uploadFile } from 'dashboard/helper/uploadHelper';
 
@@ -230,10 +231,10 @@ const selectConversation = (conv) => {
 
 const getPriorityClasses = (p) => {
   const map = {
-    low: 'bg-slate-100 text-slate-600 border-slate-200',
-    medium: 'bg-woot-50 text-woot-600 border-woot-200',
-    high: 'bg-orange-50 text-orange-600 border-orange-200',
-    urgent: 'bg-red-50 text-red-600 border-red-200',
+    low: 'border-n-weak bg-n-slate-2 text-n-slate-11',
+    medium: 'border-n-brand/20 bg-n-brand/10 text-n-blue-11',
+    high: 'border-n-amber-6/40 bg-n-amber-3 text-n-amber-11',
+    urgent: 'border-n-ruby-6/40 bg-n-ruby-3 text-n-ruby-11',
   };
   return map[p];
 };
@@ -375,62 +376,56 @@ const openAttachment = (url) => {
 
 <template>
   <Modal :show="show" :on-close="() => emit('close')" size="lg" :show-close-button="false">
-    <div class="flex flex-col h-full bg-white rounded-md overflow-hidden max-h-[85vh]">
-      <!-- Header -->
-      <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50">
+    <div class="flex h-full max-h-[85vh] flex-col overflow-hidden rounded-2xl bg-n-surface-1">
+      <div class="flex items-center justify-between border-b border-n-weak bg-n-slate-2/60 px-6 py-4">
         <div class="flex items-center gap-3">
-          <div class="h-8 w-8 rounded-full bg-white border border-slate-200 flex items-center justify-center text-woot-600 shadow-sm">
+          <div class="flex h-8 w-8 items-center justify-center rounded-full border border-n-weak bg-n-surface-1 text-n-blue-11">
             <i class="i-lucide-trello text-lg" />
           </div>
           <div>
-            <h2 class="text-base font-bold text-slate-800">
+            <h2 class="text-base font-medium text-n-slate-12">
               {{ form.conversation_id ? $t('KANBAN.MODAL.EDIT_ITEM') : $t('KANBAN.MODAL.NEW_ITEM') }}
             </h2>
-            <p class="text-xs text-slate-500 font-medium">
+            <p class="text-xs font-medium text-n-slate-10">
               {{ form.conversation_id ? `#${form.conversation_id}` : $t('KANBAN.MODAL.CREATING_CARD') }}
             </p>
           </div>
         </div>
         <button 
           @click="emit('close')"
-          class="p-2 hover:bg-slate-200 rounded-lg text-slate-400 hover:text-slate-600 transition-colors"
+          class="rounded-lg p-2 text-n-slate-10 transition-colors hover:bg-n-slate-3 hover:text-n-slate-12"
         >
           <i class="i-lucide-x text-lg" />
         </button>
       </div>
 
-      <!-- Body -->
-      <div class="flex-1 overflow-y-auto p-6 space-y-6">
-        <!-- Title -->
+      <div class="flex-1 space-y-6 overflow-y-auto p-6">
         <div class="space-y-1.5">
-          <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">{{ $t('KANBAN.MODAL.TITLE') }}</label>
+          <label class="text-xs font-medium uppercase tracking-wide text-n-slate-10">{{ $t('KANBAN.MODAL.TITLE') }}</label>
           <input
             v-model="form.title"
             type="text"
             :placeholder="$t('KANBAN.MODAL.TITLE_PLACEHOLDER')"
-            class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm font-medium focus:outline-none focus:ring-2 focus:ring-woot-500/20 focus:border-woot-500 transition-all"
+            class="w-full rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2.5 text-sm font-medium text-n-slate-12 outline-none transition focus:border-n-brand"
           />
         </div>
 
-        <!-- Description -->
         <div class="space-y-1.5">
-          <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">{{ $t('KANBAN.MODAL.DESCRIPTION') }}</label>
+          <label class="text-xs font-medium uppercase tracking-wide text-n-slate-10">{{ $t('KANBAN.MODAL.DESCRIPTION') }}</label>
           <textarea
             v-model="form.description"
             rows="3"
             :placeholder="$t('KANBAN.MODAL.DESCRIPTION_PLACEHOLDER')"
-            class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-woot-500/20 focus:border-woot-500 transition-all resize-none"
+            class="w-full resize-none rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2.5 text-sm text-n-slate-11 outline-none transition focus:border-n-brand"
           />
         </div>
 
-        <!-- Agent & Labels -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <!-- Agent -->
           <div class="space-y-1.5">
-            <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">{{ $t('KANBAN.MODAL.ASSIGNEE') }}</label>
+            <label class="text-xs font-medium uppercase tracking-wide text-n-slate-10">{{ $t('KANBAN.MODAL.ASSIGNEE') }}</label>
             <select
               v-model="form.assignee_id"
-              class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-woot-500/20 focus:border-woot-500 transition-all"
+              class="w-full rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2.5 text-sm text-n-slate-12 outline-none transition focus:border-n-brand"
             >
               <option :value="null">{{ $t('KANBAN.MODAL.NO_ASSIGNEE') }}</option>
               <option v-for="agent in agents" :key="agent.id" :value="agent.id">
@@ -439,9 +434,8 @@ const openAttachment = (url) => {
             </select>
           </div>
           
-           <!-- Labels -->
            <div class="space-y-1.5">
-            <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Etiquetas</label>
+            <label class="text-xs font-medium uppercase tracking-wide text-n-slate-10">Etiquetas</label>
             <TagMultiSelectComboBox
               v-model="form.labels"
               :options="allLabels"
@@ -451,36 +445,32 @@ const openAttachment = (url) => {
           </div>
         </div>
 
-        <!-- Notes -->
         <div class="space-y-1.5">
-          <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">{{ $t('KANBAN.MODAL.NOTES') }}</label>
+          <label class="text-xs font-medium uppercase tracking-wide text-n-slate-10">{{ $t('KANBAN.MODAL.NOTES') }}</label>
           <textarea
             v-model="form.notes"
             rows="3"
             :placeholder="$t('KANBAN.MODAL.NOTES_PLACEHOLDER')"
-            class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-woot-500/20 focus:border-woot-500 transition-all resize-none"
+            class="w-full resize-none rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2.5 text-sm text-n-slate-11 outline-none transition focus:border-n-brand"
           />
         </div>
 
-        <!-- Custom Attributes -->
-        <div v-if="customAttributes.length > 0" class="space-y-3 pt-2 border-t border-slate-100">
+        <div v-if="customAttributes.length > 0" class="space-y-3 border-t border-n-weak pt-2">
           <div v-for="attr in customAttributes" :key="attr.id" class="space-y-1.5">
-            <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">{{ attr.attribute_display_name }}</label>
+            <label class="text-xs font-medium uppercase tracking-wide text-n-slate-10">{{ attr.attribute_display_name }}</label>
             
-            <!-- Text / Link / Number / Date -->
             <input
               v-if="['text', 'link', 'number', 'date'].includes(attr.attribute_display_type)"
               v-model="form.custom_attributes[attr.attribute_key]"
               :type="attr.attribute_display_type === 'link' ? 'url' : attr.attribute_display_type"
               :placeholder="attr.attribute_display_name"
-              class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-woot-500/20 focus:border-woot-500 transition-all"
+              class="w-full rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2.5 text-sm text-n-slate-12 outline-none transition focus:border-n-brand"
             />
 
-            <!-- List -->
             <select
               v-else-if="attr.attribute_display_type === 'list'"
               v-model="form.custom_attributes[attr.attribute_key]"
-              class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-woot-500/20 focus:border-woot-500 transition-all"
+              class="w-full rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2.5 text-sm text-n-slate-12 outline-none transition focus:border-n-brand"
             >
               <option value="">Selecione...</option>
               <option v-for="opt in attr.attribute_values" :key="opt" :value="opt">
@@ -488,29 +478,27 @@ const openAttachment = (url) => {
               </option>
             </select>
 
-            <!-- Checkbox -->
-            <label v-else-if="attr.attribute_display_type === 'checkbox'" class="flex items-center gap-2 cursor-pointer">
+            <label v-else-if="attr.attribute_display_type === 'checkbox'" class="flex cursor-pointer items-center gap-2">
               <input 
                 type="checkbox" 
                 v-model="form.custom_attributes[attr.attribute_key]" 
-                class="rounded border-slate-300 text-woot-600 focus:ring-woot-500 h-4 w-4" 
+                class="h-4 w-4 rounded border-n-strong text-n-brand focus:ring-n-brand" 
               />
-              <span class="text-sm text-slate-600">{{ attr.attribute_display_name }}</span>
+              <span class="text-sm text-n-slate-11">{{ attr.attribute_display_name }}</span>
             </label>
           </div>
         </div>
 
-        <!-- Attachments & History -->
-        <div class="space-y-3 pt-4 border-t border-slate-100">
-           <label class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
-            <i class="i-lucide-paperclip text-slate-400" />
+        <div class="space-y-3 border-t border-n-weak pt-4">
+           <label class="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-n-slate-10">
+            <i class="i-lucide-paperclip text-n-slate-10" />
             Anexar Arquivos
           </label>
           <div class="space-y-2">
              <input type="file" ref="fileInputRef" @change="handleAttachmentUpload" class="hidden" />
              <button 
                @click="triggerFileUpload" 
-               class="flex items-center gap-2 px-3 py-2 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg text-sm text-slate-600 transition-colors w-full justify-center border-dashed"
+               class="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-n-weak bg-n-slate-2 px-3 py-2 text-sm text-n-slate-11 transition-colors hover:bg-n-slate-3"
                :disabled="isUploading"
              >
                <i v-if="isUploading" class="i-lucide-loader-2 animate-spin" />
@@ -518,27 +506,24 @@ const openAttachment = (url) => {
                {{ isUploading ? 'Enviando...' : 'Clique para enviar arquivo' }}
              </button>
 
-             <div v-if="form.attachments.length > 0" class="space-y-2 mt-2">
-                <div v-for="(att, idx) in form.attachments" :key="idx" class="flex items-center gap-3 p-2 bg-slate-50 border border-slate-200 rounded-lg group">
-                   <!-- Thumbnail / Icon -->
+             <div v-if="form.attachments.length > 0" class="mt-2 space-y-2">
+                <div v-for="(att, idx) in form.attachments" :key="idx" class="group flex items-center gap-3 rounded-xl border border-n-weak bg-n-slate-2/60 p-2">
                    <div 
-                     class="h-10 w-10 rounded bg-slate-200 flex items-center justify-center overflow-hidden flex-shrink-0 cursor-pointer"
+                     class="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-lg bg-n-slate-3"
                      @click="att.url ? openAttachment(att.url) : null"
                    >
                      <img v-if="att.url && (att.type?.startsWith('image') || att.url?.match(/\.(jpeg|jpg|gif|png)$/i))" :src="att.url" class="h-full w-full object-cover" />
-                     <i v-else class="i-lucide-file-text text-slate-500" />
+                     <i v-else class="i-lucide-file-text text-n-slate-10" />
                    </div>
 
-                   <!-- Info -->
                    <div class="flex-1 min-w-0" @click="att.url ? openAttachment(att.url) : null">
-                     <div class="text-xs font-medium text-slate-700 truncate cursor-pointer hover:underline">
+                     <div class="cursor-pointer truncate text-xs font-medium text-n-slate-12 hover:underline">
                        {{ att.name || (typeof att === 'object' ? `Anexo #${att.id}` : `Anexo (Legado)`) }}
                      </div>
-                     <div class="text-[10px] text-slate-500 truncate" v-if="att.id">ID: {{ att.id }}</div>
+                     <div class="truncate text-[10px] text-n-slate-10" v-if="att.id">ID: {{ att.id }}</div>
                    </div>
 
-                   <!-- Actions -->
-                   <button @click="removeAttachment(idx)" class="p-1.5 hover:bg-red-50 text-slate-400 hover:text-red-600 rounded transition-colors">
+                   <button @click="removeAttachment(idx)" class="rounded p-1.5 text-n-slate-10 transition-colors hover:bg-n-ruby-3 hover:text-n-ruby-11">
                      <i class="i-lucide-trash-2 text-xs" />
                    </button>
                 </div>
@@ -546,19 +531,18 @@ const openAttachment = (url) => {
           </div>
         </div>
 
-        <div class="pt-4 border-t border-slate-100">
-           <button class="flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-slate-700">
+        <div class="border-t border-n-weak pt-4">
+           <button class="flex items-center gap-2 text-sm font-medium text-n-slate-11 hover:text-n-slate-12">
              <i class="i-lucide-history" />
              Ver Histórico da Tarefa (Em breve)
            </button>
         </div>
 
-        <!-- Stage Selection -->
         <div class="space-y-1.5">
-          <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">{{ $t('KANBAN.MODAL.STAGE') || 'Estágio' }}</label>
+          <label class="text-xs font-medium uppercase tracking-wide text-n-slate-10">{{ $t('KANBAN.MODAL.STAGE') || 'Estágio' }}</label>
           <select
             v-model="form.stage_id"
-            class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-woot-500/20 focus:border-woot-500 transition-all"
+            class="w-full rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2.5 text-sm text-n-slate-12 outline-none transition focus:border-n-brand"
           >
             <option v-for="stage in board.stages" :key="stage.id" :value="stage.id">
               {{ stage.name }}
@@ -566,19 +550,17 @@ const openAttachment = (url) => {
           </select>
         </div>
 
-        <!-- Value & Priority Row -->
         <div class="grid grid-cols-2 gap-6">
-          <!-- Value -->
           <div class="space-y-1.5">
             <div class="flex items-center justify-between">
-              <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">{{ $t('KANBAN.MODAL.DEAL_VALUE') }}</label>
-              <label class="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" v-model="form.hasValue" class="rounded border-slate-300 text-woot-600 focus:ring-woot-500 h-3 w-3" />
-                <span class="text-[10px] font-bold text-slate-500 uppercase">{{ $t('KANBAN.MODAL.ACTIVATE') }}</span>
+              <label class="text-xs font-medium uppercase tracking-wide text-n-slate-10">{{ $t('KANBAN.MODAL.DEAL_VALUE') }}</label>
+              <label class="flex cursor-pointer items-center gap-2">
+                <input type="checkbox" v-model="form.hasValue" class="h-3 w-3 rounded border-n-strong text-n-brand focus:ring-n-brand" />
+                <span class="text-[10px] font-medium uppercase text-n-slate-10">{{ $t('KANBAN.MODAL.ACTIVATE') }}</span>
               </label>
             </div>
-            <div class="flex rounded-lg border border-slate-300 overflow-hidden focus-within:ring-2 focus-within:ring-woot-500/20 focus-within:border-woot-500 transition-all bg-white">
-              <div class="bg-slate-50 px-3 py-2.5 border-r border-slate-200 text-slate-500 text-sm font-bold flex items-center">
+            <div class="flex overflow-hidden rounded-xl border border-n-weak bg-n-surface-1 transition focus-within:border-n-brand">
+              <div class="flex items-center border-r border-n-weak bg-n-slate-2 px-3 py-2.5 text-sm font-medium text-n-slate-10">
                 R$
               </div>
               <input
@@ -588,21 +570,20 @@ const openAttachment = (url) => {
                 min="0"
                 placeholder="0.00"
                 :disabled="!form.hasValue"
-                class="flex-1 px-3 py-2.5 bg-transparent text-sm font-bold text-slate-800 focus:outline-none disabled:bg-slate-50 disabled:text-slate-400 disabled:cursor-not-allowed"
+                class="flex-1 bg-transparent px-3 py-2.5 text-sm font-medium text-n-slate-12 outline-none disabled:bg-n-slate-2 disabled:text-n-slate-10 disabled:cursor-not-allowed"
               />
             </div>
           </div>
 
-          <!-- Priority -->
           <div class="space-y-1.5">
-            <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">{{ $t('KANBAN.MODAL.PRIORITY') }}</label>
+            <label class="text-xs font-medium uppercase tracking-wide text-n-slate-10">{{ $t('KANBAN.MODAL.PRIORITY') }}</label>
             <div class="flex gap-2">
               <button
                 v-for="p in ['low', 'medium', 'high', 'urgent']"
                 :key="p"
                 @click="form.priority = p"
-                class="flex-1 py-2 rounded-lg text-xs font-bold border transition-all capitalize"
-                :class="form.priority === p ? getPriorityClasses(p) : 'border-slate-200 text-slate-500 hover:bg-slate-50'"
+                class="flex-1 rounded-lg border py-2 text-xs font-medium capitalize transition-all"
+                :class="form.priority === p ? getPriorityClasses(p) : 'border-n-weak text-n-slate-11 hover:bg-n-slate-2'"
               >
                 {{ $t(`KANBAN.MODAL.PRIORITY_LABEL.${p.toUpperCase()}`) }}
               </button>
@@ -610,39 +591,35 @@ const openAttachment = (url) => {
           </div>
         </div>
 
-        <!-- Dates Row -->
         <div class="grid grid-cols-2 gap-6 pt-2">
-          <!-- Start Date -->
           <div class="space-y-1.5">
-            <label class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
-              <i class="i-lucide-calendar-clock text-slate-400" />
+            <label class="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-n-slate-10">
+              <i class="i-lucide-calendar-clock text-n-slate-10" />
               {{ $t('KANBAN.MODAL.START_DATE') }}
             </label>
             <input
               v-model="form.start_date"
               type="date"
-              class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-woot-500/20 focus:border-woot-500 transition-all"
+              class="w-full rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2.5 text-sm text-n-slate-12 outline-none transition focus:border-n-brand"
             />
           </div>
 
-          <!-- Due Date -->
           <div class="space-y-1.5">
-            <label class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
-              <i class="i-lucide-calendar-x text-slate-400" />
+            <label class="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-n-slate-10">
+              <i class="i-lucide-calendar-x text-n-slate-10" />
               {{ $t('KANBAN.MODAL.DUE_DATE') }}
             </label>
             <input
               v-model="form.due_date"
               type="date"
-              class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-woot-500/20 focus:border-woot-500 transition-all"
+              class="w-full rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2.5 text-sm text-n-slate-12 outline-none transition focus:border-n-brand"
             />
           </div>
         </div>
 
-        <!-- Scheduled Message Section -->
-        <div class="space-y-3 pt-4 border-t border-slate-100">
-           <label class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
-            <i class="i-lucide-message-square-clock text-slate-400" />
+        <div class="space-y-3 border-t border-n-weak pt-4">
+           <label class="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-n-slate-10">
+            <i class="i-lucide-message-square-clock text-n-slate-10" />
             Agendar Mensagem Automática
           </label>
           <div class="grid grid-cols-1 gap-4">
@@ -651,145 +628,132 @@ const openAttachment = (url) => {
                 v-model="form.scheduled_message"
                 rows="2"
                 placeholder="Digite a mensagem para enviar automaticamente..."
-                class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-600 focus:outline-none focus:ring-2 focus:ring-woot-500/20 focus:border-woot-500 transition-all resize-none"
+                class="w-full resize-none rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2.5 text-sm text-n-slate-11 outline-none transition focus:border-n-brand"
               />
             </div>
              <div class="space-y-1.5">
-               <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">Data e Hora do Envio</label>
+               <label class="text-xs font-medium uppercase tracking-wide text-n-slate-10">Data e Hora do Envio</label>
                <input
                 v-model="form.scheduled_at"
                 type="datetime-local"
-                class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-woot-500/20 focus:border-woot-500 transition-all"
+                class="w-full rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2.5 text-sm text-n-slate-12 outline-none transition focus:border-n-brand"
               />
             </div>
           </div>
         </div>
 
-        <!-- Checklist Section -->
-        <div class="space-y-3 pt-4 border-t border-slate-100">
+        <div class="space-y-3 border-t border-n-weak pt-4">
           <div class="flex items-center justify-between">
-            <label class="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
-              <i class="i-lucide-check-square text-slate-400" />
+            <label class="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-n-slate-10">
+              <i class="i-lucide-check-square text-n-slate-10" />
               {{ $t('KANBAN.MODAL.CHECKLIST') }}
             </label>
-            <span class="text-xs font-medium text-slate-500">
+            <span class="text-xs font-medium text-n-slate-10">
               {{ checklistProgress }}
             </span>
           </div>
 
-          <!-- Progress Bar -->
-          <div class="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden">
+          <div class="h-1.5 w-full overflow-hidden rounded-full bg-n-slate-3">
             <div 
-              class="h-full bg-woot-500 transition-all duration-500 ease-out"
+              class="h-full bg-n-brand transition-all duration-500 ease-out"
               :style="{ width: checklistPercentage + '%' }"
             />
           </div>
 
-          <!-- Add Item -->
           <div class="flex gap-2">
             <input
               v-model="newChecklistItem"
               @keydown.enter.prevent="addChecklistItem"
               type="text"
               :placeholder="$t('KANBAN.MODAL.ADD_CHECKLIST_ITEM')"
-              class="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-md text-sm focus:outline-none focus:border-woot-500"
+              class="flex-1 rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2 text-sm text-n-slate-12 outline-none transition focus:border-n-brand"
             />
-            <button 
-              @click="addChecklistItem"
-              :disabled="!newChecklistItem"
-              class="px-4 py-2 bg-slate-100 text-slate-600 rounded-md text-sm font-bold hover:bg-slate-200 disabled:opacity-50"
-            >
-              {{ $t('KANBAN.MODAL.ADD') }}
-            </button>
+            <Button @click="addChecklistItem" :disabled="!newChecklistItem" slate faded :label="$t('KANBAN.MODAL.ADD')" />
           </div>
 
-          <!-- List -->
           <div class="space-y-1">
             <div 
               v-for="(item, index) in form.checklist" 
               :key="index"
-              class="group flex items-center gap-3 p-2 hover:bg-slate-50 rounded-md transition-colors"
+              class="group flex items-center gap-3 rounded-xl p-2 transition-colors hover:bg-n-slate-2/60"
             >
               <input 
                 type="checkbox" 
                 v-model="item.done"
-                class="rounded border-slate-300 text-woot-600 focus:ring-woot-500 h-4 w-4 cursor-pointer"
+                class="h-4 w-4 cursor-pointer rounded border-n-strong text-n-brand focus:ring-n-brand"
               />
               <input
                 v-model="item.text"
-                class="flex-1 bg-transparent border-none p-0 text-sm text-slate-700 focus:ring-0"
-                :class="{ 'line-through text-slate-400': item.done }"
+                class="flex-1 border-none bg-transparent p-0 text-sm text-n-slate-12 focus:ring-0"
+                :class="{ 'line-through text-n-slate-10': item.done }"
               />
               <button 
                 @click="removeChecklistItem(index)"
-                class="opacity-0 group-hover:opacity-100 p-1 text-slate-400 hover:text-red-500 transition-all"
+                class="p-1 text-n-slate-10 opacity-0 transition-all group-hover:opacity-100 hover:text-n-ruby-11"
               >
                 <i class="i-lucide-trash-2 text-xs" />
               </button>
             </div>
-            <div v-if="form.checklist.length === 0" class="text-center py-4 text-sm text-slate-400 italic">
+            <div v-if="form.checklist.length === 0" class="py-4 text-center text-sm italic text-n-slate-10">
               {{ $t('KANBAN.MODAL.NO_CHECKLIST_ITEMS') }}
             </div>
           </div>
         </div>
 
-        <!-- Conversation Link  hidden-->
-        <div class="space-y-1.5 pt-4 border-t border-slate-100">
-          <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">{{ $t('KANBAN.MODAL.LINK_CONVERSATION') }}</label>
+        <div class="space-y-1.5 border-t border-n-weak pt-4">
+          <label class="text-xs font-medium uppercase tracking-wide text-n-slate-10">{{ $t('KANBAN.MODAL.LINK_CONVERSATION') }}</label>
           
           <div v-if="!form.conversation_id" class="relative">
-            <i class="i-lucide-search absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <i class="i-lucide-search absolute left-3 top-1/2 -translate-y-1/2 text-n-slate-10" />
             <input
               type="text"
               :placeholder="$t('KANBAN.MODAL.SEARCH_PLACEHOLDER')"
-              class="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-woot-500/20 focus:border-woot-500"
+              class="w-full rounded-xl border border-n-weak bg-n-surface-1 py-2.5 pl-9 pr-3 text-sm text-n-slate-12 outline-none transition focus:border-n-brand"
               @input="e => searchConversations(e.target.value)"
             />
             
-            <!-- Search Results -->
-            <div v-if="searchResults.length > 0" class="absolute z-50 w-full mt-1 bg-white border border-slate-200 rounded-lg shadow-xl max-h-60 overflow-y-auto">
+            <div v-if="searchResults.length > 0" class="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-xl border border-n-weak bg-n-surface-1 shadow-xl">
               <button
                 v-for="conv in searchResults"
                 :key="conv.id"
                 @click="selectConversation(conv)"
-                class="w-full text-left px-4 py-2 hover:bg-slate-50 flex items-center justify-between group"
+                class="group flex w-full items-center justify-between px-4 py-2 text-left hover:bg-n-slate-2"
               >
                 <div>
-                  <div class="font-medium text-slate-800 text-sm">
+                  <div class="text-sm font-medium text-n-slate-12">
                     #{{ conv.id }} - {{ conv.meta?.sender?.name || conv.contact?.name || 'Sem nome' }}
                   </div>
-                  <div class="text-xs text-slate-500">{{ conv.messages?.[0]?.content?.substring(0, 40) }}...</div>
+                  <div class="text-xs text-n-slate-10">{{ conv.messages?.[0]?.content?.substring(0, 40) }}...</div>
                 </div>
-                <i class="i-lucide-link text-slate-300 group-hover:text-woot-500" />
+                <i class="i-lucide-link text-n-slate-9 group-hover:text-n-blue-11" />
               </button>
             </div>
           </div>
 
-          <div v-else class="flex items-center justify-between p-3 bg-woot-50 border border-woot-100 rounded-lg">
+          <div v-else class="flex items-center justify-between rounded-xl border border-n-brand/20 bg-n-brand/5 p-3">
             <div class="flex items-center gap-3">
-              <div class="h-8 w-8 rounded-full bg-woot-100 flex items-center justify-center text-woot-600 font-bold text-xs">
+              <div class="flex h-8 w-8 items-center justify-center rounded-full bg-n-brand/10 text-xs font-medium text-n-blue-11">
                 #{{ form.conversation_id }}
               </div>
               <div>
-                <div class="text-sm font-bold text-slate-800">{{ $t('KANBAN.MODAL.LINKED_CONVERSATION') }}</div>
-                <div class="text-xs text-slate-500">Clique em salvar para confirmar as alterações</div>
+                <div class="text-sm font-medium text-n-slate-12">{{ $t('KANBAN.MODAL.LINKED_CONVERSATION') }}</div>
+                <div class="text-xs text-n-slate-10">Clique em salvar para confirmar as alterações</div>
               </div>
             </div>
             <button 
               @click="form.conversation_id = null"
-              class="text-xs font-bold text-red-500 hover:text-red-600 hover:underline"
+              class="text-xs font-medium text-n-ruby-11 hover:underline"
             >
               {{ $t('KANBAN.MODAL.UNLINK') }}
             </button>
           </div>
         </div>
 
-        <!-- Agent -->
         <div class="space-y-1.5">
-          <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">{{ $t('KANBAN.MODAL.ASSIGNEE') }}</label>
+          <label class="text-xs font-medium uppercase tracking-wide text-n-slate-10">{{ $t('KANBAN.MODAL.ASSIGNEE') }}</label>
           <select
             v-model="form.assignee_id"
-            class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-woot-500/20 focus:border-woot-500"
+            class="w-full rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2.5 text-sm text-n-slate-12 outline-none transition focus:border-n-brand"
           >
             <option :value="null">{{ $t('KANBAN.MODAL.NO_ASSIGNEE') }}</option>
             <option v-for="agent in agents" :key="agent.id" :value="agent.id">
@@ -799,43 +763,37 @@ const openAttachment = (url) => {
         </div>
       </div>
 
-      <!-- Footer -->
-      <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex justify-between items-center gap-3">
+      <div class="flex items-center justify-between gap-3 border-t border-n-weak bg-n-slate-2/60 px-6 py-4">
         <div class="flex items-center gap-2">
-          <button
+          <Button
             v-if="wonStage && form.stage_id !== wonStage.id"
             @click="moveToStage(wonStage.id)"
+            teal
+            faded
+            icon="i-lucide-trophy"
+            :label="'Ganho'"
             :title="wonStage.name"
-            class="px-3 py-2 text-xs font-bold text-green-700 bg-green-100 hover:bg-green-200 border border-green-200 rounded-lg transition-colors flex items-center gap-1.5"
-          >
-            <i class="i-lucide-trophy text-sm" />
-            <span class="hidden sm:inline">Ganho</span>
-          </button>
-          <button
+          />
+          <Button
             v-if="lostStage && form.stage_id !== lostStage.id"
             @click="moveToStage(lostStage.id)"
+            ruby
+            faded
+            icon="i-lucide-thumbs-down"
+            :label="'Perdido'"
             :title="lostStage.name"
-            class="px-3 py-2 text-xs font-bold text-red-700 bg-red-100 hover:bg-red-200 border border-red-200 rounded-lg transition-colors flex items-center gap-1.5"
-          >
-            <i class="i-lucide-thumbs-down text-sm" />
-            <span class="hidden sm:inline">Perdido</span>
-          </button>
+          />
         </div>
         <div class="flex gap-3">
-          <button
-            @click="emit('close')"
-            class="px-4 py-2 text-sm font-bold text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 rounded-lg transition-colors shadow-sm"
-          >
-            {{ $t('KANBAN.MODAL.CANCEL') }}
-          </button>
-          <button
+          <Button @click="emit('close')" slate outline :label="$t('KANBAN.MODAL.CANCEL')" />
+          <Button
             @click="handleSave"
             :disabled="isLoading"
-            class="px-6 py-2 text-sm font-bold text-white bg-woot-600 hover:bg-woot-700 rounded-lg shadow-sm shadow-woot-200 transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center gap-2"
-          >
-            <i v-if="isLoading" class="i-lucide-loader-2 animate-spin" />
-            {{ isLoading ? $t('KANBAN.MODAL.SAVING') : $t('KANBAN.MODAL.SAVE') }}
-          </button>
+            blue
+            solid
+            :is-loading="isLoading"
+            :label="isLoading ? $t('KANBAN.MODAL.SAVING') : $t('KANBAN.MODAL.SAVE')"
+          />
         </div>
       </div>
     </div>

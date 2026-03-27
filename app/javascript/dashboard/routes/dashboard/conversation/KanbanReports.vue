@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from 'vue';
 import { useStore } from 'vuex';
 import { useI18n } from 'vue-i18n';
+import Button from 'dashboard/components-next/button/Button.vue';
 
 const store = useStore();
 const { t } = useI18n();
@@ -132,34 +133,33 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="flex flex-col h-full bg-slate-50">
-    <!-- Header -->
-    <div class="bg-white border-b border-slate-200 p-6">
+  <div class="flex h-full flex-col bg-n-slate-2">
+    <div class="border-b border-n-weak bg-n-surface-1 p-6">
       <div class="flex items-center justify-between">
         <div>
-          <h1 class="text-2xl font-bold text-slate-900 flex items-center gap-3">
-            <i class="i-lucide-bar-chart-3 text-woot-600" />
+          <h1 class="flex items-center gap-3 text-2xl font-medium text-n-slate-12">
+            <i class="i-lucide-bar-chart-3 text-n-blue-11" />
             Relatórios Kanban
           </h1>
-          <p class="text-sm text-slate-500 mt-1">
+          <p class="mt-1 text-sm text-n-slate-11">
             Análise de desempenho e métricas do seu pipeline
           </p>
         </div>
         
-        <button
+        <Button
           v-if="selectedBoard"
           @click="exportToCSV"
-          class="inline-flex items-center gap-2 px-4 py-2 bg-woot-600 text-white rounded-lg hover:bg-woot-700 transition-colors shadow-sm"
-        >
-          <i class="i-lucide-download" />
-          Exportar CSV
-        </button>
+          blue
+          solid
+          icon="i-lucide-download"
+          label="Exportar CSV"
+        />
       </div>
 
       <div class="flex items-center gap-4 mt-4">
         <select
           v-model="selectedBoard"
-          class="px-3 py-2 border border-slate-200 rounded-lg focus:border-woot-500 focus:ring-2 focus:ring-woot-100 outline-none"
+          class="rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2 text-sm text-n-slate-12 outline-none transition focus:border-n-brand"
         >
           <option v-for="board in kanbanBoards" :key="board.id" :value="board">
             {{ board.name }}
@@ -168,7 +168,7 @@ onMounted(() => {
 
         <select
           v-model="dateRange"
-          class="px-3 py-2 border border-slate-200 rounded-lg focus:border-woot-500 focus:ring-2 focus:ring-woot-100 outline-none"
+          class="rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2 text-sm text-n-slate-12 outline-none transition focus:border-n-brand"
         >
           <option value="7">Últimos 7 dias</option>
           <option value="30">Últimos 30 dias</option>
@@ -178,87 +178,84 @@ onMounted(() => {
       </div>
     </div>
 
-    <!-- Content -->
     <div class="flex-1 overflow-y-auto p-6 space-y-6">
       <div v-if="!selectedBoard" class="flex flex-col items-center justify-center p-12 text-center">
-        <i class="i-lucide-bar-chart-3 text-6xl text-slate-300 mb-4" />
-        <h3 class="text-lg font-semibold text-slate-700 mb-2">
+        <i class="i-lucide-bar-chart-3 mb-4 text-6xl text-n-slate-8" />
+        <h3 class="mb-2 text-lg font-medium text-n-slate-12">
           Nenhum quadro selecionado
         </h3>
-        <p class="text-sm text-slate-500">
+        <p class="text-sm text-n-slate-11">
           Selecione um quadro para visualizar os relatórios
         </p>
       </div>
 
       <div v-else class="space-y-6">
-        <!-- Resumo Geral -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+          <div class="rounded-2xl border border-n-weak bg-n-surface-1 p-6">
             <div class="flex items-center justify-between mb-2">
-              <span class="text-sm font-semibold text-slate-500 uppercase">Total de Tarefas</span>
-              <i class="i-lucide-briefcase text-blue-500 text-xl" />
+              <span class="text-sm font-medium uppercase text-n-slate-10">Total de Tarefas</span>
+              <i class="i-lucide-briefcase text-xl text-n-blue-11" />
             </div>
-            <p class="text-3xl font-black text-slate-900">{{ boardConversations.length }}</p>
+            <p class="text-3xl font-semibold text-n-slate-12">{{ boardConversations.length }}</p>
           </div>
 
-          <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+          <div class="rounded-2xl border border-n-weak bg-n-surface-1 p-6">
             <div class="flex items-center justify-between mb-2">
-              <span class="text-sm font-semibold text-slate-500 uppercase">Valor Total</span>
-              <i class="i-lucide-dollar-sign text-emerald-500 text-xl" />
+              <span class="text-sm font-medium uppercase text-n-slate-10">Valor Total</span>
+              <i class="i-lucide-dollar-sign text-xl text-n-teal-11" />
             </div>
-            <p class="text-3xl font-black text-emerald-600">
+            <p class="text-3xl font-semibold text-n-teal-11">
               {{ formatCurrency(stageMetrics.reduce((sum, s) => sum + s.totalValue, 0)) }}
             </p>
           </div>
 
-          <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+          <div class="rounded-2xl border border-n-weak bg-n-surface-1 p-6">
             <div class="flex items-center justify-between mb-2">
-              <span class="text-sm font-semibold text-slate-500 uppercase">Taxa de Conversão</span>
-              <i class="i-lucide-trending-up text-orange-500 text-xl" />
+              <span class="text-sm font-medium uppercase text-n-slate-10">Taxa de Conversão</span>
+              <i class="i-lucide-trending-up text-xl text-n-amber-11" />
             </div>
-            <p class="text-3xl font-black text-slate-900">{{ conversionRate.toFixed(1) }}%</p>
+            <p class="text-3xl font-semibold text-n-slate-12">{{ conversionRate.toFixed(1) }}%</p>
           </div>
 
-          <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
+          <div class="rounded-2xl border border-n-weak bg-n-surface-1 p-6">
             <div class="flex items-center justify-between mb-2">
-              <span class="text-sm font-semibold text-slate-500 uppercase">Agentes Ativos</span>
-              <i class="i-lucide-users text-purple-500 text-xl" />
+              <span class="text-sm font-medium uppercase text-n-slate-10">Agentes Ativos</span>
+              <i class="i-lucide-users text-xl text-n-blue-11" />
             </div>
-            <p class="text-3xl font-black text-slate-900">{{ agentMetrics.length }}</p>
+            <p class="text-3xl font-semibold text-n-slate-12">{{ agentMetrics.length }}</p>
           </div>
         </div>
 
-        <!-- Métricas por Estágio -->
-        <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
-          <h3 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-            <i class="i-lucide-layers text-woot-600" />
+        <div class="rounded-2xl border border-n-weak bg-n-surface-1 p-6">
+          <h3 class="mb-4 flex items-center gap-2 text-lg font-medium text-n-slate-12">
+            <i class="i-lucide-layers text-n-blue-11" />
             Desempenho por Estágio
           </h3>
           
           <div class="overflow-x-auto">
             <table class="w-full">
-              <thead class="bg-slate-50 border-b border-slate-200">
+              <thead class="border-b border-n-weak bg-n-slate-2/80">
                 <tr>
-                  <th class="text-left p-3 text-xs font-bold text-slate-600 uppercase">Estágio</th>
-                  <th class="text-center p-3 text-xs font-bold text-slate-600 uppercase">Quantidade</th>
-                  <th class="text-right p-3 text-xs font-bold text-slate-600 uppercase">Valor Total</th>
-                  <th class="text-right p-3 text-xs font-bold text-slate-600 uppercase">Valor Médio</th>
-                  <th class="text-center p-3 text-xs font-bold text-slate-600 uppercase">% do Total</th>
+                  <th class="p-3 text-left text-xs font-medium uppercase text-n-slate-10">Estágio</th>
+                  <th class="p-3 text-center text-xs font-medium uppercase text-n-slate-10">Quantidade</th>
+                  <th class="p-3 text-right text-xs font-medium uppercase text-n-slate-10">Valor Total</th>
+                  <th class="p-3 text-right text-xs font-medium uppercase text-n-slate-10">Valor Médio</th>
+                  <th class="p-3 text-center text-xs font-medium uppercase text-n-slate-10">% do Total</th>
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="stage in stageMetrics" :key="stage.id" class="border-b border-slate-100 hover:bg-slate-50">
+                <tr v-for="stage in stageMetrics" :key="stage.id" class="border-b border-n-weak/70 hover:bg-n-slate-2/40">
                   <td class="p-3">
                     <div class="flex items-center gap-2">
                       <div class="w-3 h-3 rounded-full" :style="{ backgroundColor: stage.color }" />
-                      <span class="font-semibold text-slate-900">{{ stage.name }}</span>
+                      <span class="font-medium text-n-slate-12">{{ stage.name }}</span>
                     </div>
                   </td>
                   <td class="p-3 text-center font-semibold">{{ stage.count }}</td>
-                  <td class="p-3 text-right font-semibold text-emerald-600">{{ formatCurrency(stage.totalValue) }}</td>
-                  <td class="p-3 text-right text-slate-600">{{ formatCurrency(stage.avgValue) }}</td>
+                  <td class="p-3 text-right font-medium text-n-teal-11">{{ formatCurrency(stage.totalValue) }}</td>
+                  <td class="p-3 text-right text-n-slate-11">{{ formatCurrency(stage.avgValue) }}</td>
                   <td class="p-3 text-center">
-                    <span class="inline-block px-2 py-1 bg-woot-50 text-woot-700 rounded text-xs font-bold">
+                    <span class="inline-block rounded-lg bg-n-brand/10 px-2 py-1 text-xs font-medium text-n-blue-11">
                       {{ ((stage.count / boardConversations.length) * 100).toFixed(1) }}%
                     </span>
                   </td>
@@ -268,10 +265,9 @@ onMounted(() => {
           </div>
         </div>
 
-        <!-- Métricas por Agente -->
-        <div class="bg-white rounded-xl border border-slate-200 p-6 shadow-sm">
-          <h3 class="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-            <i class="i-lucide-user-circle text-woot-600" />
+        <div class="rounded-2xl border border-n-weak bg-n-surface-1 p-6">
+          <h3 class="mb-4 flex items-center gap-2 text-lg font-medium text-n-slate-12">
+            <i class="i-lucide-user-circle text-n-blue-11" />
             Desempenho por Agente
           </h3>
           
@@ -279,32 +275,32 @@ onMounted(() => {
             <div
               v-for="metric in agentMetrics"
               :key="metric.agent.id"
-              class="border border-slate-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+              class="rounded-2xl border border-n-weak p-4 transition-colors hover:bg-n-slate-2/40"
             >
               <div class="flex items-center gap-3 mb-3">
                 <img
                   v-if="metric.agent.thumbnail"
                   :src="metric.agent.thumbnail"
                   :alt="metric.agent.name"
-                  class="w-10 h-10 rounded-full object-cover"
+                  class="h-10 w-10 rounded-full border border-n-weak object-cover"
                 />
-                <div class="flex-shrink-0 w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold" v-else>
+                <div class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-n-brand/10 font-medium text-n-blue-11" v-else>
                   {{ metric.agent.name.charAt(0).toUpperCase() }}
                 </div>
                 <div class="flex-1 min-w-0">
-                  <p class="font-semibold text-slate-900 truncate">{{ metric.agent.name }}</p>
-                  <p class="text-xs text-slate-500">{{ metric.count }} tarefa(s)</p>
+                  <p class="truncate font-medium text-n-slate-12">{{ metric.agent.name }}</p>
+                  <p class="text-xs text-n-slate-10">{{ metric.count }} tarefa(s)</p>
                 </div>
               </div>
               
               <div class="space-y-2">
                 <div class="flex items-center justify-between text-sm">
-                  <span class="text-slate-500">Valor Total:</span>
-                  <span class="font-semibold text-emerald-600">{{ formatCurrency(metric.totalValue) }}</span>
+                  <span class="text-n-slate-10">Valor Total:</span>
+                  <span class="font-medium text-n-teal-11">{{ formatCurrency(metric.totalValue) }}</span>
                 </div>
                 <div class="flex items-center justify-between text-sm">
-                  <span class="text-slate-500">Ticket Médio:</span>
-                  <span class="font-semibold text-slate-700">{{ formatCurrency(metric.avgValue) }}</span>
+                  <span class="text-n-slate-10">Ticket Médio:</span>
+                  <span class="font-medium text-n-slate-12">{{ formatCurrency(metric.avgValue) }}</span>
                 </div>
               </div>
             </div>

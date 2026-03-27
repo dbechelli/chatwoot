@@ -3,6 +3,8 @@ import { ref, computed, onMounted } from 'vue';
 import { useStore } from 'vuex';
 import { useI18n } from 'vue-i18n';
 import { useAlert } from 'dashboard/composables';
+import Button from 'dashboard/components-next/button/Button.vue';
+import EmptyStateLayout from 'dashboard/components-next/EmptyStateLayout.vue';
 import SettingsLayout from '../SettingsLayout.vue';
 import KanbanBoardEditor from './KanbanBoardEditor.vue';
 import KanbanTemplates from './KanbanTemplates.vue';
@@ -136,36 +138,33 @@ onMounted(() => {
     :sub-title="$t('KANBAN_SETTINGS.DESCRIPTION')"
     icon-name="i-lucide-kanban-square"
   >
-    <div v-if="isLoading" class="flex items-center justify-center p-12">
+    <div
+      v-if="isLoading"
+      class="flex items-center justify-center rounded-2xl border border-n-weak bg-n-surface-1 p-12"
+    >
       <i class="i-lucide-loader-2 animate-spin text-4xl text-n-brand" />
     </div>
 
     <div v-else class="flex flex-col gap-4 md:gap-6 p-4 md:p-6">
-      <!-- Header com botão de criar -->
       <div
-        class="flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+        class="flex flex-col gap-4 rounded-2xl border border-n-weak bg-n-surface-1 p-4 md:flex-row md:items-center md:justify-between md:p-5"
       >
         <div>
-          <h2 class="text-lg md:text-xl font-semibold text-n-slate-12">
+          <h2 class="text-base font-semibold text-n-slate-12 md:text-lg">
             {{ $t('KANBAN_SETTINGS.BOARDS_TITLE') }}
           </h2>
-          <p class="text-xs md:text-sm text-n-slate-11 mt-1">
+          <p class="mt-1 text-sm text-n-slate-11">
             {{ $t('KANBAN_SETTINGS.BOARDS_DESCRIPTION') }}
           </p>
         </div>
-        <button
-          class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-n-brand text-white rounded-lg hover:bg-n-brand/90 transition-colors text-sm whitespace-nowrap"
+        <Button
+          sm
+          icon="i-lucide-plus"
+          :label="$t('KANBAN_SETTINGS.CREATE_BOARD')"
           @click="createBoard"
-        >
-          <i class="i-lucide-plus" />
-          <span class="hidden sm:inline">{{
-            $t('KANBAN_SETTINGS.CREATE_BOARD')
-          }}</span>
-          <span class="sm:hidden">{{ $t('KANBAN_SETTINGS.CREATE') }}</span>
-        </button>
+        />
       </div>
 
-      <!-- Lista de boards -->
       <div
         v-if="kanbanConfig?.boards?.length > 0"
         class="grid gap-3 md:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3"
@@ -173,41 +172,36 @@ onMounted(() => {
         <div
           v-for="board in kanbanConfig.boards"
           :key="board.id"
-          class="group relative flex flex-col gap-3 p-3 md:p-4 border border-n-weak rounded-lg bg-white hover:border-n-brand hover:shadow-md transition-all"
+          class="group relative flex min-h-[220px] flex-col gap-4 rounded-2xl border border-n-weak bg-n-surface-1 p-4 transition-colors hover:border-n-brand"
         >
-          <!-- Badge de default -->
           <div
             v-if="board.isDefault"
-            class="absolute top-2 right-2 md:top-3 md:right-3 px-2 py-0.5 bg-n-brand/10 text-n-brand text-xs font-medium rounded"
+            class="absolute right-4 top-4 inline-flex items-center rounded-full bg-n-brand/10 px-2.5 py-1 text-xs font-medium text-n-brand"
           >
             {{ $t('KANBAN_SETTINGS.DEFAULT') }}
           </div>
 
-          <!-- Info do board -->
           <div class="flex items-start gap-2 md:gap-3">
             <div
-              class="flex-shrink-0 w-9 h-9 md:w-10 md:h-10 rounded-lg bg-n-brand/10 flex items-center justify-center"
+              class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-n-brand/10"
             >
               <i
                 class="i-lucide-kanban-square text-base md:text-lg text-n-brand"
               />
             </div>
             <div class="flex-1 min-w-0">
-              <h3
-                class="font-semibold text-sm md:text-base text-n-slate-12 truncate"
-              >
+              <h3 class="truncate text-sm font-semibold text-n-slate-12 md:text-base">
                 {{ board.name }}
               </h3>
               <p
                 v-if="board.description"
-                class="text-xs md:text-sm text-n-slate-11 line-clamp-2 mt-1"
+                class="mt-1 line-clamp-2 text-sm text-n-slate-11"
               >
                 {{ board.description }}
               </p>
             </div>
           </div>
 
-          <!-- Estágios -->
           <div class="flex flex-wrap gap-1.5">
             <div
               v-for="stage in board.stages?.slice(0, 5)"
@@ -225,61 +219,69 @@ onMounted(() => {
             </div>
           </div>
 
-          <!-- Ações -->
-          <div class="flex items-center gap-2 pt-2 border-t border-n-weak">
-            <button
-              class="flex-1 px-2 md:px-3 py-1.5 text-xs md:text-sm font-medium text-n-slate-12 hover:bg-n-slate-2 rounded transition-colors flex items-center justify-center gap-1"
-              @click="editBoard(board)"
-            >
-              <i class="i-lucide-edit-2" />
-              <span class="hidden sm:inline">{{
-                $t('KANBAN_SETTINGS.EDIT')
-              }}</span>
-            </button>
-            <button
-              class="px-2 md:px-3 py-1.5 text-xs md:text-sm font-medium text-n-brand hover:bg-n-brand/10 rounded transition-colors"
-              :title="$t('KANBAN_SETTINGS.DUPLICATE')"
-              @click="duplicateBoard(board)"
-            >
-              <i class="i-lucide-copy" />
-            </button>
-            <button
-              class="px-2 md:px-3 py-1.5 text-xs md:text-sm font-medium text-red-600 hover:bg-red-50 rounded transition-colors"
-              :title="$t('KANBAN_SETTINGS.DELETE')"
-              @click="deleteBoard(board.id)"
-            >
-              <i class="i-lucide-trash-2" />
-            </button>
+          <div class="mt-auto flex items-center justify-between border-t border-n-weak pt-3">
+            <span class="text-xs font-medium text-n-slate-10">
+              {{ `${board.stages?.length || 0} ${$t('KANBAN_SETTINGS.STAGES')}` }}
+            </span>
+
+            <div class="flex items-center gap-1">
+              <Button
+                sm
+                ghost
+                slate
+                icon="i-lucide-pencil-line"
+                class="!px-2.5"
+                :label="$t('KANBAN_SETTINGS.EDIT')"
+                @click="editBoard(board)"
+              />
+              <button
+                class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-n-brand transition-colors hover:bg-n-brand/10"
+                :title="$t('KANBAN_SETTINGS.DUPLICATE')"
+                @click="duplicateBoard(board)"
+              >
+                <i class="i-lucide-copy" />
+              </button>
+              <button
+                class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-n-ruby-11 transition-colors hover:bg-n-ruby-9/10"
+                :title="$t('KANBAN_SETTINGS.DELETE')"
+                @click="deleteBoard(board.id)"
+              >
+                <i class="i-lucide-trash-2" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- Empty state -->
-      <div
+      <EmptyStateLayout
         v-else
-        class="flex flex-col items-center justify-center p-8 md:p-12 border-2 border-dashed border-n-weak rounded-lg bg-n-slate-1"
+        :title="$t('KANBAN_SETTINGS.NO_BOARDS')"
+        :subtitle="$t('KANBAN_SETTINGS.NO_BOARDS_DESCRIPTION')"
       >
-        <i
-          class="i-lucide-kanban-square text-5xl md:text-6xl text-n-slate-6 mb-3 md:mb-4"
-        />
-        <h3
-          class="text-base md:text-lg font-semibold text-n-slate-12 mb-2 text-center"
-        >
-          {{ $t('KANBAN_SETTINGS.NO_BOARDS') }}
-        </h3>
-        <p class="text-xs md:text-sm text-n-slate-11 mb-4 text-center max-w-md">
-          {{ $t('KANBAN_SETTINGS.NO_BOARDS_DESCRIPTION') }}
-        </p>
-        <button
-          class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-n-brand text-white rounded-lg hover:bg-n-brand/90 transition-colors text-sm"
-          @click="createBoard"
-        >
-          <i class="i-lucide-plus" />
-          {{ $t('KANBAN_SETTINGS.CREATE_FIRST_BOARD') }}
-        </button>
-      </div>
+        <template #empty-state-item>
+          <div
+            class="mx-auto flex w-full max-w-md flex-col items-center justify-center rounded-2xl border border-dashed border-n-weak bg-n-surface-1 px-6 py-10 text-center"
+          >
+            <div
+              class="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-n-brand/10 text-n-brand"
+              @click="editBoard(board)"
+            >
+              <i class="i-lucide-kanban-square text-3xl" />
+            </div>
+            <p class="max-w-sm text-sm text-n-slate-11">
+              {{ $t('KANBAN_SETTINGS.NO_BOARDS_DESCRIPTION') }}
+            </p>
+          </div>
+        </template>
+        <template #actions>
+          <Button
+            icon="i-lucide-plus"
+            :label="$t('KANBAN_SETTINGS.CREATE_FIRST_BOARD')"
+            @click="createBoard"
+          />
+        </template>
+      </EmptyStateLayout>
 
-      <!-- Templates Modal -->
       <KanbanTemplates
         v-if="showTemplates"
         :show="showTemplates"
@@ -291,7 +293,6 @@ onMounted(() => {
       />
     </div>
 
-    <!-- Editor Modal -->
     <KanbanBoardEditor
       v-if="showEditor"
       :board="selectedBoard"

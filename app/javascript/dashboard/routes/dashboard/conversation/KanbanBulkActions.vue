@@ -2,6 +2,7 @@
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useStore } from 'vuex';
+import Button from 'dashboard/components-next/button/Button.vue';
 
 const props = defineProps({
   selectedItems: { type: Array, required: true },
@@ -44,36 +45,33 @@ const executeBulkAction = async () => {
 </script>
 
 <template>
-  <div class="fixed inset-0 z-50 flex items-end justify-center sm:items-center bg-slate-900/50 backdrop-blur-sm">
-    <div class="w-full max-w-lg bg-white rounded-t-2xl sm:rounded-2xl shadow-2xl border border-slate-200 overflow-hidden">
-      <!-- Header -->
-      <div class="flex items-center justify-between p-6 border-b border-slate-100">
+  <div class="fixed inset-0 z-50 flex items-end justify-center bg-n-slate-12/40 backdrop-blur-sm sm:items-center">
+    <div class="w-full max-w-lg overflow-hidden rounded-t-2xl border border-n-weak bg-n-surface-1 shadow-2xl sm:rounded-2xl">
+      <div class="flex items-center justify-between border-b border-n-weak px-6 py-5">
         <div>
-          <h3 class="text-lg font-bold text-slate-900">
+          <h3 class="text-lg font-medium text-n-slate-12">
             Ações em Massa
           </h3>
-          <p class="text-sm text-slate-500 mt-1">
+          <p class="mt-1 text-sm text-n-slate-11">
             {{ selectedItems.length }} tarefa(s) selecionada(s)
           </p>
         </div>
         <button
           @click="$emit('close')"
-          class="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-400 hover:text-slate-600"
+          class="rounded-full p-2 text-n-slate-10 transition-colors hover:bg-n-slate-2 hover:text-n-slate-12"
         >
           <i class="i-lucide-x text-xl" />
         </button>
       </div>
 
-      <!-- Content -->
-      <div class="p-6 space-y-4">
-        <!-- Selecionar ação -->
+      <div class="space-y-4 p-6">
         <div>
-          <label class="block text-sm font-semibold text-slate-700 mb-2">
+          <label class="mb-2 block text-sm font-medium text-n-slate-12">
             Selecione a ação
           </label>
           <select
             v-model="action"
-            class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:border-woot-500 focus:ring-2 focus:ring-woot-100 outline-none transition-all"
+            class="w-full rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2 text-sm text-n-slate-12 outline-none transition focus:border-n-brand"
           >
             <option value="">Escolha uma ação...</option>
             <option value="move">Mover para estágio</option>
@@ -84,14 +82,13 @@ const executeBulkAction = async () => {
           </select>
         </div>
 
-        <!-- Mover para estágio -->
         <div v-if="action === 'move'" class="pt-2">
-          <label class="block text-sm font-semibold text-slate-700 mb-2">
+          <label class="mb-2 block text-sm font-medium text-n-slate-12">
             Estágio de destino
           </label>
           <select
             v-model="targetStage"
-            class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:border-woot-500 focus:ring-2 focus:ring-woot-100 outline-none transition-all"
+            class="w-full rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2 text-sm text-n-slate-12 outline-none transition focus:border-n-brand"
           >
             <option value="">Selecione um estágio...</option>
             <option
@@ -104,14 +101,13 @@ const executeBulkAction = async () => {
           </select>
         </div>
 
-        <!-- Atribuir agente -->
         <div v-if="action === 'assign'" class="pt-2">
-          <label class="block text-sm font-semibold text-slate-700 mb-2">
+          <label class="mb-2 block text-sm font-medium text-n-slate-12">
             Agente
           </label>
           <select
             v-model="targetAssignee"
-            class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:border-woot-500 focus:ring-2 focus:ring-woot-100 outline-none transition-all"
+            class="w-full rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2 text-sm text-n-slate-12 outline-none transition focus:border-n-brand"
           >
             <option value="">Selecione um agente...</option>
             <option value="unassign">Remover atribuição</option>
@@ -125,14 +121,13 @@ const executeBulkAction = async () => {
           </select>
         </div>
 
-        <!-- Alterar prioridade -->
         <div v-if="action === 'priority'" class="pt-2">
-          <label class="block text-sm font-semibold text-slate-700 mb-2">
+          <label class="mb-2 block text-sm font-medium text-n-slate-12">
             Prioridade
           </label>
           <select
             v-model="targetPriority"
-            class="w-full px-3 py-2 border border-slate-200 rounded-lg focus:border-woot-500 focus:ring-2 focus:ring-woot-100 outline-none transition-all"
+            class="w-full rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2 text-sm text-n-slate-12 outline-none transition focus:border-n-brand"
           >
             <option value="">Selecione uma prioridade...</option>
             <option value="low">Baixa</option>
@@ -142,15 +137,14 @@ const executeBulkAction = async () => {
           </select>
         </div>
 
-        <!-- Warning para ações destrutivas -->
-        <div v-if="action === 'delete' || action === 'archive'" class="bg-red-50 border border-red-200 rounded-lg p-4">
+        <div v-if="action === 'delete' || action === 'archive'" class="rounded-2xl border border-n-ruby-6/40 bg-n-ruby-3 p-4">
           <div class="flex items-start gap-3">
-            <i class="i-lucide-alert-triangle text-red-500 text-xl flex-shrink-0 mt-0.5" />
+            <i class="i-lucide-alert-triangle mt-0.5 shrink-0 text-xl text-n-ruby-11" />
             <div>
-              <p class="text-sm font-semibold text-red-800 mb-1">
+              <p class="mb-1 text-sm font-medium text-n-ruby-11">
                 Atenção!
               </p>
-              <p class="text-xs text-red-700">
+              <p class="text-xs text-n-ruby-11">
                 {{ action === 'delete' 
                   ? 'Esta ação irá remover permanentemente as tarefas selecionadas do Kanban.' 
                   : 'As tarefas serão arquivadas e poderão ser restauradas posteriormente.' 
@@ -161,24 +155,16 @@ const executeBulkAction = async () => {
         </div>
       </div>
 
-      <!-- Footer -->
-      <div class="flex items-center justify-end gap-3 p-6 border-t border-slate-100">
-        <button
-          @click="$emit('close')"
-          class="px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100 rounded-lg transition-colors"
-        >
-          Cancelar
-        </button>
-        <button
+      <div class="flex items-center justify-end gap-3 border-t border-n-weak p-6">
+        <Button @click="$emit('close')" slate outline label="Cancelar" />
+        <Button
           @click="executeBulkAction"
           :disabled="!canExecute"
-          class="px-4 py-2 text-sm font-semibold bg-woot-600 text-white rounded-lg hover:bg-woot-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          :class="{ 'bg-red-600 hover:bg-red-700': action === 'delete' }"
-        >
-          <span v-if="action === 'delete'">Excluir Tarefas</span>
-          <span v-else-if="action === 'archive'">Arquivar Tarefas</span>
-          <span v-else>Aplicar Ação</span>
-        </button>
+          :ruby="action === 'delete'"
+          :blue="action !== 'delete'"
+          solid
+          :label="action === 'delete' ? 'Excluir Tarefas' : action === 'archive' ? 'Arquivar Tarefas' : 'Aplicar Ação'"
+        />
       </div>
     </div>
   </div>

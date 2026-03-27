@@ -51,12 +51,12 @@ const timeAgo = computed(() => {
 
 const priorityColor = computed(() => {
   const colors = {
-    urgent: 'bg-red-50 text-red-700 border-red-200',
-    high: 'bg-yellow-50 text-yellow-700 border-yellow-200',
-    medium: 'bg-woot-50 text-woot-700 border-woot-200',
-    low: 'bg-green-50 text-green-700 border-green-200',
+    urgent: 'border-n-ruby-7 bg-n-ruby-3 text-n-ruby-11',
+    high: 'border-n-amber-7 bg-n-amber-3 text-n-amber-11',
+    medium: 'border-n-brand/20 bg-n-brand/10 text-n-blue-11',
+    low: 'border-n-teal-7 bg-n-teal-3 text-n-teal-11',
   };
-  return colors[props.conversation.priority] || 'bg-slate-50 text-slate-600 border-slate-200';
+  return colors[props.conversation.priority] || 'border-n-weak bg-n-slate-2 text-n-slate-11';
 });
 
 const dealValue = computed(() => {
@@ -111,19 +111,22 @@ const formatCurrency = value => {
 
 <template>
   <div
-    class="group relative flex flex-col gap-3 rounded-lg border border-slate-200 bg-white p-3 shadow-sm hover:shadow-md hover:border-woot-300 transition-all duration-200"
+    class="group relative flex flex-col gap-3 rounded-2xl border border-n-weak bg-n-surface-1 p-3 transition-all duration-200 hover:border-n-brand/30 hover:bg-n-slate-2/40"
     @contextmenu.prevent="$emit('contextmenu', { event: $event, conversation })"
   >
-    <div class="absolute left-0 top-3 bottom-3 w-1 rounded-r-full bg-red-500" v-if="conversation.priority === 'urgent'"></div>
+    <div
+      v-if="conversation.priority === 'urgent'"
+      class="absolute left-0 top-4 bottom-4 w-1 rounded-r-full bg-n-ruby-9"
+    />
     
     <div class="flex items-start justify-between gap-2">
       <div class="flex-1 min-w-0">
-        <h4 class="truncate text-sm font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
+        <h4 class="truncate text-sm font-medium text-n-slate-12 transition-colors group-hover:text-n-blue-11">
           {{ kanbanTitle }}
         </h4>
-        <div class="flex items-center gap-1 mt-0.5" v-if="contact">
-          <i class="i-lucide-phone text-[10px] text-slate-400" v-if="contact.phone_number" />
-          <p class="truncate text-xs font-medium text-slate-500">
+        <div v-if="contact" class="mt-0.5 flex items-center gap-1">
+          <i class="i-lucide-phone text-[10px] text-n-slate-10" v-if="contact.phone_number" />
+          <p class="truncate text-xs font-medium text-n-slate-11">
             {{ contact.phone_number || contact.email || '-' }}
           </p>
         </div>
@@ -131,25 +134,24 @@ const formatCurrency = value => {
       
       <div
         v-if="dealValue > 0"
-        class="flex-shrink-0 rounded-lg bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700 border border-emerald-100 shadow-sm"
+        class="flex-shrink-0 rounded-xl border border-n-teal-6/30 bg-n-teal-3/50 px-2.5 py-1 text-xs font-medium text-n-teal-11"
       >
         {{ formatCurrency(dealValue) }}
       </div>
     </div>
 
-    <div v-if="kanbanDescription" class="text-xs text-slate-600 line-clamp-2">
+    <div v-if="kanbanDescription" class="line-clamp-2 text-xs text-n-slate-11">
       {{ kanbanDescription }}
     </div>
 
-    <!-- Custom Attributes -->
     <div v-if="displayAttributes.length > 0" class="flex flex-col gap-1.5">
       <div 
         v-for="attr in displayAttributes" 
         :key="attr.key"
         class="flex items-center justify-between text-xs"
       >
-        <span class="text-slate-500 font-medium">{{ attr.label }}:</span>
-        <span class="text-slate-700 font-semibold truncate max-w-[120px]" :title="attr.value">
+        <span class="font-medium text-n-slate-10">{{ attr.label }}:</span>
+        <span class="max-w-[120px] truncate font-medium text-n-slate-12" :title="attr.value">
           {{ attr.value }}
         </span>
       </div>
@@ -159,7 +161,7 @@ const formatCurrency = value => {
       <span
         v-for="label in conversation.labels.slice(0, 3)"
         :key="label"
-        class="inline-flex items-center rounded-md border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider"
+        class="inline-flex items-center rounded-lg border px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide"
         :style="{
           backgroundColor: `${label.color}15`,
           color: label.color,
@@ -170,30 +172,29 @@ const formatCurrency = value => {
       </span>
       <span
         v-if="conversation.labels.length > 3"
-        class="inline-flex items-center rounded-md bg-slate-100 px-2 py-0.5 text-[10px] font-bold text-slate-500 border border-slate-200"
+        class="inline-flex items-center rounded-lg border border-n-weak bg-n-slate-2 px-2 py-0.5 text-[10px] font-medium text-n-slate-11"
       >
         +{{ conversation.labels.length - 3 }}
       </span>
     </div>
 
-    <div class="relative bg-slate-50 rounded-lg p-2 border border-slate-100">
-      <p class="line-clamp-2 text-xs leading-relaxed text-slate-600 italic">
+    <div class="relative rounded-xl border border-n-weak bg-n-slate-2/60 p-2.5">
+      <p class="line-clamp-2 text-xs leading-relaxed text-n-slate-11">
         "{{ conversation.messages?.[0]?.content || t('KANBAN.NO_MESSAGES') }}"
       </p>
     </div>
 
     <div
-      class="flex items-center justify-between gap-2 pt-3 border-t border-slate-100 mt-1"
+      class="mt-1 flex items-center justify-between gap-2 border-t border-n-weak pt-3"
     >
       <div class="flex flex-wrap items-center gap-2">
-        <!-- Due Date -->
         <span
           v-if="dueDate"
-          class="inline-flex items-center gap-1 text-[11px] font-semibold px-1.5 py-0.5 rounded border"
+          class="inline-flex items-center gap-1 rounded-lg border px-1.5 py-0.5 text-[11px] font-medium"
           :class="[
-            isOverdue ? 'bg-red-50 text-red-700 border-red-200' : 
-            isDueSoon ? 'bg-yellow-50 text-yellow-700 border-yellow-200' : 
-            'bg-slate-100 text-slate-600 border-slate-200'
+            isOverdue ? 'border-n-ruby-7 bg-n-ruby-3 text-n-ruby-11' : 
+            isDueSoon ? 'border-n-amber-7 bg-n-amber-3 text-n-amber-11' : 
+            'border-n-weak bg-n-slate-2 text-n-slate-11'
           ]"
         >
           <i class="i-lucide-calendar text-xs" />
@@ -202,16 +203,16 @@ const formatCurrency = value => {
 
         <span
           v-if="inbox"
-          class="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded"
+          class="inline-flex items-center gap-1 rounded-lg bg-n-slate-2 px-1.5 py-0.5 text-[11px] font-medium text-n-slate-11"
         >
-          <i class="i-lucide-message-circle text-xs text-blue-500" />
+          <i class="i-lucide-message-circle text-xs text-n-brand" />
           {{ inbox.name }}
         </span>
 
         <span
           v-if="checklistProgress"
-          class="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200"
-          :class="{ 'bg-green-50 text-green-700 border-green-200': checklistProgress.done === checklistProgress.total }"
+          class="inline-flex items-center gap-1 rounded-lg border border-n-weak bg-n-slate-2 px-1.5 py-0.5 text-[11px] font-medium text-n-slate-11"
+          :class="{ 'border-n-teal-7 bg-n-teal-3 text-n-teal-11': checklistProgress.done === checklistProgress.total }"
           :title="`${checklistProgress.done}/${checklistProgress.total} itens concluídos`"
         >
           <i class="i-lucide-check-square text-xs" />
@@ -220,7 +221,7 @@ const formatCurrency = value => {
 
         <span
           v-if="conversation.priority"
-          class="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-bold uppercase border shadow-sm"
+          class="inline-flex items-center rounded-lg border px-1.5 py-0.5 text-[10px] font-medium uppercase"
           :class="[priorityColor]"
         >
           {{
@@ -230,7 +231,7 @@ const formatCurrency = value => {
       </div>
 
       <div class="flex items-center gap-2 flex-shrink-0">
-        <span class="text-[10px] font-medium text-slate-400 whitespace-nowrap">
+        <span class="whitespace-nowrap text-[10px] font-medium text-n-slate-10">
           {{ timeAgo }}
         </span>
         
@@ -239,17 +240,17 @@ const formatCurrency = value => {
             v-if="assignee?.thumbnail"
             :src="assignee.thumbnail"
             :alt="assignee.name"
-            class="h-6 w-6 rounded-full border-2 border-white shadow-sm object-cover"
+            class="h-6 w-6 rounded-full border-2 border-n-surface-1 object-cover"
             :title="assignee.name"
           />
           <div
             v-else
-            class="flex h-6 w-6 items-center justify-center rounded-full bg-blue-100 border-2 border-white shadow-sm text-[10px] font-bold text-blue-600"
+            class="flex h-6 w-6 items-center justify-center rounded-full border-2 border-n-surface-1 bg-n-brand/10 text-[10px] font-medium text-n-blue-11"
             :title="t('KANBAN.UNASSIGNED')"
           >
             <i class="i-lucide-user text-[12px]" />
           </div>
-          <div class="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full bg-emerald-500 border border-white"></div>
+          <div class="absolute -bottom-0.5 -right-0.5 h-2 w-2 rounded-full border border-n-surface-1 bg-n-teal-9"></div>
         </div>
       </div>
     </div>
@@ -257,13 +258,11 @@ const formatCurrency = value => {
 </template>
 
 <style scoped>
-/* Efeito de destaque no hover para as labels */
 span:hover {
   filter: brightness(0.9);
   transition: filter 0.2s;
 }
 
-/* Garante que o line-clamp funcione em todos os browsers */
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;

@@ -3,6 +3,7 @@ import { ref, computed, onMounted, watch } from 'vue';
 import { useStore } from 'vuex';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
+import Button from 'dashboard/components-next/button/Button.vue';
 import KanbanColumn from 'dashboard/components/KanbanBoard/KanbanColumn.vue';
 import KanbanMetrics from 'dashboard/components/KanbanBoard/KanbanMetrics.vue';
 import KanbanListView from './KanbanListView.vue';
@@ -12,6 +13,11 @@ import KanbanItemModal from './KanbanItemModal.vue';
 import KanbanContextMenu from './KanbanContextMenu.vue';
 import KanbanBulkActions from './KanbanBulkActions.vue';
 import Modal from 'dashboard/components/Modal.vue';
+import EmptyStateLayout from 'dashboard/components-next/EmptyStateLayout.vue';
+import DropdownContainer from 'next/dropdown-menu/base/DropdownContainer.vue';
+import DropdownBody from 'next/dropdown-menu/base/DropdownBody.vue';
+import DropdownSection from 'next/dropdown-menu/base/DropdownSection.vue';
+import DropdownItem from 'next/dropdown-menu/base/DropdownItem.vue';
 import wootConstants from 'dashboard/constants/globals';
 import { useAlert } from 'dashboard/composables';
 
@@ -471,7 +477,7 @@ const applyView = (view) => {
 };
 
 const deleteView = async (viewId) => {
-  if(!confirm('Tem certeza que deseja excluir este filtro?')) return;
+  if (!confirm('Tem certeza que deseja excluir este filtro?')) return;
 
   const currentViews = uiSettings.value.kanban_views || [];
   const updatedViews = currentViews.filter(v => v.id !== viewId);
@@ -480,296 +486,306 @@ const deleteView = async (viewId) => {
     await store.dispatch('updateProfile', {
       ui_settings: {
         ...uiSettings.value,
-        kanban_views: updatedViews
-      }
+        kanban_views: updatedViews,
+      },
     });
-    useAlert('Filtro removido');
+    useAlert('Filtro removido com sucesso');
   } catch (error) {
     useAlert('Erro ao remover filtro');
   }
 };
 
-// Lifecycle
+const activeViewButtonClass = mode => {
+  return viewMode.value === mode;
+};
+
+watch(selectedItems, value => {
+  showBulkActions.value = value.length > 0;
+});
+
+watch(selectedBoardId, boardId => {
+  if (!boardId) return;
+
+  router.replace({
+    query: {
+      ...router.currentRoute.value.query,
+      board: boardId,
+    },
+  });
+});
+
+watch([statusFilter, selectedBoardId], () => {
+  fetchConversations();
+});
+
 onMounted(async () => {
   await loadKanbanConfig();
-  fetchConversations();
-  store.dispatch('inboxes/get');
-  store.dispatch('agents/get');
-  store.dispatch('attributes/get');
-});
-
-// Watchers
-watch(statusFilter, () => {
-  fetchConversations();
-});
-
-watch([selectedInbox, selectedAssignee], () => {
-  // Filtros reativos
+  await fetchConversations();
 });
 </script>
 
 <template>
-  <div class="flex h-full flex-col bg-[#f8fafc]">
-    <header
-      v-if="salesStages.length > 0"
-      class="z-20 flex flex-col gap-4 border-b border-slate-200 bg-white p-4 shadow-sm"
-    >
-      <div
-        class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between"
-      >
-        <div class="flex items-center gap-3">
-          <div
-            class="flex h-10 w-10 items-center justify-center rounded-lg bg-woot-600 text-white shadow-md"
-          >
-            <i class="i-lucide-kanban-square text-2xl" />
-          </div>
-          <div>
-            <h1 class="text-xl font-bold text-slate-900 leading-tight">
-              {{ currentBoard?.name || t('KANBAN.TITLE') }}
-            </h1>
-            <span class="text-xs font-medium text-slate-500 uppercase tracking-wider">
-              {{ currentBoard?.description || 'Gestão de Funil' }}
-            </span>
-           <div class="flex items-center gap-1 bg-slate-100 rounded-lg p-1">
-            <button
-              class="inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-semibold transition-all"
-              :class="viewMode === 'board' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'"
-              @click="viewMode = 'board'"
+  <div class="flex h-full flex-col bg-n-slate-2">
+    <header class="z-20 border-b border-n-weak bg-n-surface-1">
+      <div class="flex flex-col gap-4 px-4 py-4 md:px-6">
+        <div class="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+          <div class="flex min-w-0 items-start gap-3">
+            <div
+              class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-n-brand/10 text-n-blue-11"
             >
-              <i class="i-lucide-kanban-square text-lg" />
-              <span class="hidden sm:inline">Quadro</span>
-            </button>
-            <button
-              class="inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-semibold transition-all"
-              :class="viewMode === 'list' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'"
-              @click="viewMode = 'list'"
-            >
-              <i class="i-lucide-list text-lg" />
-              <span class="hidden sm:inline">Lista</span>
-            </button>
-            <button
-              class="inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-semibold transition-all"
-              :class="viewMode === 'calendar' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-600 hover:text-slate-900'"
-              @click="viewMode = 'calendar'"
-            >
-              <i class="i-lucide-calendar text-lg" />
-              <span class="hidden sm:inline">Calendário</span>
-            </button>
-          </div>
-
-            
-          </div>
-        </div>
-
-        <div class="flex items-center gap-2 flex-wrap">
-          <button
-            class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition-all hover:bg-slate-50 hover:border-slate-300 active:scale-95 shadow-sm"
-            @click="toggleMetrics"
-          >
-            <i
-              class="text-lg"
-              :class="showMetrics ? 'i-lucide-eye-off' : 'i-lucide-eye'"
-            />
-            <span class="hidden sm:inline">{{
-              showMetrics ? t('KANBAN.HIDE_METRICS') : t('KANBAN.SHOW_METRICS')
-            }}</span>
-          </button>
-
-          <button
-            class="inline-flex items-center gap-2 rounded-lg bg-woot-600 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-woot-700 active:scale-95 shadow-sm shadow-woot-200"
-            @click="openAddItemModal()"
-          >
-            <i class="i-lucide-plus" />
-            <span class="hidden sm:inline">{{ t('KANBAN.MODAL.NEW_ITEM') }}</span>
-          </button>
-
-          <button
-            class="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition-all hover:bg-slate-800 active:scale-95 disabled:opacity-50 shadow-sm shadow-slate-200"
-            :disabled="isLoading"
-            @click="handleRefresh"
-          >
-            <i
-              class="text-lg i-lucide-refresh-cw"
-              :class="{ 'animate-spin': isLoading }"
-            />
-            <span class="hidden sm:inline">{{ t('KANBAN.REFRESH') }}</span>
-          </button>
-        </div>
-      </div>
-
-      <div
-        class="flex flex-col gap-3 md:flex-row md:items-center md:gap-6 pt-1"
-      >
-        <!-- Seletor de Board (se houver múltiplos) -->
-        <div
-          v-if="
-            kanbanConfig &&
-            kanbanConfig.boards &&
-            kanbanConfig.boards.length > 1
-          "
-          class="flex items-center gap-3"
-        >
-          <label
-            class="text-xs font-bold text-slate-400 uppercase tracking-tight"
-          >
-            {{ t('KANBAN.BOARD') }}
-          </label>
-          <select
-            v-model="selectedBoardId"
-            class="min-w-[160px] rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm font-medium text-slate-700 focus:border-woot-500 focus:ring-2 focus:ring-woot-100 outline-none transition-all"
-          >
-            <option
-              v-for="board in kanbanConfig.boards"
-              :key="board.id"
-              :value="board.id"
-            >
-              {{ board.name }}
-            </option>
-          </select>
-        </div>
-
-        <div class="flex items-center gap-3">
-          <label
-            class="text-xs font-bold text-slate-400 uppercase tracking-tight"
-          >
-            Agrupamento
-          </label>
-          <select
-            v-model="groupBy"
-            class="min-w-[160px] rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm font-medium text-slate-700 focus:border-woot-500 focus:ring-2 focus:ring-woot-100 outline-none transition-all"
-          >
-            <option value="none">Nenhum</option>
-            <option value="priority">Prioridade</option>
-            <option value="assignee">Agente</option>
-          </select>
-        </div>
-
-        <div class="flex items-center gap-3">
-          <label
-            class="text-xs font-bold text-slate-400 uppercase tracking-tight"
-          >
-            {{ t('KANBAN.FILTERS.INBOX') }}
-          </label>
-          <select
-            v-model="selectedInbox"
-            class="min-w-[160px] rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm font-medium text-slate-700 focus:border-woot-500 focus:ring-2 focus:ring-woot-100 outline-none transition-all"
-          >
-            <option :value="null">{{ t('KANBAN.FILTERS.ALL_INBOXES') }}</option>
-            <option v-for="inbox in inboxes" :key="inbox.id" :value="inbox.id">
-              {{ inbox.name }}
-            </option>
-          </select>
-        </div>
-
-        <div class="flex items-center gap-3">
-          <label
-            class="text-xs font-bold text-slate-400 uppercase tracking-tight"
-          >
-            {{ t('KANBAN.FILTERS.ASSIGNEE') }}
-          </label>
-          <select
-            v-model="selectedAssignee"
-            class="min-w-[160px] rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm font-medium text-slate-700 focus:border-woot-500 focus:ring-2 focus:ring-woot-100 outline-none transition-all"
-          >
-            <option value="all">{{ t('KANBAN.FILTERS.ALL_AGENTS') }}</option>
-            <option value="me">{{ t('KANBAN.FILTERS.MY_DEALS') }}</option>
-            <option value="unassigned">
-              {{ t('KANBAN.FILTERS.UNASSIGNED') }}
-            </option>
-          </select>
-        </div>
-
-        <div class="flex items-center gap-3">
-          <label
-            class="text-xs font-bold text-slate-400 uppercase tracking-tight"
-          >
-            Status
-          </label>
-          <select
-            v-model="statusFilter"
-            class="min-w-[160px] rounded-md border border-slate-200 bg-slate-50 px-3 py-1.5 text-sm font-medium text-slate-700 focus:border-woot-500 focus:ring-2 focus:ring-woot-100 outline-none transition-all"
-          >
-            <option value="open">Abertos</option>
-            <option value="resolved">Arquivados</option>
-            <option value="all">Todos</option>
-          </select>
-        </div>
-
-        <!-- Saved Views Controls -->
-        <div class="flex items-center gap-2 border-l border-slate-200 pl-4 ml-2">
-          <div class="relative group">
-            <button class="flex items-center gap-2 px-3 py-1.5 rounded-md border border-slate-200 bg-white hover:bg-slate-50 text-sm font-medium text-slate-700">
-               <i class="i-lucide-bookmark text-woot-600" />
-               Vistas Salvas
-               <i class="i-lucide-chevron-down text-xs" />
-            </button>
-            
-            <div class="absolute right-0 top-full mt-1 w-64 bg-white rounded-lg shadow-lg border border-slate-100 hidden group-hover:block z-50 p-1">
-              <div v-if="savedViews.length === 0" class="p-3 text-center text-xs text-slate-500">
-                Nenhuma vista salva
+              <i class="i-lucide-kanban-square text-xl" />
+            </div>
+            <div class="min-w-0 space-y-3">
+              <div class="space-y-1">
+                <h1 class="truncate text-xl font-medium text-n-slate-12">
+                  {{ currentBoard?.name || t('KANBAN.TITLE') }}
+                </h1>
+                <p class="text-sm text-n-slate-11">
+                  {{ currentBoard?.description || 'Gestão de Funil' }}
+                </p>
               </div>
-              
-              <div v-else class="flex flex-col gap-1">
-                <div v-for="view in savedViews" :key="view.id" class="flex items-center justify-between p-2 hover:bg-slate-50 rounded group/item">
-                  <button @click="applyView(view)" class="text-sm text-slate-700 font-medium flex-1 text-left">
-                    {{ view.name }}
-                  </button>
-                  <button @click="deleteView(view.id)" class="text-red-500 opacity-0 group-hover/item:opacity-100 hover:bg-red-50 p-1 rounded">
-                    <i class="i-lucide-trash-2 text-xs" />
-                  </button>
-                </div>
-              </div>
-              
-              <div class="border-t border-slate-100 mt-1 pt-1">
-                 <button @click="showSaveViewModal = true" class="w-full text-left px-2 py-1.5 text-xs text-woot-600 hover:bg-woot-50 rounded font-medium flex items-center gap-1">
-                   <i class="i-lucide-plus" />
-                   Salvar Filtros Atuais
-                 </button>
+
+              <div class="inline-flex items-center gap-1 rounded-xl border border-n-weak bg-n-slate-2 p-1">
+                <Button
+                  sm
+                  :blue="activeViewButtonClass('board')"
+                  :slate="!activeViewButtonClass('board')"
+                  :solid="activeViewButtonClass('board')"
+                  :ghost="!activeViewButtonClass('board')"
+                  icon="i-lucide-kanban-square"
+                  label="Quadro"
+                  @click="viewMode = 'board'"
+                />
+                <Button
+                  sm
+                  :blue="activeViewButtonClass('list')"
+                  :slate="!activeViewButtonClass('list')"
+                  :solid="activeViewButtonClass('list')"
+                  :ghost="!activeViewButtonClass('list')"
+                  icon="i-lucide-list"
+                  label="Lista"
+                  @click="viewMode = 'list'"
+                />
+                <Button
+                  sm
+                  :blue="activeViewButtonClass('calendar')"
+                  :slate="!activeViewButtonClass('calendar')"
+                  :solid="activeViewButtonClass('calendar')"
+                  :ghost="!activeViewButtonClass('calendar')"
+                  icon="i-lucide-calendar"
+                  label="Calendário"
+                  @click="viewMode = 'calendar'"
+                />
               </div>
             </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2">
+            <Button
+              sm
+              slate
+              outline
+              :icon="showMetrics ? 'i-lucide-eye-off' : 'i-lucide-eye'"
+              :label="showMetrics ? t('KANBAN.HIDE_METRICS') : t('KANBAN.SHOW_METRICS')"
+              @click="toggleMetrics"
+            />
+
+            <Button
+              sm
+              blue
+              solid
+              icon="i-lucide-plus"
+              :label="t('KANBAN.MODAL.NEW_ITEM')"
+              @click="openAddItemModal()"
+            />
+
+            <Button
+              sm
+              slate
+              faded
+              icon="i-lucide-refresh-cw"
+              :label="t('KANBAN.REFRESH')"
+              :is-loading="isLoading"
+              @click="handleRefresh"
+            />
+          </div>
+        </div>
+
+        <div class="grid gap-3 rounded-2xl border border-n-weak bg-n-slate-2/60 p-3 lg:grid-cols-[repeat(4,minmax(0,1fr))_auto]">
+          <div
+            v-if="kanbanConfig && kanbanConfig.boards && kanbanConfig.boards.length > 1"
+            class="space-y-1"
+          >
+            <label class="text-xs font-medium uppercase tracking-wide text-n-slate-10">
+              {{ t('KANBAN.BOARD') }}
+            </label>
+            <select
+              v-model="selectedBoardId"
+              class="h-10 w-full rounded-xl border border-n-weak bg-n-surface-1 px-3 text-sm text-n-slate-12 outline-none transition focus:border-n-brand"
+            >
+              <option
+                v-for="board in kanbanConfig.boards"
+                :key="board.id"
+                :value="board.id"
+              >
+                {{ board.name }}
+              </option>
+            </select>
+          </div>
+
+          <div class="space-y-1">
+            <label class="text-xs font-medium uppercase tracking-wide text-n-slate-10">
+              Agrupamento
+            </label>
+            <select
+              v-model="groupBy"
+              class="h-10 w-full rounded-xl border border-n-weak bg-n-surface-1 px-3 text-sm text-n-slate-12 outline-none transition focus:border-n-brand"
+            >
+              <option value="none">Nenhum</option>
+              <option value="priority">Prioridade</option>
+              <option value="assignee">Agente</option>
+            </select>
+          </div>
+
+          <div class="space-y-1">
+            <label class="text-xs font-medium uppercase tracking-wide text-n-slate-10">
+              {{ t('KANBAN.FILTERS.INBOX') }}
+            </label>
+            <select
+              v-model="selectedInbox"
+              class="h-10 w-full rounded-xl border border-n-weak bg-n-surface-1 px-3 text-sm text-n-slate-12 outline-none transition focus:border-n-brand"
+            >
+              <option :value="null">{{ t('KANBAN.FILTERS.ALL_INBOXES') }}</option>
+              <option v-for="inbox in inboxes" :key="inbox.id" :value="inbox.id">
+                {{ inbox.name }}
+              </option>
+            </select>
+          </div>
+
+          <div class="space-y-1">
+            <label class="text-xs font-medium uppercase tracking-wide text-n-slate-10">
+              {{ t('KANBAN.FILTERS.ASSIGNEE') }}
+            </label>
+            <select
+              v-model="selectedAssignee"
+              class="h-10 w-full rounded-xl border border-n-weak bg-n-surface-1 px-3 text-sm text-n-slate-12 outline-none transition focus:border-n-brand"
+            >
+              <option value="all">{{ t('KANBAN.FILTERS.ALL_AGENTS') }}</option>
+              <option value="me">{{ t('KANBAN.FILTERS.MY_DEALS') }}</option>
+              <option value="unassigned">{{ t('KANBAN.FILTERS.UNASSIGNED') }}</option>
+            </select>
+          </div>
+
+          <div class="space-y-1">
+            <label class="text-xs font-medium uppercase tracking-wide text-n-slate-10">
+              Status
+            </label>
+            <select
+              v-model="statusFilter"
+              class="h-10 w-full rounded-xl border border-n-weak bg-n-surface-1 px-3 text-sm text-n-slate-12 outline-none transition focus:border-n-brand"
+            >
+              <option value="open">Abertos</option>
+              <option value="resolved">Arquivados</option>
+              <option value="all">Todos</option>
+            </select>
+          </div>
+
+          <div class="flex items-end justify-end">
+            <DropdownContainer>
+              <template #trigger="{ toggle }">
+                <Button
+                  sm
+                  slate
+                  outline
+                  icon="i-lucide-bookmark"
+                  label="Vistas salvas"
+                  @click="toggle"
+                />
+              </template>
+              <DropdownBody class="right-0 top-full z-50 mt-2 min-w-72" strong>
+                <DropdownSection v-if="savedViews.length">
+                  <div
+                    v-for="view in savedViews"
+                    :key="view.id"
+                    class="flex items-center gap-2 px-2 py-1"
+                  >
+                    <button
+                      class="flex min-w-0 flex-1 items-center gap-2 rounded-lg px-2 py-2 text-left text-sm text-n-slate-12 hover:bg-n-slate-2"
+                      @click="applyView(view)"
+                    >
+                      <i class="i-lucide-bookmark text-n-blue-11" />
+                      <span class="truncate">{{ view.name }}</span>
+                    </button>
+                    <button
+                      class="rounded-lg p-2 text-n-ruby-11 hover:bg-n-ruby-3"
+                      @click="deleteView(view.id)"
+                    >
+                      <i class="i-lucide-trash-2" />
+                    </button>
+                  </div>
+                </DropdownSection>
+                <DropdownSection v-else>
+                  <div class="px-3 py-2 text-sm text-n-slate-11">
+                    Nenhuma vista salva
+                  </div>
+                </DropdownSection>
+                <DropdownSection>
+                  <DropdownItem
+                    icon="i-lucide-plus"
+                    label="Salvar filtros atuais"
+                    :click="() => (showSaveViewModal = true)"
+                  />
+                </DropdownSection>
+              </DropdownBody>
+            </DropdownContainer>
           </div>
         </div>
       </div>
     </header>
 
-    <!-- Save View Modal -->
-    <Modal :show="showSaveViewModal" :on-close="() => showSaveViewModal = false">
+    <transition name="fade">
+      <div v-if="showMetrics && filteredConversations.length" class="border-b border-n-weak bg-n-surface-1 px-4 py-4 md:px-6">
+        <KanbanMetrics :conversations="filteredConversations" />
+      </div>
+    </transition>
+
+    <Modal :show="showSaveViewModal" :on-close="() => (showSaveViewModal = false)">
       <div class="w-full max-w-md p-6">
-        <h3 class="text-lg font-bold text-slate-900 mb-4">Salvar Vista Atual</h3>
+        <h3 class="mb-4 text-lg font-medium text-n-slate-12">Salvar Vista Atual</h3>
         <div class="space-y-4">
           <div>
-            <label class="block text-sm font-medium text-slate-700 mb-1">Nome da Vista</label>
-            <input 
-              v-model="newViewName" 
-              type="text" 
-              class="w-full border border-slate-300 rounded-md px-3 py-2 text-sm focus:ring-woot-500 focus:border-woot-500"
+            <label class="mb-1 block text-sm font-medium text-n-slate-12">Nome da Vista</label>
+            <input
+              v-model="newViewName"
+              type="text"
+              class="w-full rounded-xl border border-n-weak px-3 py-2 text-sm text-n-slate-12 outline-none focus:border-n-brand"
               placeholder="Ex: Tickets Alta Prioridade"
             >
           </div>
-          <div class="bg-slate-50 p-3 rounded text-sm text-slate-600">
-            <p class="font-medium mb-1">Filtros que serão salvos:</p>
-            <ul class="list-disc list-inside text-xs space-y-1">
+          <div class="rounded-xl bg-n-slate-2 p-3 text-sm text-n-slate-11">
+            <p class="mb-1 font-medium text-n-slate-12">Filtros que serão salvos:</p>
+            <ul class="list-inside list-disc space-y-1 text-xs">
               <li>Inbox: {{ selectedInbox ? inboxes.find(i => i.id === selectedInbox)?.name : 'Todos' }}</li>
               <li>Agente: {{ selectedAssignee === 'me' ? 'Eu' : (selectedAssignee === 'all' ? 'Todos' : selectedAssignee) }}</li>
               <li>Status: {{ statusFilter }}</li>
             </ul>
           </div>
           <div class="flex justify-end gap-2 pt-2">
-            <button @click="showSaveViewModal = false" class="px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 rounded-md">Cancelar</button>
-            <button @click="saveCurrentView" class="px-4 py-2 text-sm font-medium text-white bg-woot-600 hover:bg-woot-700 rounded-md">Salvar</button>
+            <Button slate outline sm label="Cancelar" @click="showSaveViewModal = false" />
+            <Button blue solid sm label="Salvar" @click="saveCurrentView" />
           </div>
         </div>
       </div>
     </Modal>
 
-    <main class="flex-1 w-full overflow-hidden bg-[#f8fafc]" :class="viewMode === 'list' ? 'overflow-y-auto' : 'overflow-x-auto overflow-y-hidden'">
+    <main class="flex-1 w-full overflow-hidden bg-n-slate-2" :class="viewMode === 'list' ? 'overflow-y-auto' : 'overflow-x-auto overflow-y-hidden'">
       <div
         v-if="isLoading && !allConversations.length"
         class="flex h-full items-center justify-center"
       >
         <div class="flex flex-col items-center gap-4">
-          <i class="i-lucide-loader-2 animate-spin text-5xl text-woot-600" />
-          <p class="text-sm font-semibold text-slate-500">
+          <i class="i-lucide-loader-2 animate-spin text-5xl text-n-brand" />
+          <p class="text-sm font-medium text-n-slate-11">
             {{ t('KANBAN.LOADING') }}
           </p>
         </div>
@@ -790,7 +806,7 @@ watch([selectedInbox, selectedAssignee], () => {
       </div>
 
       <!-- Visualização em Calendário -->
-      <div v-else-if="salesStages.length > 0 && viewMode === 'calendar'" class="h-full p-4 overflow-hidden">
+      <div v-else-if="salesStages.length > 0 && viewMode === 'calendar'" class="h-full overflow-hidden p-4 md:p-6">
         <KanbanCalendar
           :items="filteredConversations"
           :stages="salesStages"
@@ -815,7 +831,6 @@ watch([selectedInbox, selectedAssignee], () => {
             :conversations="conversationsByStage[stage.stage] || []"
             :wip-limit="stage.wipLimit"
             :visible-attributes="visibleAttributes"
-            class="shadow-sm border border-slate-200 rounded-xl"
             @stage-change="handleStageChange"
             @card-click="handleCardClick"
             @card-contextmenu="handleCardContextmenu"
@@ -827,25 +842,22 @@ watch([selectedInbox, selectedAssignee], () => {
       <!-- Swimlane Board View -->
       <div
         v-else-if="salesStages.length > 0 && viewMode === 'board' && groupBy !== 'none'"
-        class="flex flex-col h-full bg-[#f8fafc] overflow-y-auto overflow-x-hidden p-4 md:p-6 pb-20 gap-8"
+        class="flex h-full flex-col gap-8 overflow-x-hidden overflow-y-auto bg-n-slate-2 p-4 pb-20 md:p-6"
       >
         <div v-for="group in swimlaneGroups" :key="group.id" class="flex flex-col gap-3">
-          <!-- Group Header -->
-          <div class="sticky left-0 flex items-center gap-2 bg-slate-100/80 backdrop-blur px-3 py-2 rounded-lg border border-slate-200 w-fit">
-            <span class="text-sm font-bold text-slate-700">{{ group.name }}</span>
-            <span class="text-xs font-semibold bg-white border border-slate-200 px-1.5 py-0.5 rounded-md text-slate-500">
+          <div class="sticky left-0 flex w-fit items-center gap-2 rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2">
+            <span class="text-sm font-medium text-n-slate-12">{{ group.name }}</span>
+            <span class="rounded-lg bg-n-slate-2 px-1.5 py-0.5 text-xs font-medium text-n-slate-11">
                {{ salesStages.reduce((acc, stage) => acc + getSwimlaneConversations(stage.stage, group.value).length, 0) }}
             </span>
           </div>
 
-          <!-- Group Stages Row -->
            <div class="flex items-start gap-4 overflow-x-auto pb-4">
              <div
                v-for="stage in salesStages"
                :key="stage.stage + group.id"
                class="flex flex-col w-80 flex-shrink-0"
              >
-               <!-- We reuse KanbanColumn but it might need style adjustment to not be h-full -->
                <KanbanColumn
                  :stage="stage.stage"
                  :title="stage.title"
@@ -853,7 +865,7 @@ watch([selectedInbox, selectedAssignee], () => {
                  :conversations="getSwimlaneConversations(stage.stage, group.value)"
                  :wip-limit="null" 
                  :visible-attributes="visibleAttributes"
-                 class="shadow-sm border border-slate-200 rounded-xl min-h-[150px] max-h-[500px]"
+                 class="min-h-[150px] max-h-[500px]"
                  @stage-change="(payload) => handleStageChange({...payload, groupUpdate: { type: groupBy, value: group.value }})"
                  @card-click="handleCardClick"
                  @card-contextmenu="handleCardContextmenu"
@@ -865,35 +877,22 @@ watch([selectedInbox, selectedAssignee], () => {
 
       <div
         v-else
-        class="flex h-full flex-col items-center justify-center gap-6 p-8 text-center"
+        class="h-full p-8"
       >
-        <div class="rounded-full bg-slate-100 p-6">
-          <i class="i-lucide-kanban-square text-6xl text-slate-400" />
-        </div>
-        <div class="max-w-md space-y-2">
-          <h2 class="text-2xl font-bold text-slate-900">
-            {{ t('KANBAN.NO_BOARDS_TITLE') }}
-          </h2>
-          <p class="text-slate-500">
-            {{ t('KANBAN.NO_BOARDS_DESCRIPTION') }}
-          </p>
-        </div>
-        <div class="flex items-center gap-3">
-          <router-link
-            :to="{ name: 'settings_kanban' }"
-            class="inline-flex items-center gap-2 rounded-lg bg-woot-600 px-6 py-3 text-sm font-semibold text-white transition-all hover:bg-woot-700 active:scale-95 shadow-md hover:shadow-lg"
-          >
-            <i class="i-lucide-plus-circle text-lg" />
-            {{ t('KANBAN.CREATE_FIRST_BOARD') }}
-          </router-link>
-          <button
-            @click="showHelpModal = true"
-            class="inline-flex items-center gap-2 rounded-lg bg-white border border-slate-200 px-6 py-3 text-sm font-semibold text-slate-700 transition-all hover:bg-slate-50 hover:border-slate-300 active:scale-95 shadow-sm hover:shadow-md"
-          >
-            <i class="i-lucide-book-open text-lg text-woot-600" />
-            Ver Exemplos de Uso
-          </button>
-        </div>
+        <EmptyStateLayout
+          :title="t('KANBAN.NO_BOARDS_TITLE')"
+          :subtitle="t('KANBAN.NO_BOARDS_DESCRIPTION')"
+          :show-backdrop="false"
+        >
+          <template #actions>
+            <div class="flex items-center gap-3">
+              <router-link :to="{ name: 'settings_kanban' }">
+                <Button blue solid icon="i-lucide-plus-circle" :label="t('KANBAN.CREATE_FIRST_BOARD')" />
+              </router-link>
+              <Button slate outline icon="i-lucide-book-open" label="Ver Exemplos de Uso" @click="showHelpModal = true" />
+            </div>
+          </template>
+        </EmptyStateLayout>
       </div>
     </main>
 

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed } from 'vue';
 import { 
   format, 
   startOfMonth, 
@@ -15,9 +15,8 @@ import {
   parseISO
 } from 'date-fns';
 import { ptBR, enUS } from 'date-fns/locale';
-import { useStore } from 'dashboard/composables/store';
 import { useI18n } from 'vue-i18n';
-import KanbanCard from 'dashboard/components/KanbanBoard/KanbanCard.vue';
+import Button from 'dashboard/components-next/button/Button.vue';
 
 const props = defineProps({
   items: {
@@ -32,7 +31,6 @@ const props = defineProps({
 
 const emit = defineEmits(['openItem']);
 
-const store = useStore();
 const { t, locale } = useI18n();
 
 const currentMonth = ref(new Date());
@@ -128,76 +126,55 @@ const handleItemClick = (item) => {
   emit('openItem', item);
 };
 
-const getStageColor = (stageId) => {
-  // Try to find stage
-  // Since stage prop is array of stages, mapped by id usually in parent
-  // Assuming stage info is not directly on item, but item has stage_id
-  // But props.stages is available
-  // Let's just return a generic color or try to match if we can
-  return 'bg-woot-500';
-};
-
 </script>
 
 <template>
-  <div class="flex flex-col h-full bg-white rounded-lg shadow-sm border border-slate-200 overflow-hidden">
-    <!-- Header -->
-    <div class="flex items-center justify-between p-4 border-b border-slate-100">
+  <div class="flex h-full flex-col overflow-hidden rounded-2xl border border-n-weak bg-n-surface-1">
+    <div class="flex items-center justify-between border-b border-n-weak px-4 py-4 md:px-5">
       <div class="flex items-center gap-4">
-        <h2 class="text-lg font-bold text-slate-800 capitalize">{{ monthTitle }}</h2>
-        <div class="flex items-center bg-slate-100 rounded-lg p-1">
-          <button @click="prevMonth" class="p-1 hover:bg-white hover:shadow-sm rounded-md transition-all text-slate-600">
-            <i class="i-lucide-chevron-left text-lg" />
-          </button>
-          <button @click="jumpToToday" class="px-3 py-1 text-xs font-bold text-slate-600 hover:text-woot-600 transition-colors">
-            {{ $t('KANBAN.CALENDAR.TODAY') || 'Hoje' }}
-          </button>
-          <button @click="nextMonth" class="p-1 hover:bg-white hover:shadow-sm rounded-md transition-all text-slate-600">
-            <i class="i-lucide-chevron-right text-lg" />
-          </button>
+        <h2 class="text-lg font-medium capitalize text-n-slate-12">{{ monthTitle }}</h2>
+        <div class="inline-flex items-center gap-1 rounded-xl border border-n-weak bg-n-slate-2 p-1">
+          <Button sm slate ghost icon="i-lucide-chevron-left" @click="prevMonth" />
+          <Button sm slate outline :label="$t('KANBAN.CALENDAR.TODAY') || 'Hoje'" @click="jumpToToday" />
+          <Button sm slate ghost icon="i-lucide-chevron-right" @click="nextMonth" />
         </div>
       </div>
-      
-      <!-- Statistics for the month could go here -->
     </div>
 
-    <!-- Calendar Grid -->
-    <div class="flex-1 flex flex-col overflow-hidden">
-      <!-- Week headers -->
-      <div class="grid grid-cols-7 border-b border-slate-200 bg-slate-50">
+    <div class="flex flex-1 flex-col overflow-hidden">
+      <div class="grid grid-cols-7 border-b border-n-weak bg-n-slate-2/80">
         <div 
           v-for="dayName in weekDays" 
           :key="dayName"
-          class="py-2 text-center text-xs font-bold text-slate-500 uppercase tracking-wider"
+          class="py-2 text-center text-xs font-medium uppercase tracking-wide text-n-slate-10"
         >
           {{ dayName }}
         </div>
       </div>
 
-      <!-- Days -->
-      <div class="flex-1 grid grid-cols-7 grid-rows-5 overflow-y-auto">
+      <div class="grid flex-1 grid-cols-7 grid-rows-5 overflow-y-auto bg-n-weak/30">
         <div 
           v-for="day in calendarDays" 
           :key="day.date"
-          class="min-h-[120px] border-b border-r border-slate-100 p-2 transition-colors hover:bg-slate-50 group flex flex-col gap-1"
+          class="group flex min-h-[120px] flex-col gap-1 border-b border-r border-n-weak bg-n-surface-1 p-2 transition-colors hover:bg-n-slate-2/50"
           :class="{
-            'bg-slate-50/50 text-slate-400': !day.isCurrentMonth,
-            'bg-woot-25/30': day.isToday
+            'bg-n-slate-2/50 text-n-slate-10': !day.isCurrentMonth,
+            'bg-n-brand/5': day.isToday
           }"
         >
-          <div class="flex items-center justify-between mb-1">
+          <div class="mb-1 flex items-center justify-between">
             <span 
-              class="text-sm font-medium w-7 h-7 flex items-center justify-center rounded-full"
+              class="flex h-7 w-7 items-center justify-center rounded-full text-sm font-medium"
               :class="{
-                'bg-woot-500 text-white shadow-md': day.isToday,
-                'text-slate-700': !day.isToday && day.isCurrentMonth
+                'bg-n-brand text-white': day.isToday,
+                'text-n-slate-12': !day.isToday && day.isCurrentMonth
               }"
             >
               {{ format(day.date, 'd') }}
             </span>
             <button 
               v-if="day.isCurrentMonth"
-              class="opacity-0 group-hover:opacity-100 p-1 hover:bg-slate-200 rounded text-slate-400 transition-all"
+              class="rounded-lg p-1 text-n-slate-10 opacity-0 transition-all hover:bg-n-slate-3 group-hover:opacity-100"
               :title="$t('KANBAN.CALENDAR.ADD_ITEM') || 'Adicionar Item'"
               @click="$emit('openItem', { custom_attributes: { kanban_due_date: format(day.date, 'yyyy-MM-dd') } })"
             >
@@ -205,34 +182,31 @@ const getStageColor = (stageId) => {
             </button>
           </div>
 
-          <!-- Items list for the day -->
-          <div class="flex-1 space-y-1 overflow-y-auto max-h-[100px] custom-scrollbar">
+          <div class="custom-scrollbar max-h-[100px] flex-1 space-y-1 overflow-y-auto">
             <div 
               v-for="item in day.items" 
               :key="item.calendarUniqueId"
               @click.stop="handleItemClick(item)"
-              class="px-2 py-1.5 bg-white border border-slate-200 rounded shadow-sm text-xs cursor-pointer hover:border-woot-300 hover:shadow-md transition-all truncate border-l-4 group/item"
+              class="group/item rounded-xl border border-n-weak bg-n-surface-1 px-2 py-1.5 text-xs transition-all hover:border-n-brand/30 hover:bg-n-slate-2/50"
               :class="{
-                'border-l-red-500': item.priority === 'urgent',
-                'border-l-orange-400': item.priority === 'high',
-                'border-l-woot-500': item.priority === 'medium',
-                'border-l-slate-400': item.priority === 'low'
+                'ring-1 ring-n-ruby-6/50': item.priority === 'urgent',
+                'ring-1 ring-n-amber-6/50': item.priority === 'high',
+                'ring-1 ring-n-brand/40': item.priority === 'medium',
+                'ring-1 ring-n-slate-6/50': item.priority === 'low'
               }"
             >
-              <div class="flex items-center gap-1.5 min-w-0">
-                 <!-- Icon based on type -->
-                 <i v-if="item.calendarType === 'start'" class="i-lucide-calendar-clock text-blue-500 flex-shrink-0" title="Início" />
-                 <i v-else-if="item.calendarType === 'due'" class="i-lucide-calendar-x text-red-500 flex-shrink-0" title="Vencimento" />
-                 <i v-else-if="item.calendarType === 'schedule'" class="i-lucide-message-square-clock text-amber-500 flex-shrink-0" title="Mensagem Agendada" />
+              <div class="flex min-w-0 items-center gap-1.5">
+                 <i v-if="item.calendarType === 'start'" class="i-lucide-calendar-clock shrink-0 text-n-blue-11" title="Início" />
+                 <i v-else-if="item.calendarType === 'due'" class="i-lucide-calendar-x shrink-0 text-n-ruby-11" title="Vencimento" />
+                 <i v-else-if="item.calendarType === 'schedule'" class="i-lucide-message-square-clock shrink-0 text-n-amber-11" title="Mensagem Agendada" />
 
-                <div class="font-medium text-slate-700 truncate">
+                <div class="truncate font-medium text-n-slate-12">
                   {{ item.custom_attributes?.kanban_title || item.meta?.sender?.name || `#${item.id}` }}
                 </div>
               </div>
-              <!-- Optional: show time if we had it, or value -->
-              <div class="flex justify-between items-center text-[10px] text-slate-500 mt-0.5">
+              <div class="mt-0.5 flex items-center justify-between text-[10px] text-n-slate-10">
                 <span v-if="item.custom_attributes?.deal_value">R$ {{ item.custom_attributes.deal_value }}</span>
-                <span v-if="item.calendarType === 'schedule'" class="ml-auto font-mono">
+                <span v-if="item.calendarType === 'schedule'" class="ml-auto font-mono text-n-slate-11">
                    {{ item.custom_attributes.kanban_scheduled_at ? format(parseISO(item.custom_attributes.kanban_scheduled_at), 'HH:mm') : '' }}
                 </span>
               </div>

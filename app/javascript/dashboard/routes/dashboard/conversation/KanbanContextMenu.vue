@@ -1,19 +1,19 @@
 <template>
   <div 
     v-if="show"
-    class="fixed z-50 bg-white rounded-lg shadow-xl border border-slate-200 py-1 w-48"
+    class="fixed z-50 w-56 rounded-2xl border border-n-weak bg-n-surface-1 py-2 shadow-lg"
     :style="{ top: `${y}px`, left: `${x}px` }"
     v-click-outside="close"
   >
-    <div class="px-3 py-2 border-b border-slate-100 mb-1">
-      <p class="text-xs font-bold text-slate-800 truncate">
+    <div class="mb-1 border-b border-n-weak px-3 py-2">
+      <p class="truncate text-xs font-medium text-n-slate-12">
         #{{ item.id }} - {{ item.meta?.sender?.name }}
       </p>
     </div>
 
     <button 
       @click="handleAction('edit')"
-      class="w-full text-left px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-woot-600 flex items-center gap-2"
+      class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-n-slate-11 transition-colors hover:bg-n-slate-2 hover:text-n-blue-11"
     >
       <i class="i-lucide-pencil text-xs" />
       {{ t('KANBAN.CONTEXT_MENU.EDIT') }}
@@ -21,7 +21,7 @@
 
     <button 
       @click="handleAction('view_contact')"
-      class="w-full text-left px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-woot-600 flex items-center gap-2"
+      class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-n-slate-11 transition-colors hover:bg-n-slate-2 hover:text-n-blue-11"
     >
       <i class="i-lucide-user text-xs" />
       {{ t('KANBAN.CONTEXT_MENU.VIEW_CONTACT') }}
@@ -29,18 +29,18 @@
 
     <button 
       @click="handleAction('open_conversation')"
-      class="w-full text-left px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 hover:text-woot-600 flex items-center gap-2"
+      class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-n-slate-11 transition-colors hover:bg-n-slate-2 hover:text-n-blue-11"
     >
       <i class="i-lucide-message-circle text-xs" />
       {{ t('KANBAN.CONTEXT_MENU.OPEN_CONVERSATION') }}
     </button>
 
-    <div v-if="isAdmin" class="border-t border-slate-100 my-1"></div>
+    <div v-if="isAdmin" class="my-1 border-t border-n-weak"></div>
 
     <button 
       v-if="isAdmin"
       @click="handleAction('delete')"
-      class="w-full text-left px-3 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2"
+      class="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-n-ruby-11 transition-colors hover:bg-n-ruby-3"
     >
       <i class="i-lucide-trash-2 text-xs" />
       {{ t('KANBAN.CONTEXT_MENU.DELETE') }}

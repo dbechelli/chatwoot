@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import Button from 'dashboard/components-next/button/Button.vue';
 import Modal from 'dashboard/components/Modal.vue';
 
 defineProps({
@@ -134,13 +135,13 @@ const selectTemplate = template => {
           <div
             v-for="template in templates"
             :key="template.id"
-            class="group border border-n-weak rounded-lg p-4 md:p-5 hover:shadow-md hover:border-n-brand transition-all cursor-pointer bg-white"
+            class="group flex cursor-pointer flex-col rounded-2xl border border-n-weak bg-n-surface-1 p-4 transition-colors hover:border-n-brand md:p-5"
             @click="selectTemplate(template)"
           >
             <!-- Icon & Title -->
             <div class="flex items-start gap-3 md:gap-4 mb-3 md:mb-4">
               <div
-                class="flex-shrink-0 w-10 h-10 md:w-12 md:h-12 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform"
+                class="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl transition-transform group-hover:scale-105 md:h-12 md:w-12"
                 :style="{ backgroundColor: template.iconBg }"
               >
                 <i
@@ -186,12 +187,13 @@ const selectTemplate = template => {
               </div>
             </div>
 
-            <!-- Use Button -->
-            <button
-              class="w-full mt-3 md:mt-4 px-4 py-2 bg-n-brand text-white rounded-lg font-semibold text-xs md:text-sm hover:bg-n-brand/90 transition-colors opacity-0 group-hover:opacity-100"
-            >
-              {{ $t('KANBAN_SETTINGS.USE_TEMPLATE') }}
-            </button>
+            <div class="mt-4">
+              <Button
+                sm
+                class="w-full"
+                :label="$t('KANBAN_SETTINGS.USE_TEMPLATE')"
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -201,14 +203,16 @@ const selectTemplate = template => {
         class="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 md:p-6 border-t border-n-weak bg-n-slate-1"
       >
         <p class="text-xs md:text-sm text-n-slate-11 text-center sm:text-left">
-          {{ `💡 ${$t('KANBAN_SETTINGS.CUSTOMIZE_AFTER_CREATE')}` }}
+          {{ $t('KANBAN_SETTINGS.CUSTOMIZE_AFTER_CREATE') }}
         </p>
-        <button
-          class="w-full sm:w-auto px-4 py-2 text-xs md:text-sm font-semibold text-n-slate-12 hover:bg-n-slate-2 rounded-lg transition-colors"
+        <Button
+          sm
+          ghost
+          slate
+          class="w-full sm:w-auto"
+          :label="$t('KANBAN_SETTINGS.CREATE_BLANK_BOARD')"
           @click="$emit('close')"
-        >
-          {{ $t('KANBAN_SETTINGS.CREATE_BLANK_BOARD') }}
-        </button>
+        />
       </div>
     </div>
   </Modal>

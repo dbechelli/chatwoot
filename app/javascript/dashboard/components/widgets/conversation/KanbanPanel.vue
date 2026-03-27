@@ -3,6 +3,7 @@ import { ref, computed, onMounted, watch } from 'vue';
 import { useStore } from 'vuex';
 import { useI18n } from 'vue-i18n';
 import { useAlert } from 'dashboard/composables';
+import Button from 'dashboard/components-next/button/Button.vue';
 
 const props = defineProps({
   conversationId: { type: [Number, String], required: true },
@@ -167,38 +168,35 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="flex flex-col h-full bg-white border-l border-slate-200">
-    <!-- Header -->
-    <div class="flex items-center justify-between p-4 border-b border-slate-200">
+  <div class="flex h-full flex-col border-l border-n-weak bg-n-surface-1">
+    <div class="flex items-center justify-between border-b border-n-weak px-4 py-4">
       <div class="flex items-center gap-2">
-        <i class="i-lucide-kanban-square text-woot-600 text-xl" />
-        <h3 class="font-bold text-slate-900">Kanban</h3>
+        <i class="i-lucide-kanban-square text-xl text-n-blue-11" />
+        <h3 class="font-medium text-n-slate-12">Kanban</h3>
       </div>
       <button
         v-if="isInKanban"
         @click="isExpanded = !isExpanded"
-        class="p-1 hover:bg-slate-100 rounded transition-colors"
+        class="rounded-lg p-1 text-n-slate-10 transition-colors hover:bg-n-slate-2"
       >
-        <i :class="isExpanded ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'" class="text-slate-500" />
+        <i :class="isExpanded ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'" class="text-n-slate-10" />
       </button>
     </div>
 
-    <!-- Content -->
-    <div class="flex-1 overflow-y-auto p-4 space-y-4">
-      <div v-if="availableBoards.length === 0" class="text-center py-8">
-        <i class="i-lucide-kanban-square text-4xl text-slate-300 mb-2" />
-        <p class="text-sm text-slate-500">Nenhum quadro disponível</p>
+    <div class="flex-1 space-y-4 overflow-y-auto p-4">
+      <div v-if="availableBoards.length === 0" class="py-8 text-center">
+        <i class="i-lucide-kanban-square mb-2 text-4xl text-n-slate-8" />
+        <p class="text-sm text-n-slate-11">Nenhum quadro disponível</p>
       </div>
 
       <div v-else>
-        <!-- Board Selector -->
         <div>
-          <label class="block text-xs font-semibold text-slate-600 mb-2 uppercase">
+          <label class="mb-2 block text-xs font-medium uppercase tracking-wide text-n-slate-10">
             Quadro
           </label>
           <select
             v-model="selectedBoard"
-            class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:border-woot-500 focus:ring-2 focus:ring-woot-100 outline-none"
+            class="w-full rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2 text-sm text-n-slate-12 outline-none transition focus:border-n-brand"
           >
             <option v-for="board in availableBoards" :key="board.id" :value="board">
               {{ board.name }}
@@ -206,24 +204,22 @@ onMounted(async () => {
           </select>
         </div>
 
-        <!-- Current Status -->
-        <div v-if="isInKanban" class="bg-woot-50 border border-woot-200 rounded-lg p-3">
-          <div class="flex items-center gap-2 mb-2">
-            <i class="i-lucide-check-circle text-woot-600" />
-            <span class="text-xs font-semibold text-woot-800 uppercase">No Kanban</span>
+        <div v-if="isInKanban" class="rounded-2xl border border-n-brand/20 bg-n-brand/5 p-3">
+          <div class="mb-2 flex items-center gap-2">
+            <i class="i-lucide-check-circle text-n-blue-11" />
+            <span class="text-xs font-medium uppercase tracking-wide text-n-blue-11">No Kanban</span>
           </div>
           
           <div class="space-y-3">
-            <!-- Current Stage -->
             <div>
-              <label class="block text-xs font-medium text-slate-600 mb-1">
+              <label class="mb-1 block text-xs font-medium text-n-slate-11">
                 Estágio Atual
               </label>
               <select
                 v-model="currentStage"
                 @change="updateStage(currentStage)"
                 :disabled="isLoading"
-                class="w-full px-2 py-1.5 text-sm border border-slate-200 rounded bg-white focus:border-woot-500 outline-none"
+                class="w-full rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2 text-sm text-n-slate-12 outline-none transition focus:border-n-brand"
               >
                 <option
                   v-for="stage in currentBoardStages"
@@ -235,16 +231,14 @@ onMounted(async () => {
               </select>
             </div>
 
-            <!-- Expanded Details -->
-            <div v-if="isExpanded" class="space-y-3 pt-2 border-t border-woot-200">
-              <!-- Priority -->
+            <div v-if="isExpanded" class="space-y-3 border-t border-n-brand/20 pt-2">
               <div>
-                <label class="block text-xs font-medium text-slate-600 mb-1">
+                <label class="mb-1 block text-xs font-medium text-n-slate-11">
                   Prioridade
                 </label>
                 <select
                   v-model="priority"
-                  class="w-full px-2 py-1.5 text-sm border border-slate-200 rounded bg-white focus:border-woot-500 outline-none"
+                  class="w-full rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2 text-sm text-n-slate-12 outline-none transition focus:border-n-brand"
                 >
                   <option value="low">Baixa</option>
                   <option value="medium">Média</option>
@@ -253,9 +247,8 @@ onMounted(async () => {
                 </select>
               </div>
 
-              <!-- Deal Value -->
               <div v-if="selectedBoard?.valueAttributeKey">
-                <label class="block text-xs font-medium text-slate-600 mb-1">
+                <label class="mb-1 block text-xs font-medium text-n-slate-11">
                   Valor
                 </label>
                 <input
@@ -263,82 +256,78 @@ onMounted(async () => {
                   type="number"
                   min="0"
                   step="0.01"
-                  class="w-full px-2 py-1.5 text-sm border border-slate-200 rounded focus:border-woot-500 outline-none"
+                  class="w-full rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2 text-sm text-n-slate-12 outline-none transition focus:border-n-brand"
                   placeholder="R$ 0,00"
                 />
               </div>
 
-              <!-- Dates -->
               <div>
-                <label class="block text-xs font-medium text-slate-600 mb-1">
+                <label class="mb-1 block text-xs font-medium text-n-slate-11">
                   Data de Início
                 </label>
                 <input
                   v-model="startDate"
                   type="date"
-                  class="w-full px-2 py-1.5 text-sm border border-slate-200 rounded focus:border-woot-500 outline-none"
+                  class="w-full rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2 text-sm text-n-slate-12 outline-none transition focus:border-n-brand"
                 />
               </div>
 
               <div>
-                <label class="block text-xs font-medium text-slate-600 mb-1">
+                <label class="mb-1 block text-xs font-medium text-n-slate-11">
                   Data de Vencimento
                 </label>
                 <input
                   v-model="dueDate"
                   type="date"
-                  class="w-full px-2 py-1.5 text-sm border border-slate-200 rounded focus:border-woot-500 outline-none"
+                  class="w-full rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2 text-sm text-n-slate-12 outline-none transition focus:border-n-brand"
                 />
               </div>
 
-              <!-- Notes -->
               <div>
-                <label class="block text-xs font-medium text-slate-600 mb-1">
+                <label class="mb-1 block text-xs font-medium text-n-slate-11">
                   Notas
                 </label>
                 <textarea
                   v-model="notes"
                   rows="3"
-                  class="w-full px-2 py-1.5 text-sm border border-slate-200 rounded focus:border-woot-500 outline-none resize-none"
+                  class="w-full resize-none rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2 text-sm text-n-slate-12 outline-none transition focus:border-n-brand"
                   placeholder="Notas sobre esta tarefa..."
                 />
               </div>
 
-              <!-- Save Button -->
-              <button
+              <Button
                 @click="addToKanban"
                 :disabled="isLoading"
-                class="w-full px-3 py-2 bg-woot-600 text-white rounded-lg text-sm font-semibold hover:bg-woot-700 transition-colors disabled:opacity-50"
-              >
-                Salvar Alterações
-              </button>
+                blue
+                solid
+                class="w-full"
+                label="Salvar Alterações"
+              />
             </div>
 
-            <!-- Remove Button -->
-            <button
+            <Button
               @click="removeFromKanban"
-              class="w-full px-3 py-1.5 text-red-600 hover:bg-red-50 rounded text-sm font-medium transition-colors"
-            >
-              <i class="i-lucide-trash-2 mr-1" />
-              Remover do Kanban
-            </button>
+              ruby
+              ghost
+              icon="i-lucide-trash-2"
+              class="w-full justify-start"
+              label="Remover do Kanban"
+            />
           </div>
         </div>
 
-        <!-- Add to Kanban -->
         <div v-else class="space-y-3">
-          <p class="text-xs text-slate-500">
+          <p class="text-xs text-n-slate-11">
             Esta conversa não está no Kanban ainda
           </p>
 
-          <!-- Stage Selection -->
           <div>
-            <label class="block text-xs font-semibold text-slate-600 mb-2 uppercase">
+            <label class="mb-2 block text-xs font-medium uppercase tracking-wide text-n-slate-10">
               Estágio Inicial
             </label>
             <select
               v-model="currentStage"
-              class="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:border-woot-500 outline-none"
+              class="w-full rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2 text-sm text-n-slate-12 outline-none transition focus:border-n-brand"
             >
               <option value="">Selecione um estágio...</option>
               <option
@@ -351,15 +340,15 @@ onMounted(async () => {
             </select>
           </div>
 
-          <!-- Add Button -->
-          <button
+          <Button
             @click="addToKanban"
             :disabled="!currentStage || isLoading"
-            class="w-full px-4 py-2 bg-woot-600 text-white rounded-lg font-semibold hover:bg-woot-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <i class="i-lucide-plus mr-2" />
-            Adicionar ao Kanban
-          </button>
+            blue
+            solid
+            icon="i-lucide-plus"
+            class="w-full"
+            label="Adicionar ao Kanban"
+          />
         </div>
       </div>
     </div>

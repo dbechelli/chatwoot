@@ -85,43 +85,43 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div class="p-4 bg-white rounded-md border border-slate-100">
+  <div class="rounded-xl border border-n-weak bg-n-surface-1 p-4">
     <div v-if="!currentBoard">
-      <p class="text-xs text-slate-500">{{ $t('KANBAN.SIDEBAR.NO_BOARD') }}</p>
+      <p class="text-xs text-n-slate-11">{{ $t('KANBAN.SIDEBAR.NO_BOARD') }}</p>
     </div>
 
     <div v-else>
       <div v-if="currentStage" class="space-y-3">
         <div class="flex items-center justify-between">
           <span 
-            class="px-2 py-1 rounded text-xs font-bold uppercase tracking-wider"
+            class="rounded-lg px-2 py-1 text-xs font-medium uppercase tracking-wide"
             :style="{ backgroundColor: `${currentStage.color}20`, color: currentStage.color }"
           >
             {{ currentStage.name }}
           </span>
           <button 
             @click="showModal = true"
-            class="text-xs text-blue-600 hover:underline font-medium"
+            class="text-xs font-medium text-n-blue-11 hover:underline"
           >
             {{ $t('KANBAN.SIDEBAR.EDIT') }}
           </button>
         </div>
 
-        <div v-if="kanbanTitle" class="font-bold text-sm text-slate-800">
+        <div v-if="kanbanTitle" class="text-sm font-medium text-n-slate-12">
           {{ kanbanTitle }}
         </div>
 
-        <div v-if="dealValue" class="flex items-center gap-1 text-emerald-700 font-bold text-sm">
+        <div v-if="dealValue" class="flex items-center gap-1 text-sm font-medium text-n-teal-11">
           <i class="i-lucide-dollar-sign text-xs" />
           {{ formatCurrency(dealValue) }}
         </div>
       </div>
 
       <div v-else class="text-center py-2">
-        <p class="text-xs text-slate-500 mb-3">{{ $t('KANBAN.SIDEBAR.NOT_IN_KANBAN') }}</p>
+        <p class="mb-3 text-xs text-n-slate-11">{{ $t('KANBAN.SIDEBAR.NOT_IN_KANBAN') }}</p>
         <button
           @click="showModal = true"
-          class="w-full py-2 bg-blue-50 text-blue-600 rounded-md text-sm font-bold hover:bg-blue-100 transition-colors"
+          class="w-full rounded-lg bg-n-brand/10 py-2 text-sm font-medium text-n-blue-11 transition-colors hover:bg-n-brand/15"
         >
           {{ $t('KANBAN.SIDEBAR.ADD_TO_KANBAN') }}
         </button>

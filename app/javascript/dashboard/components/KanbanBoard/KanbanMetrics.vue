@@ -58,95 +58,94 @@ const formatPercentage = value => {
 
 <template>
   <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
-    <div class="group flex flex-col gap-1 rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:shadow-md">
+    <div class="group flex flex-col gap-1 rounded-2xl border border-n-weak bg-n-surface-1 p-4 transition-colors hover:bg-n-slate-2/40">
       <div class="flex items-center justify-between">
-        <span class="text-xs font-bold uppercase tracking-wider text-slate-500">
+        <span class="text-xs font-medium uppercase tracking-wide text-n-slate-10">
           {{ t('KANBAN.METRICS.TOTAL_DEALS') }}
         </span>
-        <div class="rounded-lg bg-blue-50 p-2 text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
+        <div class="rounded-xl bg-n-brand/10 p-2 text-n-blue-11 transition-colors group-hover:bg-n-brand/15">
           <i class="i-lucide-briefcase text-lg" />
         </div>
       </div>
       <div class="mt-1">
-        <span class="text-2xl font-black text-slate-900 leading-none">
+        <span class="text-2xl font-semibold leading-none text-n-slate-12">
           {{ totalDeals }}
         </span>
-        <p class="text-[10px] text-slate-400 mt-1">Negociações ativas</p>
+        <p class="mt-1 text-[10px] text-n-slate-10">Negociações ativas</p>
       </div>
     </div>
 
-    <div class="group flex flex-col gap-1 rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:shadow-md">
+    <div class="group flex flex-col gap-1 rounded-2xl border border-n-weak bg-n-surface-1 p-4 transition-colors hover:bg-n-slate-2/40">
       <div class="flex items-center justify-between">
-        <span class="text-xs font-bold uppercase tracking-wider text-slate-500">
+        <span class="text-xs font-medium uppercase tracking-wide text-n-slate-10">
           {{ t('KANBAN.METRICS.TOTAL_VALUE') }}
         </span>
-        <div class="rounded-lg bg-emerald-50 p-2 text-emerald-600 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+        <div class="rounded-xl bg-n-teal-3/70 p-2 text-n-teal-11 transition-colors group-hover:bg-n-teal-3">
           <i class="i-lucide-dollar-sign text-lg" />
         </div>
       </div>
       <div class="mt-1">
-        <span class="text-2xl font-black text-emerald-600 leading-none">
+        <span class="text-2xl font-semibold leading-none text-n-teal-11">
           {{ formatCurrency(totalValue) }}
         </span>
-        <p class="text-[10px] text-slate-400 mt-1">Volume em carteira</p>
+        <p class="mt-1 text-[10px] text-n-slate-10">Volume em carteira</p>
       </div>
     </div>
 
-    <div class="group flex flex-col gap-1 rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:shadow-md">
+    <div class="group flex flex-col gap-1 rounded-2xl border border-n-weak bg-n-surface-1 p-4 transition-colors hover:bg-n-slate-2/40">
       <div class="flex items-center justify-between">
-        <span class="text-xs font-bold uppercase tracking-wider text-slate-500">
+        <span class="text-xs font-medium uppercase tracking-wide text-n-slate-10">
           {{ t('KANBAN.METRICS.AVG_DEAL_VALUE') }}
         </span>
-        <div class="rounded-lg bg-purple-50 p-2 text-purple-600 group-hover:bg-purple-600 group-hover:text-white transition-colors">
+        <div class="rounded-xl bg-n-blue-3/70 p-2 text-n-blue-11 transition-colors group-hover:bg-n-blue-3">
           <i class="i-lucide-trending-up text-lg" />
         </div>
       </div>
       <div class="mt-1">
-        <span class="text-2xl font-black text-purple-700 leading-none">
+        <span class="text-2xl font-semibold leading-none text-n-blue-11">
           {{ formatCurrency(avgDealValue) }}
         </span>
-        <p class="text-[10px] text-slate-400 mt-1">Ticket médio atual</p>
+        <p class="mt-1 text-[10px] text-n-slate-10">Ticket médio atual</p>
       </div>
     </div>
 
-    <div class="group flex flex-col gap-1 rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:shadow-md">
+    <div class="group flex flex-col gap-1 rounded-2xl border border-n-weak bg-n-surface-1 p-4 transition-colors hover:bg-n-slate-2/40">
       <div class="flex items-center justify-between">
-        <span class="text-xs font-bold uppercase tracking-wider text-slate-500">
+        <span class="text-xs font-medium uppercase tracking-wide text-n-slate-10">
           {{ t('KANBAN.METRICS.CONVERSION_RATE') }}
         </span>
-        <div class="rounded-lg bg-orange-50 p-2 text-orange-600 group-hover:bg-orange-600 group-hover:text-white transition-colors">
+        <div class="rounded-xl bg-n-amber-3/70 p-2 text-n-amber-11 transition-colors group-hover:bg-n-amber-3">
           <i class="i-lucide-target text-lg" />
         </div>
       </div>
       <div class="mt-1">
-        <span class="text-2xl font-black text-orange-700 leading-none">
+        <span class="text-2xl font-semibold leading-none text-n-amber-11">
           {{ formatPercentage(conversionRate) }}
         </span>
-        <p class="text-[10px] text-slate-400 mt-1">Taxa de conversão</p>
+        <p class="mt-1 text-[10px] text-n-slate-10">Taxa de conversão</p>
       </div>
     </div>
 
-    <div class="group flex flex-col gap-1 rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:shadow-md">
+    <div class="group flex flex-col gap-1 rounded-2xl border border-n-weak bg-n-surface-1 p-4 transition-colors hover:bg-n-slate-2/40">
       <div class="flex items-center justify-between">
-        <span class="text-xs font-bold uppercase tracking-wider text-slate-500">
+        <span class="text-xs font-medium uppercase tracking-wide text-n-slate-10">
           Previsão
         </span>
-        <div class="rounded-lg bg-indigo-50 p-2 text-indigo-600 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
+        <div class="rounded-xl bg-n-slate-3 p-2 text-n-slate-11 transition-colors group-hover:bg-n-slate-4">
           <i class="i-lucide-chart-line text-lg" />
         </div>
       </div>
       <div class="mt-1">
-        <span class="text-2xl font-black text-indigo-700 leading-none">
+        <span class="text-2xl font-semibold leading-none text-n-slate-12">
           {{ formatCurrency(forecastValue) }}
         </span>
-        <p class="text-[10px] text-slate-400 mt-1">Expectativa de fechamento</p>
+        <p class="mt-1 text-[10px] text-n-slate-10">Expectativa de fechamento</p>
       </div>
     </div>
   </div>
 </template>
 
 <style scoped>
-/* Efeito de destaque nos números ao passar o mouse */
 .group:hover span {
   transition: transform 0.2s ease;
 }

@@ -57,27 +57,27 @@ const handleCardClick = conversation => {
 
 <template>
   <div 
-    class="flex flex-col rounded-xl border border-slate-200 bg-slate-50/50 shadow-sm overflow-hidden h-full transition-colors"
-    :class="{ 'border-red-300 bg-red-50/30': isOverLimit }"
+    class="flex h-full flex-col overflow-hidden rounded-2xl border border-n-weak bg-n-surface-1 transition-colors"
+    :class="{ 'border-n-ruby-7 bg-n-ruby-3/20': isOverLimit }"
   >
-    <div class="flex flex-col gap-2 p-4 bg-white border-b border-slate-200">
+    <div class="flex flex-col gap-3 border-b border-n-weak bg-n-slate-2/50 px-4 py-4">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-2.5 overflow-hidden">
           <div
-            class="h-3 w-3 rounded-full flex-shrink-0"
-            :style="{ backgroundColor: color, boxShadow: `0 0 8px ${color}60` }"
+            class="h-2.5 w-2.5 flex-shrink-0 rounded-full"
+            :style="{ backgroundColor: color }"
           />
-          <h3 class="text-sm font-bold text-slate-800 truncate uppercase tracking-wide">
+          <h3 class="truncate text-sm font-medium uppercase tracking-wide text-n-slate-12">
             {{ title }}
           </h3>
         </div>
         
         <div
-          class="flex items-center gap-1 rounded-md px-2 py-0.5 text-[11px] font-bold shadow-sm border"
+          class="flex items-center gap-1 rounded-lg border px-2 py-0.5 text-[11px] font-medium"
           :class="
             isOverLimit
-              ? 'bg-red-500 text-white border-red-600'
-              : 'bg-slate-100 text-slate-600 border-slate-200'
+              ? 'border-n-ruby-7 bg-n-ruby-3 text-n-ruby-11'
+              : 'border-n-weak bg-n-surface-1 text-n-slate-11'
           "
         >
           <span>{{ conversations.length }}</span>
@@ -85,10 +85,10 @@ const handleCardClick = conversation => {
         </div>
       </div>
 
-      <div v-if="totalValue > 0" class="flex items-center gap-1.5 mt-1">
-        <div class="flex items-center gap-1 px-2 py-0.5 bg-emerald-50 rounded-md border border-emerald-100">
-          <i class="i-lucide-trending-up text-xs text-emerald-600" />
-          <span class="text-xs font-bold text-emerald-700">
+      <div v-if="totalValue > 0" class="mt-1 flex items-center gap-1.5">
+        <div class="flex items-center gap-1 rounded-lg border border-n-teal-6/30 bg-n-teal-3/40 px-2 py-0.5">
+          <i class="i-lucide-trending-up text-xs text-n-teal-10" />
+          <span class="text-xs font-medium text-n-teal-11">
             {{ formatCurrency(totalValue) }}
           </span>
         </div>
@@ -97,7 +97,7 @@ const handleCardClick = conversation => {
       <Transition name="fade">
         <div
           v-if="isOverLimit"
-          class="flex items-center gap-2 rounded-lg bg-red-100 p-2 text-[11px] font-bold text-red-700 mt-1 animate-pulse"
+          class="mt-1 flex items-center gap-2 rounded-xl border border-n-ruby-7/30 bg-n-ruby-3 px-3 py-2 text-[11px] font-medium text-n-ruby-11"
         >
           <i class="i-lucide-alert-triangle text-sm" />
           <span>{{ t('KANBAN.WIP_LIMIT_EXCEEDED') }}</span>
@@ -109,13 +109,13 @@ const handleCardClick = conversation => {
       v-model="localConversations"
       group="kanban-conversations"
       item-key="id"
-      class="flex-1 flex flex-col gap-3 overflow-y-auto overflow-x-hidden p-3 min-h-[150px] custom-scrollbar-inside"
+      class="custom-scrollbar-inside flex min-h-[150px] flex-1 flex-col gap-3 overflow-x-hidden overflow-y-auto p-3"
       ghost-class="ghost-card"
       drag-class="dragging-card"
       @change="handleChange"
     >
       <template #item="{ element }">
-        <div @click="handleCardClick(element)" class="transform transition-transform active:scale-[0.99] cursor-pointer">
+        <div @click="handleCardClick(element)" class="cursor-pointer transition-transform active:scale-[0.99]">
           <KanbanCard 
             :conversation="element" 
             :visible-attributes="visibleAttributes"
@@ -125,11 +125,11 @@ const handleCardClick = conversation => {
       </template>
 
       <template #footer v-if="!conversations.length">
-        <div class="flex flex-col items-center justify-center gap-3 py-10 opacity-40 grayscale">
-          <div class="p-4 rounded-full bg-slate-200">
-            <i class="i-lucide-inbox text-3xl text-slate-500" />
+        <div class="flex flex-col items-center justify-center gap-3 py-10 text-center">
+          <div class="rounded-2xl bg-n-slate-3 p-4 text-n-slate-10">
+            <i class="i-lucide-inbox text-3xl" />
           </div>
-          <p class="text-xs font-bold text-slate-500 text-center px-4 uppercase tracking-tighter">
+          <p class="px-4 text-xs font-medium uppercase tracking-wide text-n-slate-10">
             {{ t('KANBAN.EMPTY_COLUMN') }}
           </p>
         </div>
@@ -141,19 +141,17 @@ const handleCardClick = conversation => {
 <style scoped>
 /* Estilo para o card fantasma (onde ele vai cair) */
 .ghost-card {
-  opacity: 0.3;
-  background: #cbd5e1 !important;
-  border: 2px dashed #94a3b8 !important;
-  border-radius: 12px;
+  opacity: 0.35;
+  background: rgb(226 232 240) !important;
+  border: 1px dashed rgb(148 163 184) !important;
+  border-radius: 1rem;
 }
 
-/* Estilo para o card sendo arrastado */
 .dragging-card {
-  transform: rotate(3deg);
+  transform: rotate(2deg);
   cursor: grabbing !important;
 }
 
-/* Scrollbar interno da coluna */
 .custom-scrollbar-inside::-webkit-scrollbar {
   width: 5px;
 }
@@ -168,10 +166,9 @@ const handleCardClick = conversation => {
 }
 
 .custom-scrollbar-inside::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #64748b;
 }
 
-/* Animação simples */
 .fade-enter-active, .fade-leave-active {
   transition: opacity 0.3s ease;
 }
