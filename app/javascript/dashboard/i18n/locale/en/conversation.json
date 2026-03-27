@@ -226,6 +226,7 @@
       "REPLYING_TO": "Replying to:",
       "TIP_EMOJI_ICON": "Show emoji selector",
       "TIP_ATTACH_ICON": "Attach files",
+      "TIP_MORE_ACTIONS_ICON": "More sending actions",
       "TIP_AUDIORECORDER_ICON": "Record audio",
       "TIP_AUDIORECORDER_PERMISSION": "Allow access to audio",
       "TIP_AUDIORECORDER_ERROR": "Could not open the audio",
@@ -254,6 +255,24 @@
         "CONFIRM": {
           "YES": "Send",
           "CANCEL": "Cancel"
+        }
+      },
+      "MORE_ACTIONS": {
+        "SHARE_CONTACT": "Share contact",
+        "SEND_PIX": "Send PIX",
+        "PIX_COMING_SOON": "PIX sending will be added next.",
+        "CONTACT_MESSAGE_SUMMARY": "Shared contact: {name}",
+        "CONTACT_MODAL": {
+          "TITLE": "Share contact",
+          "DESCRIPTION": "Send a WhatsApp contact card through UAZAPI.",
+          "FULL_NAME": "Full name",
+          "PHONE_NUMBER": "Phone number(s)",
+          "PHONE_HELP": "Use international format. You can add more than one number separated by commas.",
+          "ORGANIZATION": "Organization",
+          "EMAIL": "Email",
+          "URL": "Website",
+          "CANCEL": "Cancel",
+          "SUBMIT": "Share contact"
         }
       },
       "QUOTED_REPLY": {

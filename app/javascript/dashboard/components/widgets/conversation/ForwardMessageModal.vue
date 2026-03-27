@@ -124,10 +124,11 @@ const forwardToContacts = async () => {
       contactIds: selectedContacts.value,
     });
 
-    // Process results
-    const results = response?.results || [];
-    const successCount = results.filter(r => r.success).length;
-    const errorCount = results.filter(r => !r.success).length;
+    // API inbox forwarding returns created message metadata without a success flag.
+    // Treat entries as successful unless the backend explicitly marks them as failed.
+    const results = Array.isArray(response?.results) ? response.results : [];
+    const errorCount = results.filter(result => result?.success === false || Boolean(result?.error)).length;
+    const successCount = results.length - errorCount;
 
     // Show result
     if (successCount > 0) {

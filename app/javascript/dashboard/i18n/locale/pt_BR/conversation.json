@@ -226,6 +226,7 @@
       "REPLYING_TO": "Respondendo a:",
       "TIP_EMOJI_ICON": "Mostrar seletor de emoji",
       "TIP_ATTACH_ICON": "Anexar arquivos",
+      "TIP_MORE_ACTIONS_ICON": "Mais ações de envio",
       "TIP_AUDIORECORDER_ICON": "Gravar áudio",
       "TIP_AUDIORECORDER_PERMISSION": "Permitir acesso ao áudio",
       "TIP_AUDIORECORDER_ERROR": "Não foi possível abrir o áudio",
@@ -254,6 +255,24 @@
         "CONFIRM": {
           "YES": "Enviar",
           "CANCEL": "Cancelar"
+        }
+      },
+      "MORE_ACTIONS": {
+        "SHARE_CONTACT": "Compartilhar contato",
+        "SEND_PIX": "Enviar PIX",
+        "PIX_COMING_SOON": "O envio de PIX será adicionado na próxima etapa.",
+        "CONTACT_MESSAGE_SUMMARY": "Contato compartilhado: {name}",
+        "CONTACT_MODAL": {
+          "TITLE": "Compartilhar contato",
+          "DESCRIPTION": "Envie um cartão de contato do WhatsApp pela UAZAPI.",
+          "FULL_NAME": "Nome completo",
+          "PHONE_NUMBER": "Telefone(s)",
+          "PHONE_HELP": "Use o formato internacional. Você pode adicionar mais de um número separado por vírgulas.",
+          "ORGANIZATION": "Organização",
+          "EMAIL": "E-mail",
+          "URL": "Site",
+          "CANCEL": "Cancelar",
+          "SUBMIT": "Compartilhar contato"
         }
       },
       "QUOTED_REPLY": {

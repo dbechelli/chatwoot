@@ -148,6 +148,8 @@ export default {
     'toggleInsertArticle',
     'selectWhatsappTemplate',
     'selectContentTemplate',
+    'openContactCard',
+    'selectPixAction',
     'toggleQuotedReply',
     'scheduleMessage',
   ],
@@ -266,6 +268,16 @@ export default {
       if (this.isEditorDisabled) return false;
       return !this.isOnPrivateNote;
     },
+    showUazapiActionsMenu() {
+      if (this.isEditorDisabled || this.isOnPrivateNote) return false;
+      if (!this.isAPIInbox) return false;
+
+      const additionalAttributes = this.inbox?.additional_attributes || {};
+      return (
+        additionalAttributes.provider === 'uazapi' ||
+        Boolean(additionalAttributes.uazapi_base_url)
+      );
+    },
     sendWithSignature() {
       // channelType is sourced from inboxMixin
       return this.fetchSignatureFlagFromUISettings(this.channelType);
@@ -302,6 +314,12 @@ export default {
     },
     openScheduleModal() {
       this.$emit('scheduleMessage');
+    },
+    openContactCard() {
+      this.$emit('openContactCard');
+    },
+    selectPixAction() {
+      this.$emit('selectPixAction');
     },
   },
 };
@@ -344,6 +362,33 @@ export default {
           sm
         />
       </FileUpload>
+      <DropdownContainer v-if="showUazapiActionsMenu">
+        <template #trigger="{ toggle, isOpen }">
+          <NextButton
+            v-tooltip.top-end="$t('CONVERSATION.REPLYBOX.TIP_MORE_ACTIONS_ICON')"
+            icon="i-lucide-plus"
+            slate
+            faded
+            sm
+            :class="{ 'bg-n-slate-9/20': isOpen }"
+            @click="toggle"
+          />
+        </template>
+        <DropdownBody class="bottom-11 left-0 min-w-56 z-50" strong>
+          <DropdownSection>
+            <DropdownItem
+              icon="i-lucide-contact-round"
+              :label="$t('CONVERSATION.REPLYBOX.MORE_ACTIONS.SHARE_CONTACT')"
+              :click="openContactCard"
+            />
+            <DropdownItem
+              icon="i-lucide-qr-code"
+              :label="$t('CONVERSATION.REPLYBOX.MORE_ACTIONS.SEND_PIX')"
+              :click="selectPixAction"
+            />
+          </DropdownSection>
+        </DropdownBody>
+      </DropdownContainer>
       <NextButton
         v-if="showAudioRecorderButton"
         v-tooltip.top-end="$t('CONVERSATION.REPLYBOX.TIP_AUDIORECORDER_ICON')"

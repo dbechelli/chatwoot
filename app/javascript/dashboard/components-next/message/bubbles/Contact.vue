@@ -20,14 +20,29 @@ const attachment = computed(() => {
   return attachments.value[0];
 });
 
+const attachmentMeta = computed(() => attachment.value?.meta ?? {});
+
 const phoneNumber = computed(() => {
-  return attachment.value.fallbackTitle;
+  return attachment.value?.fallbackTitle || '';
 });
 
 const contactName = computed(() => {
-  const { meta } = attachment.value ?? {};
-  const { firstName, lastName } = meta ?? {};
-  return `${firstName ?? ''} ${lastName ?? ''}`.trim();
+  const { fullName, firstName, lastName } = attachmentMeta.value;
+  return fullName || `${firstName ?? ''} ${lastName ?? ''}`.trim();
+});
+
+const organization = computed(() => attachmentMeta.value.organization || '');
+
+const email = computed(() => attachmentMeta.value.email || '');
+
+const url = computed(() => attachmentMeta.value.url || '');
+
+const formattedPhoneNumberDisplay = computed(() => {
+  return phoneNumber.value
+    .split(',')
+    .map(number => number.trim())
+    .filter(Boolean)
+    .join(' • ');
 });
 
 const formattedPhoneNumber = computed(() => {
@@ -35,7 +50,10 @@ const formattedPhoneNumber = computed(() => {
 });
 
 const rawPhoneNumber = computed(() => {
-  return phoneNumber.value.replace(/\D/g, '');
+  return phoneNumber.value
+    .split(',')
+    .map(number => number.replace(/\D/g, ''))
+    .find(Boolean) || '';
 });
 
 function getContactObject() {
@@ -102,7 +120,25 @@ const action = computed(() => ({
     icon-bg-color="bg-[#D6409F]"
     sender-translation-key="CONVERSATION.SHARED_ATTACHMENT.CONTACT"
     :title="contactName"
-    :content="phoneNumber"
+    :content="formattedPhoneNumberDisplay"
     :action="formattedPhoneNumber ? action : null"
-  />
+  >
+    <div v-if="contactName" class="truncate text-sm text-n-slate-12">
+      {{ contactName }}
+    </div>
+    <div class="space-y-1 text-sm text-n-slate-11">
+      <div v-if="formattedPhoneNumberDisplay" class="truncate">
+        {{ formattedPhoneNumberDisplay }}
+      </div>
+      <div v-if="organization" class="truncate">
+        {{ organization }}
+      </div>
+      <div v-if="email" class="truncate">
+        {{ email }}
+      </div>
+      <div v-if="url" class="truncate">
+        {{ url }}
+      </div>
+    </div>
+  </BaseAttachmentBubble>
 </template>

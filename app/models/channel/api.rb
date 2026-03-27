@@ -37,6 +37,7 @@ class Channel::Api < ApplicationRecord
     validate_uazapi_configuration!
     validate_uazapi_message!(message)
 
+    return send_contact_message(message) if uazapi_contact_attachment?(message.attachments.first)
     return send_media_message(message) if message.attachments.present?
 
     response = uazapi_client.send_text_message(
@@ -96,6 +97,8 @@ class Channel::Api < ApplicationRecord
     return if message.attachments.blank?
 
     attachment = message.attachments.first
+    return validate_uazapi_contact_attachment!(attachment) if uazapi_contact_attachment?(attachment)
+
     raise I18n.t('errors.uazapi.unsupported_attachment_type') if uazapi_media_type(attachment).blank?
     raise I18n.t('errors.uazapi.public_url_missing') if uazapi_file_url(attachment).blank?
   end
@@ -157,6 +160,25 @@ class Channel::Api < ApplicationRecord
     extract_message_id(response)
   end
 
+  def send_contact_message(message)
+    attachment = message.attachments.first
+    metadata = attachment.meta.to_h.with_indifferent_access
+
+    response = uazapi_client.send_contact_message(
+      recipient_id: uazapi_recipient_id(message),
+      full_name: metadata[:fullName].presence || [metadata[:firstName], metadata[:lastName]].compact.join(' ').strip,
+      phone_number: attachment.fallback_title,
+      organization: metadata[:organization],
+      email: metadata[:email],
+      url: metadata[:url],
+      reply_id: message.in_reply_to_external_id,
+      track_id: message.id.to_s,
+      forward: uazapi_forwarded?(message)
+    )
+
+    extract_message_id(response)
+  end
+
   def uazapi_recipient_id(message)
     raw_recipient = [
       message.conversation.contact.phone_number,
@@ -175,6 +197,18 @@ class Channel::Api < ApplicationRecord
     uazapi_media_type(attachment).present? && uazapi_file_url(attachment).present?
   rescue StandardError
     false
+  end
+
+  def uazapi_contact_attachment?(attachment)
+    attachment&.file_type == 'contact'
+  end
+
+  def validate_uazapi_contact_attachment!(attachment)
+    metadata = attachment.meta.to_h.with_indifferent_access
+    full_name = metadata[:fullName].presence || [metadata[:firstName], metadata[:lastName]].compact.join(' ').strip
+
+    raise I18n.t('errors.uazapi.contact_name_required') if full_name.blank?
+    raise I18n.t('errors.uazapi.contact_phone_required') if attachment.fallback_title.blank?
   end
 
   def uazapi_media_type(attachment)

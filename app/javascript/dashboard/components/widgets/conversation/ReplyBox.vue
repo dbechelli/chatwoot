@@ -20,6 +20,7 @@ import CopilotEditorSection from './CopilotEditorSection.vue';
 import MessageSignatureMissingAlert from './MessageSignatureMissingAlert.vue';
 import ReplyBoxBanner from './ReplyBoxBanner.vue';
 import QuotedEmailPreview from './QuotedEmailPreview.vue';
+import UazapiContactCardModal from './UazapiContactCardModal.vue';
 import { REPLY_EDITOR_MODES } from 'dashboard/components/widgets/WootWriter/constants';
 import WootMessageEditor from 'dashboard/components/widgets/WootWriter/Editor.vue';
 import AudioRecorder from 'dashboard/components/widgets/WootWriter/AudioRecorder.vue';
@@ -81,6 +82,7 @@ export default {
     CopilotEditorSection,
     CopilotReplyBottomPanel,
     ScheduledMessageModal,
+    UazapiContactCardModal,
   },
   mixins: [inboxMixin, fileUploadMixin, keyboardEventListenerMixins],
   props: {
@@ -153,6 +155,7 @@ export default {
       newConversationModalActive: false,
       showArticleSearchPopover: false,
       showScheduledMessageModal: false,
+      showUazapiContactCardModal: false,
       copilotAcceptedMessages: {},
     };
   },
@@ -917,6 +920,37 @@ export default {
     closeScheduledMessageModal() {
       this.showScheduledMessageModal = false;
     },
+    openUazapiContactCardModal() {
+      this.showUazapiContactCardModal = true;
+    },
+    closeUazapiContactCardModal() {
+      this.showUazapiContactCardModal = false;
+    },
+    showPixComingSoon() {
+      useAlert(this.$t('CONVERSATION.REPLYBOX.MORE_ACTIONS.PIX_COMING_SOON'));
+    },
+    onSendUazapiContactCard(contactCard) {
+      const messagePayload = this.setReplyToInPayload({
+        conversationId: this.currentChat.id,
+        message: this.$t('CONVERSATION.REPLYBOX.MORE_ACTIONS.CONTACT_MESSAGE_SUMMARY', {
+          name: contactCard.fullName,
+        }),
+        private: false,
+        sender: this.sender,
+        contentAttributes: {
+          uazapi_contact_card: {
+            full_name: contactCard.fullName,
+            phone_number: contactCard.phoneNumber,
+            organization: contactCard.organization,
+            email: contactCard.email,
+            url: contactCard.url,
+          },
+        },
+      });
+
+      this.sendMessage(messagePayload, messagePayload.message);
+      this.closeUazapiContactCardModal();
+    },
     async onScheduledMessageCreated() {
       this.closeScheduledMessageModal();
       this.clearMessage();
@@ -1637,6 +1671,8 @@ export default {
         :show-schedule-options="!isPrivate"
         @select-whatsapp-template="openWhatsappTemplateModal"
         @select-content-template="openContentTemplateModal"
+        @open-contact-card="openUazapiContactCardModal"
+        @select-pix-action="showPixComingSoon"
         @replace-text="replaceText"
         @toggle-insert-article="toggleInsertArticle"
         @toggle-quoted-reply="toggleQuotedReply"
@@ -1667,6 +1703,12 @@ export default {
       :initial-content="message"
       :initial-attachment="attachedFiles[0] || null"
       @scheduled-message-created="onScheduledMessageCreated"
+    />
+
+    <UazapiContactCardModal
+      :show="showUazapiContactCardModal"
+      @close="closeUazapiContactCardModal"
+      @submit="onSendUazapiContactCard"
     />
 
     <woot-confirm-modal

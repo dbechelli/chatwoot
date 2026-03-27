@@ -45,6 +45,25 @@ module Uazapi
       post('/send/media', payload.compact, timeout: media_timeout)
     end
 
+    def send_contact_message(recipient_id:, full_name:, phone_number:, organization: nil, email: nil, url: nil,
+                             reply_id: nil, track_id: nil, forward: nil)
+      payload = {
+        number: recipient_id,
+        fullName: full_name,
+        phoneNumber: phone_number,
+        organization: organization,
+        email: email,
+        url: url,
+        replyid: reply_id,
+        async: true,
+        forward: forward,
+        track_source: 'chatwoot',
+        track_id: track_id
+      }
+
+      post('/send/contact', payload.compact)
+    end
+
     def delete_message(message_id:)
       post('/message/delete', { id: message_id })
     end

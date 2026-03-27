@@ -121,6 +121,38 @@ describe Messages::MessageBuilder do
       end
     end
 
+    context 'when content_attributes contains a UAZAPI contact card' do
+      let(:params) do
+        ActionController::Parameters.new({
+                                           content: 'Shared contact: Joao Silva',
+                                           content_attributes: {
+                                             uazapi_contact_card: {
+                                               full_name: 'Joao Silva',
+                                               phone_number: '5511999999999,5511888888888',
+                                               organization: 'Empresa XYZ',
+                                               email: 'joao@empresa.com',
+                                               url: 'https://empresa.com/joao'
+                                             }
+                                           }
+                                         })
+      end
+
+      it 'creates a contact attachment with structured metadata' do
+        message = message_builder
+
+        expect(message.attachments.size).to eq(1)
+        expect(message.attachments.first.file_type).to eq('contact')
+        expect(message.attachments.first.fallback_title).to eq('5511999999999,5511888888888')
+        expect(message.attachments.first.meta).to include(
+          'fullName' => 'Joao Silva',
+          'organization' => 'Empresa XYZ',
+          'email' => 'joao@empresa.com',
+          'url' => 'https://empresa.com/joao'
+        )
+        expect(message.content_attributes).to eq({})
+      end
+    end
+
     context 'when attachment messages' do
       let(:params) do
         ActionController::Parameters.new({

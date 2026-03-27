@@ -117,6 +117,8 @@ en:
       multiple_attachments_not_supported: Sending multiple attachments in a single UAZAPI message is not supported.
       unsupported_attachment_type: This attachment type is not supported by UAZAPI.
       public_url_missing: Unable to generate a public URL for this attachment.
+      contact_name_required: Contact name is required for sending a vCard.
+      contact_phone_required: Contact phone number is required for sending a vCard.
       quick_reply_locked: This quick reply was created in WhatsApp and cannot be changed from Chatwoot.
     forward:
       no_contacts: 'No contacts provided'

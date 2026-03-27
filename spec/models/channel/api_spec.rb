@@ -120,6 +120,45 @@ RSpec.describe Channel::Api do
 
       expect(channel_api.send_message(message)).to eq('uazapi-media-1')
     end
+
+    it 'calls the UAZAPI send contact endpoint for contact attachments' do
+      message = create(:message, inbox: channel_api.inbox, account: channel_api.account, conversation: conversation, content: 'Contato compartilhado: Joao Silva')
+      message.attachments.build(
+        account_id: message.account_id,
+        file_type: :contact,
+        fallback_title: '5511999999999,5511888888888',
+        meta: {
+          fullName: 'Joao Silva',
+          organization: 'Empresa XYZ',
+          email: 'joao@empresa.com',
+          url: 'https://empresa.com/joao'
+        }
+      )
+      message.save!
+
+      stub_request(:post, 'https://demo.uazapi.com/send/contact')
+        .with(
+          headers: {
+            'Accept' => 'application/json',
+            'Content-Type' => 'application/json',
+            'Token' => 'secret-token'
+          },
+          body: {
+            number: '5511999999999',
+            fullName: 'Joao Silva',
+            phoneNumber: '5511999999999,5511888888888',
+            organization: 'Empresa XYZ',
+            email: 'joao@empresa.com',
+            url: 'https://empresa.com/joao',
+            async: true,
+            track_source: 'chatwoot',
+            track_id: message.id.to_s
+          }
+        )
+        .to_return(status: 200, body: { id: 'uazapi-contact-1' }.to_json, headers: { 'Content-Type' => 'application/json' })
+
+      expect(channel_api.send_message(message)).to eq('uazapi-contact-1')
+    end
   end
 
   describe '#delete_message' do
