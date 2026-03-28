@@ -135,15 +135,20 @@
     "BOARDS_TITLE": "Kanban Boards",
     "BOARDS_DESCRIPTION": "Create and manage multiple Kanban boards for different processes",
     "CREATE_BOARD": "Create Board",
+    "CREATE": "Create",
     "CREATE_FIRST_BOARD": "Create Your First Board",
     "EDIT_BOARD": "Edit Board",
+    "DUPLICATE_SUCCESS": "Board duplicated successfully",
+    "DUPLICATE_ERROR": "Failed to duplicate board",
     "NO_BOARDS": "No boards yet",
     "NO_BOARDS_DESCRIPTION": "Create your first Kanban board to start organizing your sales pipeline",
     "DEFAULT": "Default",
     "EDIT": "Edit",
+    "DUPLICATE": "Duplicate",
+    "DELETE": "Delete",
     "SAVE": "Save",
     "CANCEL": "Cancel",
-    "CONFIRM_DELETE": "Are you sure you want to delete this board?",
+    "CONFIRM_DELETE": "Are you sure you want to delete this board? This action cannot be undone.",
     "DELETE_SUCCESS": "Board deleted successfully",
     "DELETE_ERROR": "Failed to delete board",
     "LOAD_ERROR": "Failed to load Kanban settings",
@@ -154,6 +159,7 @@
     "BASIC_CONFIG": "Basic Configuration",
     "BOARD_NAME": "Board Name",
     "BOARD_NAME_PLACEHOLDER": "e.g., Sales Pipeline",
+    "REQUIRED": "*",
     "BOARD_DESCRIPTION": "Description",
     "BOARD_DESCRIPTION_PLACEHOLDER": "Describe this board's purpose",
     "AGENTS": "Allowed Agents",
@@ -163,9 +169,23 @@
     "ENABLE_VALUE": "Track Monetary Value",
     "ENABLE_VALUE_HELP": "Enable a field to add value ($) to cards.",
     "CUSTOM_ATTRIBUTE_KEY": "Custom Attribute Key",
+    "CUSTOM_ATTRIBUTE_PLACEHOLDER": "sales_stage",
     "CUSTOM_ATTRIBUTE_HELP": "The field name used to store the stage value (e.g., sales_stage)",
     "VALUE_ATTRIBUTE_KEY": "Value Attribute Key",
+    "VALUE_ATTRIBUTE_PLACEHOLDER": "deal_value",
     "VALUE_ATTRIBUTE_HELP": "The field name used to store deal value (e.g., deal_value)",
+    "ADVANCED_CONFIG": "Advanced Configuration",
+    "WEBHOOK_AUTOMATION": "Automation (Webhook)",
+    "WEBHOOK_URL": "Webhook URL",
+    "WEBHOOK_PLACEHOLDER": "https://your-domain.com/webhook/...",
+    "WEBHOOK_HELP": "When a card changes stage, we send a POST request to this URL with the item payload",
+    "AUTO_ASSIGN": "Automatic Assignment",
+    "AUTO_ASSIGN_DESCRIPTION": "Automatically add new conversations from selected inboxes to this board",
+    "INBOXES": "Inboxes",
+    "INITIAL_STAGE": "Initial Stage",
+    "SELECT_STAGE": "Select...",
+    "ROUND_ROBIN": "Round-Robin Distribution",
+    "ROUND_ROBIN_HELP": "Distribute conversations in rotation among the board agents",
     "SET_AS_DEFAULT": "Set as default board",
     "STAGES": "Stages",
     "ADD_STAGE": "Add Stage",
@@ -176,6 +196,83 @@
     "STAGE_NAME_PLACEHOLDER": "e.g., Negotiation",
     "COLOR": "Color",
     "WIP_LIMIT": "WIP Limit",
-    "NO_LIMIT": "No limit"
+    "NO_LIMIT": "No limit",
+    "TEMPLATES_TITLE": "Kanban Board Templates",
+    "TEMPLATES_DESCRIPTION": "Start quickly with pre-configured templates",
+    "USE_TEMPLATE": "Use This Template",
+    "CUSTOMIZE_AFTER_CREATE": "You can customize stages after creating the board",
+    "CREATE_BLANK_BOARD": "Create Blank Board",
+    "TEMPLATES": {
+      "SALES_PIPELINE": {
+        "NAME": "Sales Pipeline",
+        "DESCRIPTION": "Manage opportunities from first contact to closure",
+        "STAGES": {
+          "LEAD": "New Lead",
+          "CONTACTED": "Contacted",
+          "QUALIFIED": "Qualified",
+          "PROPOSAL": "Proposal Sent",
+          "NEGOTIATION": "Negotiation",
+          "WON": "Won",
+          "LOST": "Lost"
+        }
+      },
+      "CUSTOMER_SUPPORT": {
+        "NAME": "Customer Support",
+        "DESCRIPTION": "Track support tickets from creation to resolution",
+        "STAGES": {
+          "NEW": "New Ticket",
+          "IN_PROGRESS": "In Progress",
+          "WAITING_CUSTOMER": "Waiting for Customer",
+          "RESOLVED": "Resolved",
+          "CLOSED": "Closed"
+        }
+      },
+      "RECRUITMENT": {
+        "NAME": "Recruitment",
+        "DESCRIPTION": "Manage candidates throughout the hiring pipeline",
+        "STAGES": {
+          "APPLIED": "Applied",
+          "SCREENING": "Screening",
+          "INTERVIEW": "Interview",
+          "TECHNICAL": "Technical Test",
+          "OFFER": "Offer",
+          "HIRED": "Hired",
+          "REJECTED": "Rejected"
+        }
+      },
+      "ONBOARDING": {
+        "NAME": "Customer Onboarding",
+        "DESCRIPTION": "Guide new customers through setup and activation",
+        "STAGES": {
+          "WELCOME": "Welcome",
+          "DOCUMENTATION": "Documentation",
+          "SETUP": "Setup",
+          "TRAINING": "Training",
+          "ACTIVE": "Active"
+        }
+      },
+      "PROJECT_MANAGEMENT": {
+        "NAME": "Project Management",
+        "DESCRIPTION": "Track team tasks and project delivery",
+        "STAGES": {
+          "BACKLOG": "Backlog",
+          "TODO": "To Do",
+          "IN_PROGRESS": "In Progress",
+          "REVIEW": "Review",
+          "DONE": "Done"
+        }
+      },
+      "LEAD_QUALIFICATION": {
+        "NAME": "Lead Qualification",
+        "DESCRIPTION": "Qualify leads before handing them over to sales",
+        "STAGES": {
+          "NEW_LEAD": "New Lead",
+          "CONTACT_ATTEMPT": "Contact Attempt",
+          "QUALIFIED": "Qualified",
+          "DISQUALIFIED": "Disqualified",
+          "PASSED_TO_SALES": "Passed to Sales"
+        }
+      }
+    }
   }
 }

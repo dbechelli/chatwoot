@@ -17,8 +17,6 @@ const emit = defineEmits(['save', 'close']);
 const { t } = useI18n();
 const store = useStore();
 
-const settingsT = key => t(`SETTINGS.KANBAN_SETTINGS.${key}`);
-
 const localBoard = ref({
   ...props.board,
   agent_ids: props.board.agent_ids || [],
@@ -102,7 +100,7 @@ const addStage = () => {
 
   localBoard.value.stages.push({
     id: `stage-${Date.now()}`,
-    name: settingsT('NEW_STAGE'),
+    name: t('KANBAN_SETTINGS.NEW_STAGE'),
     color: '#3b82f6',
     order: localBoard.value.stages.length + 1,
     wipLimit: null,
@@ -170,12 +168,12 @@ const sectionCardClass =
           <h2 class="text-lg md:text-2xl font-bold text-n-slate-12 truncate">
             {{
               board.id
-                ? settingsT('EDIT_BOARD')
-                : settingsT('CREATE_BOARD')
+                ? $t('KANBAN_SETTINGS.EDIT_BOARD')
+                : $t('KANBAN_SETTINGS.CREATE_BOARD')
             }}
           </h2>
           <p class="text-xs md:text-sm text-n-slate-11 mt-1">
-            {{ settingsT('BOARD_EDITOR_DESCRIPTION') }}
+            {{ $t('KANBAN_SETTINGS.BOARD_EDITOR_DESCRIPTION') }}
           </p>
         </div>
         <button
@@ -190,30 +188,30 @@ const sectionCardClass =
       <div class="flex-1 space-y-4 overflow-y-auto p-4 md:space-y-6 md:p-6">
         <div class="space-y-3 md:space-y-4">
           <h3 class="text-base md:text-lg font-semibold text-n-slate-12">
-            {{ settingsT('BASIC_CONFIG') }}
+            {{ $t('KANBAN_SETTINGS.BASIC_CONFIG') }}
           </h3>
 
           <div :class="sectionCardClass" class="grid grid-cols-1 gap-3 md:grid-cols-2 md:gap-4">
             <div class="space-y-2">
               <label class="block text-sm font-medium text-n-slate-12 mb-2">
-                {{ settingsT('BOARD_NAME') }}
+                {{ $t('KANBAN_SETTINGS.BOARD_NAME') }}
                 <span class="text-red-500">{{
-                  settingsT('REQUIRED')
+                  $t('KANBAN_SETTINGS.REQUIRED')
                 }}</span>
               </label>
               <input
                 v-model="localBoard.name"
                 type="text"
                 :class="fieldClass"
-                :placeholder="settingsT('BOARD_NAME_PLACEHOLDER')"
+                :placeholder="$t('KANBAN_SETTINGS.BOARD_NAME_PLACEHOLDER')"
               />
             </div>
 
             <div v-if="showAdvanced" class="space-y-2">
               <label class="block text-sm font-medium text-n-slate-12 mb-2">
-                {{ settingsT('CUSTOM_ATTRIBUTE_KEY') }}
+                {{ $t('KANBAN_SETTINGS.CUSTOM_ATTRIBUTE_KEY') }}
                 <span class="text-red-500">{{
-                  settingsT('REQUIRED')
+                  $t('KANBAN_SETTINGS.REQUIRED')
                 }}</span>
               </label>
               <input
@@ -221,11 +219,11 @@ const sectionCardClass =
                 type="text"
                 :class="fieldClass"
                 :placeholder="
-                  settingsT('CUSTOM_ATTRIBUTE_PLACEHOLDER')
+                  $t('KANBAN_SETTINGS.CUSTOM_ATTRIBUTE_PLACEHOLDER')
                 "
               />
               <p class="text-xs text-n-slate-11 mt-1">
-                {{ settingsT('CUSTOM_ATTRIBUTE_HELP') }}
+                {{ $t('KANBAN_SETTINGS.CUSTOM_ATTRIBUTE_HELP') }}
               </p>
             </div>
 
@@ -233,7 +231,7 @@ const sectionCardClass =
               <label
                 class="block text-xs md:text-sm font-medium text-n-slate-12 mb-2"
               >
-                {{ settingsT('AGENTS') }}
+                {{ $t('KANBAN_SETTINGS.AGENTS') }}
               </label>
               <div
                 class="grid max-h-32 grid-cols-1 gap-2 overflow-y-auto rounded-2xl border border-n-weak bg-n-slate-1 p-2 sm:grid-cols-2 md:max-h-40 md:grid-cols-3"
@@ -255,7 +253,7 @@ const sectionCardClass =
                 </label>
               </div>
               <p class="text-xs text-n-slate-11 mt-1">
-                {{ settingsT('AGENTS_HELP') }}
+                {{ $t('KANBAN_SETTINGS.AGENTS_HELP') }}
               </p>
             </div>
 
@@ -263,7 +261,7 @@ const sectionCardClass =
               <label
                 class="block text-xs md:text-sm font-medium text-n-slate-12 mb-2"
               >
-                {{ settingsT('VISIBLE_ATTRIBUTES') }}
+                {{ $t('KANBAN_SETTINGS.VISIBLE_ATTRIBUTES') }}
               </label>
               <div
                 class="grid max-h-32 grid-cols-1 gap-2 overflow-y-auto rounded-2xl border border-n-weak bg-n-slate-1 p-2 sm:grid-cols-2 md:max-h-40 md:grid-cols-3"
@@ -287,20 +285,20 @@ const sectionCardClass =
                 </label>
               </div>
               <p class="text-xs text-n-slate-11 mt-1">
-                {{ settingsT('VISIBLE_ATTRIBUTES_HELP') }}
+                {{ $t('KANBAN_SETTINGS.VISIBLE_ATTRIBUTES_HELP') }}
               </p>
             </div>
 
             <div class="md:col-span-2">
               <label class="block text-sm font-medium text-n-slate-12 mb-2">
-                {{ settingsT('BOARD_DESCRIPTION') }}
+                {{ $t('KANBAN_SETTINGS.BOARD_DESCRIPTION') }}
               </label>
               <textarea
                 v-model="localBoard.description"
                 rows="2"
                 :class="`${fieldClass} resize-none`"
                 :placeholder="
-                  settingsT('BOARD_DESCRIPTION_PLACEHOLDER')
+                  $t('KANBAN_SETTINGS.BOARD_DESCRIPTION_PLACEHOLDER')
                 "
               />
             </div>
@@ -313,27 +311,27 @@ const sectionCardClass =
                   class="w-4 h-4 rounded border-n-slate-6 text-n-brand focus:ring-n-brand"
                 />
                 <span class="text-sm font-medium text-n-slate-12">
-                  {{ settingsT('ENABLE_VALUE') }}
+                  {{ $t('KANBAN_SETTINGS.ENABLE_VALUE') }}
                 </span>
               </label>
               <p class="text-xs text-n-slate-11 ml-6 -mt-3">
-                {{ settingsT('ENABLE_VALUE_HELP') }}
+                {{ $t('KANBAN_SETTINGS.ENABLE_VALUE_HELP') }}
               </p>
 
               <div v-if="showAdvanced && enableValue" class="space-y-2 rounded-2xl border border-n-weak bg-n-slate-1 p-3">
                 <label class="block text-sm font-medium text-n-slate-12 mb-2">
-                  {{ settingsT('VALUE_ATTRIBUTE_KEY') }}
+                  {{ $t('KANBAN_SETTINGS.VALUE_ATTRIBUTE_KEY') }}
                 </label>
                 <input
                   v-model="localBoard.valueAttributeKey"
                   type="text"
                   :class="fieldClass"
                   :placeholder="
-                    settingsT('VALUE_ATTRIBUTE_PLACEHOLDER')
+                    $t('KANBAN_SETTINGS.VALUE_ATTRIBUTE_PLACEHOLDER')
                   "
                 />
                 <p class="text-xs text-n-slate-11 mt-1">
-                  {{ settingsT('VALUE_ATTRIBUTE_HELP') }}
+                  {{ $t('KANBAN_SETTINGS.VALUE_ATTRIBUTE_HELP') }}
                 </p>
               </div>
             </div>
@@ -351,7 +349,7 @@ const sectionCardClass =
                       : 'i-lucide-chevron-down'
                   "
                 />
-                {{ settingsT('ADVANCED_CONFIG') }}
+                {{ $t('KANBAN_SETTINGS.ADVANCED_CONFIG') }}
               </button>
             </div>
 
@@ -361,22 +359,22 @@ const sectionCardClass =
                 class="text-xs md:text-sm font-bold text-n-slate-12 mb-3 flex items-center gap-2"
               >
                 <i class="i-lucide-webhook text-n-brand" />
-                {{ settingsT('WEBHOOK_AUTOMATION') }}
+                {{ $t('KANBAN_SETTINGS.WEBHOOK_AUTOMATION') }}
               </h4>
               <div class="space-y-2">
                 <label
                   class="block text-xs md:text-sm font-medium text-n-slate-12"
                 >
-                  {{ settingsT('WEBHOOK_URL') }}
+                  {{ $t('KANBAN_SETTINGS.WEBHOOK_URL') }}
                 </label>
                 <input
                   v-model="localBoard.webhook_url"
                   type="url"
                   :class="fieldClass"
-                  :placeholder="settingsT('WEBHOOK_PLACEHOLDER')"
+                  :placeholder="$t('KANBAN_SETTINGS.WEBHOOK_PLACEHOLDER')"
                 />
                 <p class="text-xs text-n-slate-11">
-                  {{ settingsT('WEBHOOK_HELP') }}
+                  {{ $t('KANBAN_SETTINGS.WEBHOOK_HELP') }}
                 </p>
               </div>
             </div>
@@ -387,10 +385,10 @@ const sectionCardClass =
                 class="text-xs md:text-sm font-bold text-n-slate-12 mb-3 flex items-center gap-2"
               >
                 <i class="i-lucide-zap text-amber-500" />
-                {{ settingsT('AUTO_ASSIGN') }}
+                {{ $t('KANBAN_SETTINGS.AUTO_ASSIGN') }}
               </h4>
               <p class="text-xs text-n-slate-11 mb-3">
-                {{ settingsT('AUTO_ASSIGN_DESCRIPTION') }}
+                {{ $t('KANBAN_SETTINGS.AUTO_ASSIGN_DESCRIPTION') }}
               </p>
 
               <div class="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
@@ -398,7 +396,7 @@ const sectionCardClass =
                   <label
                     class="block text-xs md:text-sm font-medium text-n-slate-12 mb-2"
                   >
-                    {{ settingsT('INBOXES') }}
+                    {{ $t('KANBAN_SETTINGS.INBOXES') }}
                   </label>
                   <div
                     class="grid max-h-32 grid-cols-1 gap-2 overflow-y-auto rounded-2xl border border-n-weak bg-n-slate-1 p-2 md:max-h-40"
@@ -426,14 +424,14 @@ const sectionCardClass =
                   <label
                     class="block text-xs md:text-sm font-medium text-n-slate-12 mb-2"
                   >
-                    {{ settingsT('INITIAL_STAGE') }}
+                    {{ $t('KANBAN_SETTINGS.INITIAL_STAGE') }}
                   </label>
                   <select
                     v-model="localBoard.auto_assign_stage_id"
                     :class="fieldClass"
                   >
                     <option value="">
-                      {{ settingsT('SELECT_STAGE') }}
+                      {{ $t('KANBAN_SETTINGS.SELECT_STAGE') }}
                     </option>
                     <option
                       v-for="stage in localBoard.stages"
@@ -468,10 +466,10 @@ const sectionCardClass =
                       <div class="flex-1 min-w-0">
                         <span
                           class="text-xs md:text-sm font-medium text-n-slate-12 block"
-                          >{{ settingsT('ROUND_ROBIN') }}</span
+                          >{{ $t('KANBAN_SETTINGS.ROUND_ROBIN') }}</span
                         >
                         <span class="text-xs text-n-slate-11 block mt-0.5">{{
-                          settingsT('ROUND_ROBIN_HELP')
+                          $t('KANBAN_SETTINGS.ROUND_ROBIN_HELP')
                         }}</span>
                       </div>
                     </label>
@@ -488,7 +486,7 @@ const sectionCardClass =
                   class="w-4 h-4 rounded border-n-slate-6 text-n-brand focus:ring-n-brand"
                 />
                 <span class="text-sm font-medium text-n-slate-12">
-                  {{ settingsT('SET_AS_DEFAULT') }}
+                  {{ $t('KANBAN_SETTINGS.SET_AS_DEFAULT') }}
                 </span>
               </label>
             </div>
@@ -500,15 +498,15 @@ const sectionCardClass =
             class="flex flex-col sm:flex-row sm:items-center justify-between gap-3"
           >
             <h3 class="text-base md:text-lg font-semibold text-n-slate-12">
-              {{ settingsT('STAGES') }}
+              {{ $t('KANBAN_SETTINGS.STAGES') }}
               <span class="text-red-500">{{
-                settingsT('REQUIRED')
+                $t('KANBAN_SETTINGS.REQUIRED')
               }}</span>
             </h3>
             <Button
               sm
               icon="i-lucide-plus"
-              :label="settingsT('ADD_STAGE')"
+              :label="$t('KANBAN_SETTINGS.ADD_STAGE')"
               @click="addStage"
             />
           </div>
@@ -541,19 +539,19 @@ const sectionCardClass =
               >
                 <div>
                   <label class="block text-xs font-medium text-n-slate-11 mb-1">
-                    {{ settingsT('STAGE_NAME') }}
+                    {{ $t('KANBAN_SETTINGS.STAGE_NAME') }}
                   </label>
                   <input
                     v-model="stage.name"
                     type="text"
                     :class="fieldClass"
-                    :placeholder="settingsT('STAGE_NAME_PLACEHOLDER')"
+                    :placeholder="$t('KANBAN_SETTINGS.STAGE_NAME_PLACEHOLDER')"
                   />
                 </div>
 
                 <div>
                   <label class="block text-xs font-medium text-n-slate-11 mb-1">
-                    {{ settingsT('COLOR') }}
+                    {{ $t('KANBAN_SETTINGS.COLOR') }}
                   </label>
                   <div class="flex items-center gap-2">
                     <select
@@ -577,14 +575,14 @@ const sectionCardClass =
 
                 <div>
                   <label class="block text-xs font-medium text-n-slate-11 mb-1">
-                    {{ settingsT('WIP_LIMIT') }}
+                    {{ $t('KANBAN_SETTINGS.WIP_LIMIT') }}
                   </label>
                   <input
                     v-model.number="stage.wipLimit"
                     type="number"
                     min="0"
                     :class="fieldClass"
-                    :placeholder="settingsT('NO_LIMIT')"
+                    :placeholder="$t('KANBAN_SETTINGS.NO_LIMIT')"
                   />
                 </div>
               </div>
@@ -603,7 +601,7 @@ const sectionCardClass =
             >
               <i class="i-lucide-list text-4xl text-n-slate-6 mb-2" />
               <p class="text-sm text-n-slate-11">
-                {{ settingsT('NO_STAGES') }}
+                {{ $t('KANBAN_SETTINGS.NO_STAGES') }}
               </p>
             </div>
           </div>
@@ -618,12 +616,12 @@ const sectionCardClass =
           sm
           ghost
           slate
-          :label="settingsT('CANCEL')"
+          :label="$t('KANBAN_SETTINGS.CANCEL')"
           @click="$emit('close')"
         />
         <Button
           sm
-          :label="settingsT('SAVE')"
+          :label="$t('KANBAN_SETTINGS.SAVE')"
           :disabled="!canSave"
           @click="handleSave"
         />

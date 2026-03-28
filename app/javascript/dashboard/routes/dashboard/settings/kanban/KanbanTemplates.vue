@@ -11,8 +11,6 @@ defineProps({
 const emit = defineEmits(['close', 'selectTemplate']);
 const { t, tm } = useI18n();
 
-const settingsT = key => t(`SETTINGS.KANBAN_SETTINGS.${key}`);
-
 const templateDefinitions = ref([
   {
     id: 'sales_pipeline',
@@ -66,7 +64,7 @@ const templateDefinitions = ref([
 
 const templates = computed(() => {
   return templateDefinitions.value.map(tmpl => {
-    const baseKey = `SETTINGS.KANBAN_SETTINGS.TEMPLATES.${tmpl.key}`;
+    const baseKey = `KANBAN_SETTINGS.TEMPLATES.${tmpl.key}`;
     const stagesKey = `${baseKey}.STAGES`;
 
     const stageMap = tm(stagesKey) || {};
@@ -115,10 +113,10 @@ const selectTemplate = template => {
       >
         <div>
           <h2 class="text-xl md:text-2xl font-bold text-n-slate-12">
-            {{ settingsT('TEMPLATES_TITLE') }}
+            {{ $t('KANBAN_SETTINGS.TEMPLATES_TITLE') }}
           </h2>
           <p class="text-xs md:text-sm text-n-slate-11 mt-1">
-            {{ settingsT('TEMPLATES_DESCRIPTION') }}
+            {{ $t('KANBAN_SETTINGS.TEMPLATES_DESCRIPTION') }}
           </p>
         </div>
         <button
@@ -169,7 +167,7 @@ const selectTemplate = template => {
               <p
                 class="text-xs font-semibold text-n-slate-9 uppercase tracking-wider"
               >
-                {{ template.stages.length }} {{ settingsT('STAGES') }}
+                {{ template.stages.length }} {{ $t('KANBAN_SETTINGS.STAGES') }}
               </p>
               <div class="flex flex-wrap gap-1.5">
                 <div
@@ -193,7 +191,7 @@ const selectTemplate = template => {
               <Button
                 sm
                 class="w-full"
-                :label="settingsT('USE_TEMPLATE')"
+                :label="$t('KANBAN_SETTINGS.USE_TEMPLATE')"
               />
             </div>
           </div>
@@ -205,14 +203,14 @@ const selectTemplate = template => {
         class="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 md:p-6 border-t border-n-weak bg-n-slate-1"
       >
         <p class="text-xs md:text-sm text-n-slate-11 text-center sm:text-left">
-          {{ settingsT('CUSTOMIZE_AFTER_CREATE') }}
+          {{ $t('KANBAN_SETTINGS.CUSTOMIZE_AFTER_CREATE') }}
         </p>
         <Button
           sm
           ghost
           slate
           class="w-full sm:w-auto"
-          :label="settingsT('CREATE_BLANK_BOARD')"
+          :label="$t('KANBAN_SETTINGS.CREATE_BLANK_BOARD')"
           @click="$emit('close')"
         />
       </div>
