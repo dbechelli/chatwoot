@@ -57,6 +57,19 @@ RSpec.describe 'Kanban Settings API', type: :request do
       expect(response.parsed_body['customAttributeKey']).to eq('support_funnel_status')
     end
 
+    it 'creates a board even when the account has invalid unrelated settings' do
+      account.update_column(:settings, { 'reporting_timezone' => 'Invalid/Timezone' })
+
+      expect do
+        post "/api/v1/accounts/#{account.id}/kanban_settings/boards",
+             headers: administrator.create_new_auth_token,
+             params: payload,
+             as: :json
+      end.to change { account.reload.kanban_boards.count }.by(1)
+
+      expect(response).to have_http_status(:success)
+    end
+
     it 'rejects an authenticated non-administrator' do
       post "/api/v1/accounts/#{account.id}/kanban_settings/boards",
            headers: agent.create_new_auth_token,

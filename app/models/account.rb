@@ -227,7 +227,7 @@ class Account < ApplicationRecord
     board = normalize_kanban_board_data(board_data).merge('id' => SecureRandom.uuid)
     boards = kanban_boards
     boards << board
-    update!(kanban_config: kanban_config.merge('boards' => boards))
+    persist_kanban_config(kanban_config.merge('boards' => boards))
     board
   end
 
@@ -239,7 +239,7 @@ class Account < ApplicationRecord
     return nil if board_index.nil?
 
     boards[board_index] = boards[board_index].merge(normalize_kanban_board_data(board_data))
-    update!(kanban_config: kanban_config.merge('boards' => boards))
+    persist_kanban_config(kanban_config.merge('boards' => boards))
     boards[board_index]
   end
 
@@ -247,7 +247,7 @@ class Account < ApplicationRecord
     return if kanban_config.nil?
 
     boards = kanban_boards.reject { |b| b['id'] == board_id }
-    update!(kanban_config: kanban_config.merge('boards' => boards))
+    persist_kanban_config(kanban_config.merge('boards' => boards))
   end
 
   private
@@ -255,12 +255,17 @@ class Account < ApplicationRecord
   def ensure_kanban_config
     return if kanban_config.present?
 
-    update!(kanban_config: { 'enabled' => false, 'boards' => [] })
+    persist_kanban_config({ 'enabled' => false, 'boards' => [] })
   end
 
   def normalize_kanban_board_data(board_data)
     raw_board_data = board_data.respond_to?(:to_h) ? board_data.to_h : board_data
     raw_board_data.deep_stringify_keys
+  end
+
+  def persist_kanban_config(config)
+    update_column(:kanban_config, config)
+    self[:kanban_config] = config
   end
 
   def notify_creation
