@@ -232,6 +232,14 @@ Rails.application.routes.draw do
           resources :reporting_events, only: [:index] if ChatwootApp.enterprise?
           resources :custom_attribute_definitions, only: [:index, :show, :create, :update, :destroy]
           resources :custom_filters, only: [:index, :show, :create, :update, :destroy]
+          resource :kanban_settings, only: [:show, :update] do
+            collection do
+              post 'boards', action: :create_board
+              put 'boards/:id', action: :update_board
+              delete 'boards/:id', action: :destroy_board
+              post 'boards/:id/duplicate', action: :duplicate_board
+            end
+          end
           resources :inboxes, only: [:index, :show, :create, :update, :destroy] do
             get :assignable_agents, on: :member
             get :campaigns, on: :member
