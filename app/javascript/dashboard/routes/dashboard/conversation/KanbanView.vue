@@ -13,7 +13,6 @@ import KanbanItemModal from './KanbanItemModal.vue';
 import KanbanContextMenu from './KanbanContextMenu.vue';
 import KanbanBulkActions from './KanbanBulkActions.vue';
 import Modal from 'dashboard/components/Modal.vue';
-import EmptyStateLayout from 'dashboard/components-next/EmptyStateLayout.vue';
 import DropdownContainer from 'next/dropdown-menu/base/DropdownContainer.vue';
 import DropdownBody from 'next/dropdown-menu/base/DropdownBody.vue';
 import DropdownSection from 'next/dropdown-menu/base/DropdownSection.vue';
@@ -82,6 +81,8 @@ const customAttributeKey = computed(() => {
 const visibleAttributes = computed(() => {
   return currentBoard.value?.visible_attributes || [];
 });
+
+const hasBoards = computed(() => salesStages.value.length > 0);
 
 // Getters
 const allConversations = computed(
@@ -581,37 +582,61 @@ onMounted(async () => {
           </div>
 
           <div class="flex flex-wrap items-center gap-2">
-            <Button
-              sm
-              slate
-              outline
-              :icon="showMetrics ? 'i-lucide-eye-off' : 'i-lucide-eye'"
-              :label="showMetrics ? t('KANBAN.HIDE_METRICS') : t('KANBAN.SHOW_METRICS')"
-              @click="toggleMetrics"
-            />
+            <template v-if="hasBoards">
+              <Button
+                sm
+                slate
+                outline
+                :icon="showMetrics ? 'i-lucide-eye-off' : 'i-lucide-eye'"
+                :label="showMetrics ? t('KANBAN.HIDE_METRICS') : t('KANBAN.SHOW_METRICS')"
+                @click="toggleMetrics"
+              />
 
-            <Button
-              sm
-              blue
-              solid
-              icon="i-lucide-plus"
-              :label="t('KANBAN.MODAL.NEW_ITEM')"
-              @click="openAddItemModal()"
-            />
+              <Button
+                sm
+                blue
+                solid
+                icon="i-lucide-plus"
+                :label="t('KANBAN.MODAL.NEW_ITEM')"
+                @click="openAddItemModal()"
+              />
 
-            <Button
-              sm
-              slate
-              faded
-              icon="i-lucide-refresh-cw"
-              :label="t('KANBAN.REFRESH')"
-              :is-loading="isLoading"
-              @click="handleRefresh"
-            />
+              <Button
+                sm
+                slate
+                faded
+                icon="i-lucide-refresh-cw"
+                :label="t('KANBAN.REFRESH')"
+                :is-loading="isLoading"
+                @click="handleRefresh"
+              />
+            </template>
+            <template v-else>
+              <router-link :to="{ name: 'kanban_settings' }">
+                <Button
+                  sm
+                  blue
+                  solid
+                  icon="i-lucide-plus-circle"
+                  :label="t('KANBAN.CREATE_FIRST_BOARD')"
+                />
+              </router-link>
+              <Button
+                sm
+                slate
+                outline
+                icon="i-lucide-book-open"
+                label="Ver Exemplos de Uso"
+                @click="showHelpModal = true"
+              />
+            </template>
           </div>
         </div>
 
-        <div class="grid gap-3 rounded-2xl border border-n-weak bg-n-slate-2/60 p-3 lg:grid-cols-[repeat(4,minmax(0,1fr))_auto]">
+        <div
+          v-if="hasBoards"
+          class="grid gap-3 rounded-2xl border border-n-weak bg-n-slate-2/60 p-3 lg:grid-cols-[repeat(4,minmax(0,1fr))_auto]"
+        >
           <div
             v-if="kanbanConfig && kanbanConfig.boards && kanbanConfig.boards.length > 1"
             class="space-y-1"
@@ -875,24 +900,24 @@ onMounted(async () => {
         </div>
       </div>
 
-      <div
-        v-else
-        class="h-full p-8"
-      >
-        <EmptyStateLayout
-          :title="t('KANBAN.NO_BOARDS_TITLE')"
-          :subtitle="t('KANBAN.NO_BOARDS_DESCRIPTION')"
-          :show-backdrop="false"
-        >
-          <template #actions>
-            <div class="flex items-center gap-3">
-              <router-link :to="{ name: 'settings_kanban' }">
-                <Button blue solid icon="i-lucide-plus-circle" :label="t('KANBAN.CREATE_FIRST_BOARD')" />
-              </router-link>
-              <Button slate outline icon="i-lucide-book-open" label="Ver Exemplos de Uso" @click="showHelpModal = true" />
-            </div>
-          </template>
-        </EmptyStateLayout>
+      <div v-else class="flex h-full items-center justify-center p-6 md:p-8">
+        <div class="flex w-full max-w-3xl flex-col items-center rounded-[28px] border border-n-weak bg-n-surface-1 px-6 py-12 text-center shadow-sm md:px-12 md:py-16">
+          <div class="mb-5 flex h-20 w-20 items-center justify-center rounded-3xl bg-n-brand/10 text-n-blue-11">
+            <i class="i-lucide-kanban-square text-4xl" />
+          </div>
+          <h2 class="text-3xl font-medium text-n-slate-12">
+            {{ t('KANBAN.NO_BOARDS_TITLE') }}
+          </h2>
+          <p class="mt-3 max-w-2xl text-base text-n-slate-11">
+            {{ t('KANBAN.NO_BOARDS_DESCRIPTION') }}
+          </p>
+          <div class="mt-8 flex flex-col items-center gap-3 sm:flex-row">
+            <router-link :to="{ name: 'kanban_settings' }">
+              <Button blue solid icon="i-lucide-plus-circle" :label="t('KANBAN.CREATE_FIRST_BOARD')" />
+            </router-link>
+            <Button slate outline icon="i-lucide-book-open" label="Ver Exemplos de Uso" @click="showHelpModal = true" />
+          </div>
+        </div>
       </div>
     </main>
 

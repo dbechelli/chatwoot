@@ -409,31 +409,149 @@
     "SECURITY": "Segurança",
     "KANBAN_SETTINGS": {
       "TITLE": "Configurações do Kanban",
+      "DESCRIPTION": "Gerencie seus quadros Kanban e fluxos de trabalho",
+      "BOARDS_TITLE": "Quadros Kanban",
+      "BOARDS_DESCRIPTION": "Crie e gerencie quadros visuais para acompanhar suas conversas e negociações",
       "NEW_BOARD": "Novo Quadro",
       "EDIT_BOARD": "Editar Quadro",
       "CREATE_BOARD": "Criar Quadro",
+      "CREATE": "Criar",
+      "CREATE_FIRST_BOARD": "Criar meu primeiro quadro",
+      "BOARD_CREATED": "Quadro criado com sucesso",
+      "BOARD_UPDATED": "Quadro atualizado com sucesso",
+      "DUPLICATE_SUCCESS": "Quadro duplicado com sucesso",
+      "DUPLICATE_ERROR": "Erro ao duplicar quadro",
+      "DEFAULT": "Padrão",
+      "NO_BOARDS": "Nenhum quadro ainda",
+      "NO_BOARDS_DESCRIPTION": "Comece criando seu primeiro quadro Kanban",
+      "EDIT": "Editar",
+      "DUPLICATE": "Duplicar",
+      "DELETE": "Excluir",
+      "BOARD_EDITOR_DESCRIPTION": "Configure as opções do quadro e seus estágios",
+      "BASIC_CONFIG": "Configuração Básica",
+      "BOARD_NAME": "Nome do Quadro",
       "BOARD_NAME_PLACEHOLDER": "Nome do Quadro (ex: Vendas)",
+      "REQUIRED": "*",
       "CUSTOM_ATTRIBUTE_KEY": "Chave do Atributo Personalizado",
+      "CUSTOM_ATTRIBUTE_PLACEHOLDER": "sales_stage",
       "CUSTOM_ATTRIBUTE_HELP": "Nome do atributo que armazenará o estágio (ex: sales_stage)",
-      "DESCRIPTION": "Descrição",
-      "DESCRIPTION_PLACEHOLDER": "Descrição do quadro",
+      "BOARD_DESCRIPTION": "Descrição",
+      "BOARD_DESCRIPTION_PLACEHOLDER": "Descreva o objetivo deste quadro",
       "VALUE_ATTRIBUTE_KEY": "Chave do Valor",
+      "VALUE_ATTRIBUTE_PLACEHOLDER": "deal_value",
       "VALUE_ATTRIBUTE_HELP": "Nome do atributo que armazenará o valor (ex: deal_value)",
-      "IS_DEFAULT": "Quadro Padrão",
-      "IS_DEFAULT_HELP": "Este quadro será o padrão para novos usuários",
+      "VISIBLE_ATTRIBUTES": "Atributos Visíveis",
+      "VISIBLE_ATTRIBUTES_HELP": "Escolha quais atributos da conversa aparecem nos cartões",
+      "ENABLE_VALUE": "Habilitar controle de valor",
+      "ENABLE_VALUE_HELP": "Acompanhe valores monetários das negociações neste quadro",
+      "ADVANCED_CONFIG": "Configurações Avançadas",
+      "WEBHOOK_AUTOMATION": "Automação (Webhook)",
+      "WEBHOOK_URL": "URL do Webhook",
+      "WEBHOOK_PLACEHOLDER": "https://seu-dominio.com/webhook/...",
+      "WEBHOOK_HELP": "Quando um cartão mudar de estágio, enviaremos um POST para esta URL com os dados do item",
+      "AUTO_ASSIGN": "Atribuição Automática",
+      "AUTO_ASSIGN_DESCRIPTION": "Adiciona automaticamente novas conversas das caixas selecionadas a este quadro",
+      "INBOXES": "Caixas de Entrada",
+      "INITIAL_STAGE": "Estágio Inicial",
+      "SELECT_STAGE": "Selecione...",
+      "ROUND_ROBIN": "Distribuição Round-Robin",
+      "ROUND_ROBIN_HELP": "Distribua conversas em rodízio entre os agentes do quadro",
+      "SET_AS_DEFAULT": "Definir como quadro padrão",
       "STAGES": "Estágios",
       "ADD_STAGE": "Adicionar Estágio",
+      "NEW_STAGE": "Novo Estágio",
+      "STAGE_NAME": "Nome do Estágio",
+      "STAGE_NAME_PLACEHOLDER": "Ex: Qualificado",
+      "COLOR": "Cor",
+      "WIP_LIMIT": "Limite WIP",
+      "NO_LIMIT": "Sem limite",
+      "NO_STAGES": "Adicione estágios para organizar seu fluxo",
       "CANCEL": "Cancelar",
       "SAVE": "Salvar",
-      "NEW_STAGE": "Novo Estágio",
       "AGENTS": "Agentes Permitidos",
       "AGENTS_HELP": "Selecione os agentes que podem ver este quadro. Se vazio, todos podem ver.",
       "LOAD_ERROR": "Erro ao carregar configurações",
-      "SAVE_SUCCESS": "Configurações salvas com sucesso",
       "SAVE_ERROR": "Erro ao salvar configurações",
       "DELETE_SUCCESS": "Quadro excluído com sucesso",
       "DELETE_ERROR": "Erro ao excluir quadro",
-      "CONFIRM_DELETE": "Tem certeza que deseja excluir este quadro?"
+      "CONFIRM_DELETE": "Tem certeza que deseja excluir este quadro? Esta ação não pode ser desfeita.",
+      "TEMPLATES_TITLE": "Modelos de Quadros Kanban",
+      "TEMPLATES_DESCRIPTION": "Comece rapidamente com modelos pré-configurados",
+      "USE_TEMPLATE": "Usar este Modelo",
+      "CUSTOMIZE_AFTER_CREATE": "Você poderá personalizar os estágios depois de criar o quadro",
+      "CREATE_BLANK_BOARD": "Criar Quadro em Branco",
+      "TEMPLATES": {
+        "SALES_PIPELINE": {
+          "NAME": "Pipeline de Vendas",
+          "DESCRIPTION": "Gerencie oportunidades do primeiro contato ao fechamento",
+          "STAGES": {
+            "LEAD": "Novo Lead",
+            "CONTACTED": "Contactado",
+            "QUALIFIED": "Qualificado",
+            "PROPOSAL": "Proposta Enviada",
+            "NEGOTIATION": "Negociação",
+            "WON": "Ganho",
+            "LOST": "Perdido"
+          }
+        },
+        "CUSTOMER_SUPPORT": {
+          "NAME": "Suporte ao Cliente",
+          "DESCRIPTION": "Acompanhe tickets do início até a resolução",
+          "STAGES": {
+            "NEW": "Novo Ticket",
+            "IN_PROGRESS": "Em Atendimento",
+            "WAITING_CUSTOMER": "Aguardando Cliente",
+            "RESOLVED": "Resolvido",
+            "CLOSED": "Fechado"
+          }
+        },
+        "RECRUITMENT": {
+          "NAME": "Recrutamento",
+          "DESCRIPTION": "Gerencie candidatos durante o processo seletivo",
+          "STAGES": {
+            "APPLIED": "Inscrito",
+            "SCREENING": "Triagem",
+            "INTERVIEW": "Entrevista",
+            "TECHNICAL": "Teste Técnico",
+            "OFFER": "Proposta",
+            "HIRED": "Contratado",
+            "REJECTED": "Rejeitado"
+          }
+        },
+        "ONBOARDING": {
+          "NAME": "Onboarding de Clientes",
+          "DESCRIPTION": "Guie novos clientes no processo de implantação",
+          "STAGES": {
+            "WELCOME": "Boas-vindas",
+            "DOCUMENTATION": "Documentação",
+            "SETUP": "Configuração",
+            "TRAINING": "Treinamento",
+            "ACTIVE": "Ativo"
+          }
+        },
+        "PROJECT_MANAGEMENT": {
+          "NAME": "Gestão de Projetos",
+          "DESCRIPTION": "Acompanhe tarefas e projetos da equipe",
+          "STAGES": {
+            "BACKLOG": "Backlog",
+            "TODO": "A Fazer",
+            "IN_PROGRESS": "Em Progresso",
+            "REVIEW": "Em Revisão",
+            "DONE": "Concluído"
+          }
+        },
+        "LEAD_QUALIFICATION": {
+          "NAME": "Qualificação de Leads",
+          "DESCRIPTION": "Filtre e qualifique leads antes de enviar para vendas",
+          "STAGES": {
+            "NEW_LEAD": "Novo Lead",
+            "CONTACT_ATTEMPT": "Tentativa de Contato",
+            "QUALIFIED": "Qualificado",
+            "DISQUALIFIED": "Desqualificado",
+            "PASSED_TO_SALES": "Enviado para Vendas"
+          }
+        }
+      }
     }
   },
   "BILLING_SETTINGS": {

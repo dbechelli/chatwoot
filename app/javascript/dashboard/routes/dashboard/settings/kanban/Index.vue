@@ -12,6 +12,8 @@ import KanbanTemplates from './KanbanTemplates.vue';
 const store = useStore();
 const { t } = useI18n();
 
+const settingsT = key => t(`SETTINGS.KANBAN_SETTINGS.${key}`);
+
 const kanbanConfig = ref(null);
 const isLoading = ref(true);
 const selectedBoard = ref(null);
@@ -28,7 +30,7 @@ const loadConfig = async () => {
     );
     kanbanConfig.value = response.data;
   } catch (error) {
-    useAlert(t('KANBAN_SETTINGS.LOAD_ERROR'));
+    useAlert(settingsT('LOAD_ERROR'));
   } finally {
     isLoading.value = false;
   }
@@ -46,12 +48,12 @@ const createFromTemplate = templateData => {
 
 const createBlankBoard = () => {
   selectedBoard.value = {
-    name: t('KANBAN_SETTINGS.NEW_BOARD'),
+    name: settingsT('NEW_BOARD'),
     description: '',
     stages: [
       {
         id: `stage-${Date.now()}`,
-        name: t('KANBAN_SETTINGS.NEW_STAGE'),
+        name: settingsT('NEW_STAGE'),
         color: '#3b82f6',
         order: 1,
         wipLimit: null,
@@ -77,36 +79,36 @@ const saveBoard = async boardData => {
         `/api/v1/accounts/${accountId.value}/kanban_settings/boards/${boardData.id}`,
         { board: boardData }
       );
-      useAlert(t('KANBAN_SETTINGS.BOARD_UPDATED'));
+      useAlert(settingsT('BOARD_UPDATED'));
     } else {
       // Create new
       await window.axios.post(
         `/api/v1/accounts/${accountId.value}/kanban_settings/boards`,
         { board: boardData }
       );
-      useAlert(t('KANBAN_SETTINGS.BOARD_CREATED'));
+      useAlert(settingsT('BOARD_CREATED'));
     }
 
     await loadConfig();
     showEditor.value = false;
     selectedBoard.value = null;
   } catch (error) {
-    useAlert(t('KANBAN_SETTINGS.SAVE_ERROR'));
+    useAlert(settingsT('SAVE_ERROR'));
   }
 };
 
 const deleteBoard = async boardId => {
   // eslint-disable-next-line no-alert, no-restricted-globals
-  if (!confirm(t('KANBAN_SETTINGS.CONFIRM_DELETE'))) return;
+  if (!confirm(settingsT('CONFIRM_DELETE'))) return;
 
   try {
     await window.axios.delete(
       `/api/v1/accounts/${accountId.value}/kanban_settings/boards/${boardId}`
     );
-    useAlert(t('KANBAN_SETTINGS.DELETE_SUCCESS'));
+    useAlert(settingsT('DELETE_SUCCESS'));
     await loadConfig();
   } catch (error) {
-    useAlert(t('KANBAN_SETTINGS.DELETE_ERROR'));
+    useAlert(settingsT('DELETE_ERROR'));
   }
 };
 
@@ -115,10 +117,10 @@ const duplicateBoard = async board => {
     await window.axios.post(
       `/api/v1/accounts/${accountId.value}/kanban_settings/boards/${board.id}/duplicate`
     );
-    useAlert(t('KANBAN_SETTINGS.DUPLICATE_SUCCESS'));
+    useAlert(settingsT('DUPLICATE_SUCCESS'));
     await loadConfig();
   } catch (error) {
-    useAlert(t('KANBAN_SETTINGS.DUPLICATE_ERROR'));
+    useAlert(settingsT('DUPLICATE_ERROR'));
   }
 };
 
@@ -134,8 +136,8 @@ onMounted(() => {
 
 <template>
   <SettingsLayout
-    :title="$t('KANBAN_SETTINGS.TITLE')"
-    :sub-title="$t('KANBAN_SETTINGS.DESCRIPTION')"
+    :title="settingsT('TITLE')"
+    :sub-title="settingsT('DESCRIPTION')"
     icon-name="i-lucide-kanban-square"
   >
     <div
@@ -151,16 +153,16 @@ onMounted(() => {
       >
         <div>
           <h2 class="text-base font-semibold text-n-slate-12 md:text-lg">
-            {{ $t('KANBAN_SETTINGS.BOARDS_TITLE') }}
+            {{ settingsT('BOARDS_TITLE') }}
           </h2>
           <p class="mt-1 text-sm text-n-slate-11">
-            {{ $t('KANBAN_SETTINGS.BOARDS_DESCRIPTION') }}
+            {{ settingsT('BOARDS_DESCRIPTION') }}
           </p>
         </div>
         <Button
           sm
           icon="i-lucide-plus"
-          :label="$t('KANBAN_SETTINGS.CREATE_BOARD')"
+          :label="settingsT('CREATE_BOARD')"
           @click="createBoard"
         />
       </div>
@@ -178,7 +180,7 @@ onMounted(() => {
             v-if="board.isDefault"
             class="absolute right-4 top-4 inline-flex items-center rounded-full bg-n-brand/10 px-2.5 py-1 text-xs font-medium text-n-brand"
           >
-            {{ $t('KANBAN_SETTINGS.DEFAULT') }}
+            {{ settingsT('DEFAULT') }}
           </div>
 
           <div class="flex items-start gap-2 md:gap-3">
@@ -221,7 +223,7 @@ onMounted(() => {
 
           <div class="mt-auto flex items-center justify-between border-t border-n-weak pt-3">
             <span class="text-xs font-medium text-n-slate-10">
-              {{ `${board.stages?.length || 0} ${$t('KANBAN_SETTINGS.STAGES')}` }}
+              {{ `${board.stages?.length || 0} ${settingsT('STAGES')}` }}
             </span>
 
             <div class="flex items-center gap-1">
@@ -231,19 +233,19 @@ onMounted(() => {
                 slate
                 icon="i-lucide-pencil-line"
                 class="!px-2.5"
-                :label="$t('KANBAN_SETTINGS.EDIT')"
+                :label="settingsT('EDIT')"
                 @click="editBoard(board)"
               />
               <button
                 class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-n-brand transition-colors hover:bg-n-brand/10"
-                :title="$t('KANBAN_SETTINGS.DUPLICATE')"
+                :title="settingsT('DUPLICATE')"
                 @click="duplicateBoard(board)"
               >
                 <i class="i-lucide-copy" />
               </button>
               <button
                 class="inline-flex h-8 w-8 items-center justify-center rounded-lg text-n-ruby-11 transition-colors hover:bg-n-ruby-9/10"
-                :title="$t('KANBAN_SETTINGS.DELETE')"
+                :title="settingsT('DELETE')"
                 @click="deleteBoard(board.id)"
               >
                 <i class="i-lucide-trash-2" />
@@ -255,8 +257,8 @@ onMounted(() => {
 
       <EmptyStateLayout
         v-else
-        :title="$t('KANBAN_SETTINGS.NO_BOARDS')"
-        :subtitle="$t('KANBAN_SETTINGS.NO_BOARDS_DESCRIPTION')"
+        :title="settingsT('NO_BOARDS')"
+        :subtitle="settingsT('NO_BOARDS_DESCRIPTION')"
       >
         <template #empty-state-item>
           <div
@@ -264,19 +266,18 @@ onMounted(() => {
           >
             <div
               class="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-n-brand/10 text-n-brand"
-              @click="editBoard(board)"
             >
               <i class="i-lucide-kanban-square text-3xl" />
             </div>
             <p class="max-w-sm text-sm text-n-slate-11">
-              {{ $t('KANBAN_SETTINGS.NO_BOARDS_DESCRIPTION') }}
+              {{ settingsT('NO_BOARDS_DESCRIPTION') }}
             </p>
           </div>
         </template>
         <template #actions>
           <Button
             icon="i-lucide-plus"
-            :label="$t('KANBAN_SETTINGS.CREATE_FIRST_BOARD')"
+            :label="settingsT('CREATE_FIRST_BOARD')"
             @click="createBoard"
           />
         </template>

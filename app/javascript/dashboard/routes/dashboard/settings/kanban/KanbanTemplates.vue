@@ -9,7 +9,9 @@ defineProps({
 });
 
 const emit = defineEmits(['close', 'selectTemplate']);
-const { t } = useI18n();
+const { t, tm } = useI18n();
+
+const settingsT = key => t(`SETTINGS.KANBAN_SETTINGS.${key}`);
 
 const templateDefinitions = ref([
   {
@@ -64,11 +66,11 @@ const templateDefinitions = ref([
 
 const templates = computed(() => {
   return templateDefinitions.value.map(tmpl => {
-    const baseKey = `KANBAN_SETTINGS.TEMPLATES.${tmpl.key}`;
+    const baseKey = `SETTINGS.KANBAN_SETTINGS.TEMPLATES.${tmpl.key}`;
     const stagesKey = `${baseKey}.STAGES`;
 
-    // Get all stage keys for this template
-    const stageKeys = Object.keys(t(stagesKey));
+    const stageMap = tm(stagesKey) || {};
+    const stageKeys = Object.keys(stageMap);
 
     const stages = stageKeys.map((key, index) => ({
       id: key.toLowerCase(),
@@ -113,10 +115,10 @@ const selectTemplate = template => {
       >
         <div>
           <h2 class="text-xl md:text-2xl font-bold text-n-slate-12">
-            {{ $t('KANBAN_SETTINGS.TEMPLATES_TITLE') }}
+            {{ settingsT('TEMPLATES_TITLE') }}
           </h2>
           <p class="text-xs md:text-sm text-n-slate-11 mt-1">
-            {{ $t('KANBAN_SETTINGS.TEMPLATES_DESCRIPTION') }}
+            {{ settingsT('TEMPLATES_DESCRIPTION') }}
           </p>
         </div>
         <button
@@ -167,7 +169,7 @@ const selectTemplate = template => {
               <p
                 class="text-xs font-semibold text-n-slate-9 uppercase tracking-wider"
               >
-                {{ template.stages.length }} {{ $t('KANBAN_SETTINGS.STAGES') }}
+                {{ template.stages.length }} {{ settingsT('STAGES') }}
               </p>
               <div class="flex flex-wrap gap-1.5">
                 <div
@@ -191,7 +193,7 @@ const selectTemplate = template => {
               <Button
                 sm
                 class="w-full"
-                :label="$t('KANBAN_SETTINGS.USE_TEMPLATE')"
+                :label="settingsT('USE_TEMPLATE')"
               />
             </div>
           </div>
@@ -203,14 +205,14 @@ const selectTemplate = template => {
         class="flex flex-col sm:flex-row items-center justify-between gap-3 p-4 md:p-6 border-t border-n-weak bg-n-slate-1"
       >
         <p class="text-xs md:text-sm text-n-slate-11 text-center sm:text-left">
-          {{ $t('KANBAN_SETTINGS.CUSTOMIZE_AFTER_CREATE') }}
+          {{ settingsT('CUSTOMIZE_AFTER_CREATE') }}
         </p>
         <Button
           sm
           ghost
           slate
           class="w-full sm:w-auto"
-          :label="$t('KANBAN_SETTINGS.CREATE_BLANK_BOARD')"
+          :label="settingsT('CREATE_BLANK_BOARD')"
           @click="$emit('close')"
         />
       </div>
