@@ -130,11 +130,11 @@ onMounted(() => {
 
         <router-link
           v-if="canManageBoards"
-          :to="{ name: 'kanban_settings' }"
+          :to="{ name: 'kanban_funnels' }"
           class="inline-flex items-center gap-2 rounded-2xl px-3 py-2 text-sm font-medium text-n-slate-11 transition-colors hover:bg-n-slate-2 hover:text-n-slate-12"
         >
-          <i class="i-lucide-settings-2 text-base" />
-          <span>{{ t('KANBAN.NAV.SETTINGS') }}</span>
+          <i class="i-lucide-list-filter text-base" />
+          <span>{{ t('KANBAN.NAV.FUNNELS') }}</span>
         </router-link>
       </div>
     </aside>

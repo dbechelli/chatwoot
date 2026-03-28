@@ -148,9 +148,9 @@ const spotlightBoards = computed(() => boards.value.slice(0, 3));
               <span>{{ t('KANBAN.NAV.NEW_FUNNEL') }}</span>
               <i class="i-lucide-plus" />
             </router-link>
-            <router-link v-if="canManageBoards" :to="{ name: 'kanban_settings' }" class="flex items-center justify-between rounded-2xl border border-n-weak bg-n-slate-1 px-4 py-3 text-sm font-medium text-n-slate-12 transition-colors hover:border-n-brand hover:bg-n-brand/5">
-              <span>{{ t('KANBAN.NAV.SETTINGS') }}</span>
-              <i class="i-lucide-settings-2" />
+            <router-link v-if="canManageBoards" :to="{ name: 'kanban_funnels' }" class="flex items-center justify-between rounded-2xl border border-n-weak bg-n-slate-1 px-4 py-3 text-sm font-medium text-n-slate-12 transition-colors hover:border-n-brand hover:bg-n-brand/5">
+              <span>{{ t('KANBAN.NAV.FUNNELS') }}</span>
+              <i class="i-lucide-list-filter" />
             </router-link>
           </div>
         </div>

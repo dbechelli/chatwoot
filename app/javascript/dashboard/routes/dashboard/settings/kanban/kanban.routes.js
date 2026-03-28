@@ -1,6 +1,5 @@
 import { frontendURL } from '../../../../helper/URLHelper';
 import SettingsWrapper from '../SettingsWrapper.vue';
-import KanbanSettings from './Index.vue';
 
 export default {
   routes: [
@@ -11,7 +10,7 @@ export default {
         {
           path: '',
           name: 'kanban_settings',
-          component: KanbanSettings,
+          redirect: to => ({ name: 'kanban_funnels', params: to.params }),
           meta: {
             permissions: ['administrator'],
           },

@@ -224,7 +224,7 @@ class Account < ApplicationRecord
 
   def add_kanban_board(board_data)
     ensure_kanban_config
-    board = board_data.merge('id' => SecureRandom.uuid)
+    board = normalize_kanban_board_data(board_data).merge('id' => SecureRandom.uuid)
     boards = kanban_boards
     boards << board
     update!(kanban_config: kanban_config.merge('boards' => boards))
@@ -238,7 +238,7 @@ class Account < ApplicationRecord
     board_index = boards.find_index { |b| b['id'] == board_id }
     return nil if board_index.nil?
 
-    boards[board_index] = boards[board_index].merge(board_data)
+    boards[board_index] = boards[board_index].merge(normalize_kanban_board_data(board_data))
     update!(kanban_config: kanban_config.merge('boards' => boards))
     boards[board_index]
   end
@@ -256,6 +256,11 @@ class Account < ApplicationRecord
     return if kanban_config.present?
 
     update!(kanban_config: { 'enabled' => false, 'boards' => [] })
+  end
+
+  def normalize_kanban_board_data(board_data)
+    raw_board_data = board_data.respond_to?(:to_h) ? board_data.to_h : board_data
+    raw_board_data.deep_stringify_keys
   end
 
   def notify_creation

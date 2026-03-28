@@ -628,7 +628,7 @@ const menuItems = computed(() => {
           name: 'Settings Kanban',
           label: t('SIDEBAR.KANBAN_SETTINGS'),
           icon: 'i-lucide-kanban-square',
-          to: accountScopedRoute('kanban_settings'),
+           to: accountScopedRoute('kanban_funnels'),
         },
         {
           name: 'Settings Billing',

@@ -65,9 +65,10 @@ class Api::V1::Accounts::KanbanSettingsController < Api::V1::Accounts::BaseContr
     params.require(:kanban_config).permit(
       :enabled,
       boards: [
-        :id, :name, :description, :customAttributeKey, :valueAttributeKey, :isDefault, :webhook_url, :enable_round_robin,
+        :id, :name, :description, :customAttributeKey, :valueAttributeKey, :isDefault, :webhook_url, :enable_round_robin, :auto_assign_stage_id,
         { agent_ids: [] },
         { visible_attributes: [] },
+        { auto_assign_inboxes: [] },
         stages: [:id, :name, :color, :order, :wipLimit]
       ]
     )
@@ -75,9 +76,10 @@ class Api::V1::Accounts::KanbanSettingsController < Api::V1::Accounts::BaseContr
 
   def board_params
     params.require(:board).permit(
-      :name, :description, :customAttributeKey, :valueAttributeKey, :isDefault, :webhook_url, :enable_round_robin,
+      :name, :description, :customAttributeKey, :valueAttributeKey, :isDefault, :webhook_url, :enable_round_robin, :auto_assign_stage_id,
       { agent_ids: [] },
       { visible_attributes: [] },
+      { auto_assign_inboxes: [] },
       stages: [:id, :name, :color, :order, :wipLimit]
     )
   end
