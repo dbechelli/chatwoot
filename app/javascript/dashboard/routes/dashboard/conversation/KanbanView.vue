@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue';
 import { useStore } from 'vuex';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import Button from 'dashboard/components-next/button/Button.vue';
 import KanbanColumn from 'dashboard/components/KanbanBoard/KanbanColumn.vue';
@@ -21,6 +21,7 @@ import wootConstants from 'dashboard/constants/globals';
 import { useAlert } from 'dashboard/composables';
 
 const store = useStore();
+const route = useRoute();
 const router = useRouter();
 const { t } = useI18n();
 
@@ -83,6 +84,11 @@ const visibleAttributes = computed(() => {
 });
 
 const hasBoards = computed(() => salesStages.value.length > 0);
+const canManageBoards = computed(
+  () =>
+    store.getters.getCurrentRole === 'administrator' &&
+    store.getters.getCurrentCustomRoleId === null
+);
 
 // Getters
 const allConversations = computed(
@@ -191,18 +197,31 @@ const loadKanbanConfig = async () => {
 
     // Selecionar board da URL ou board padrão ou primeiro disponível
     if (kanbanConfig.value.boards && kanbanConfig.value.boards.length > 0) {
+      const boardIdFromRoute = route.params.boardId;
       const boardIdFromQuery = router.currentRoute.value.query.board;
-      if (boardIdFromQuery) {
-        const boardFromQuery = kanbanConfig.value.boards.find(
-          b => b.id.toString() === boardIdFromQuery.toString()
+      const requestedBoardId = boardIdFromRoute || boardIdFromQuery;
+
+      if (requestedBoardId) {
+        const requestedBoard = kanbanConfig.value.boards.find(
+          board => board.id.toString() === requestedBoardId.toString()
         );
-        selectedBoardId.value = boardFromQuery?.id || null;
+        selectedBoardId.value = requestedBoard?.id || null;
       }
 
       if (!selectedBoardId.value) {
         const defaultBoard = kanbanConfig.value.boards.find(b => b.isDefault);
         selectedBoardId.value =
           defaultBoard?.id || kanbanConfig.value.boards[0].id;
+
+        if (route.name === 'kanban_board' && !boardIdFromRoute) {
+          router.replace({
+            name: 'kanban_board',
+            params: {
+              ...route.params,
+              boardId: selectedBoardId.value,
+            },
+          });
+        }
       }
     }
   } catch (error) {
@@ -504,16 +523,20 @@ watch(selectedItems, value => {
   showBulkActions.value = value.length > 0;
 });
 
-watch(selectedBoardId, boardId => {
-  if (!boardId) return;
+watch(
+  () => route.params.boardId,
+  boardId => {
+    if (!boardId || !kanbanConfig.value?.boards?.length) return;
 
-  router.replace({
-    query: {
-      ...router.currentRoute.value.query,
-      board: boardId,
-    },
-  });
-});
+    const requestedBoard = kanbanConfig.value.boards.find(
+      board => board.id.toString() === boardId.toString()
+    );
+
+    if (requestedBoard) {
+      selectedBoardId.value = requestedBoard.id;
+    }
+  }
+);
 
 watch([statusFilter, selectedBoardId], () => {
   fetchConversations();
@@ -542,7 +565,7 @@ onMounted(async () => {
                   {{ currentBoard?.name || t('KANBAN.TITLE') }}
                 </h1>
                 <p class="text-sm text-n-slate-11">
-                  {{ currentBoard?.description || 'Gestão de Funil' }}
+                  {{ currentBoard?.description || t('KANBAN.WORKSPACE.DEFAULT_DESCRIPTION') }}
                 </p>
               </div>
 
@@ -583,6 +606,19 @@ onMounted(async () => {
 
           <div class="flex flex-wrap items-center gap-2">
             <template v-if="hasBoards">
+              <router-link
+                v-if="canManageBoards && currentBoard"
+                :to="{ name: 'kanban_board_edit', params: { boardId: currentBoard.id } }"
+              >
+                <Button
+                  sm
+                  slate
+                  outline
+                  icon="i-lucide-pencil-line"
+                  :label="t('KANBAN.FUNNELS.EDIT_FUNNEL')"
+                />
+              </router-link>
+
               <Button
                 sm
                 slate
@@ -612,7 +648,7 @@ onMounted(async () => {
               />
             </template>
             <template v-else>
-              <router-link :to="{ name: 'kanban_settings' }">
+              <router-link :to="{ name: 'kanban_board_new' }">
                 <Button
                   sm
                   blue
@@ -638,7 +674,7 @@ onMounted(async () => {
           class="grid gap-3 rounded-2xl border border-n-weak bg-n-slate-2/60 p-3 lg:grid-cols-[repeat(4,minmax(0,1fr))_auto]"
         >
           <div
-            v-if="kanbanConfig && kanbanConfig.boards && kanbanConfig.boards.length > 1"
+            v-if="!route.params.boardId && kanbanConfig && kanbanConfig.boards && kanbanConfig.boards.length > 1"
             class="space-y-1"
           >
             <label class="text-xs font-medium uppercase tracking-wide text-n-slate-10">
@@ -912,7 +948,7 @@ onMounted(async () => {
             {{ t('KANBAN.NO_BOARDS_DESCRIPTION') }}
           </p>
           <div class="mt-8 flex flex-col items-center gap-3 sm:flex-row">
-            <router-link :to="{ name: 'kanban_settings' }">
+            <router-link :to="{ name: 'kanban_board_new' }">
               <Button blue solid icon="i-lucide-plus-circle" :label="t('KANBAN.CREATE_FIRST_BOARD')" />
             </router-link>
             <Button slate outline icon="i-lucide-book-open" label="Ver Exemplos de Uso" @click="showHelpModal = true" />

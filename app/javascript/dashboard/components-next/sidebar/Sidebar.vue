@@ -307,24 +307,37 @@ const menuItems = computed(() => {
       name: 'Kanban',
       label: t('SIDEBAR.KANBAN'),
       icon: 'i-lucide-kanban-square',
-      to:
-        kanbanBoards.value.length > 0
-          ? undefined
-          : accountScopedRoute('kanban'),
-      activeOn: ['kanban'],
-      children:
-        kanbanBoards.value.length > 0
-          ? kanbanBoards.value.map(board => ({
-              name: `Kanban-${board.id}`,
-              label: board.name,
-              to: accountScopedRoute(
-                'kanban',
-                {},
-                { board: board.id }
-              ),
-              icon: 'i-lucide-kanban-square',
-            }))
-          : undefined,
+      to: accountScopedRoute('kanban'),
+      activeOn: [
+        'kanban',
+        'kanban_overview',
+        'kanban_funnels',
+        'kanban_board',
+        'kanban_board_new',
+        'kanban_board_edit',
+      ],
+      children: [
+        {
+          name: 'KanbanOverview',
+          label: t('KANBAN.NAV.OVERVIEW'),
+          to: accountScopedRoute('kanban_overview'),
+          icon: 'i-lucide-layout-dashboard',
+        },
+        {
+          name: 'KanbanFunnels',
+          label: t('KANBAN.NAV.FUNNELS'),
+          to: accountScopedRoute('kanban_funnels'),
+          icon: 'i-lucide-panels-top-left',
+        },
+        ...kanbanBoards.value.map(board => ({
+          name: `Kanban-${board.id}`,
+          label: board.name,
+          to: accountScopedRoute('kanban_board', {
+            boardId: board.id,
+          }),
+          icon: 'i-lucide-kanban-square',
+        })),
+      ],
     },
     {
       name: 'WhatsApp Groups',
