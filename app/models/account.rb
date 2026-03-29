@@ -406,14 +406,6 @@ class Account < ApplicationRecord
     Rails.configuration.dispatcher.dispatch(ACCOUNT_CREATED, Time.zone.now, account: self)
   end
 
-  trigger.after(:insert).for_each(:row) do
-    "execute format('create sequence IF NOT EXISTS conv_dpid_seq_%s', NEW.id);"
-  end
-
-  trigger.name('camp_dpid_before_insert').after(:insert).for_each(:row) do
-    "execute format('create sequence IF NOT EXISTS camp_dpid_seq_%s', NEW.id);"
-  end
-
   def validate_limit_keys
     # method overridden in enterprise module
   end
