@@ -684,8 +684,14 @@ const activeViewButtonClass = mode => {
   return viewMode.value === mode;
 };
 
+const usesResponsiveBoardGrid = computed(() => salesStages.value.length > 0 && salesStages.value.length <= 4);
+
 const boardColumnStyle = computed(() => {
   const stageCount = salesStages.value.length;
+
+  if (usesResponsiveBoardGrid.value) {
+    return { minWidth: 0 };
+  }
 
   if (stageCount >= 6) {
     return { width: 'clamp(13.5rem, 16vw, 17rem)' };
@@ -700,6 +706,42 @@ const boardColumnStyle = computed(() => {
   }
 
   return { width: 'clamp(16rem, 24vw, 20rem)' };
+});
+
+const boardLayoutClass = computed(() => {
+  if (usesResponsiveBoardGrid.value) {
+    return 'grid min-h-full w-full content-start items-stretch gap-3 p-3 md:gap-4 md:p-5';
+  }
+
+  return 'grid min-h-full min-w-max grid-flow-col auto-cols-max snap-x snap-mandatory items-start gap-3 p-3 pb-5 md:gap-4 md:p-5 md:pb-6';
+});
+
+const boardLayoutStyle = computed(() => {
+  if (!usesResponsiveBoardGrid.value) {
+    return {};
+  }
+
+  return {
+    gridTemplateColumns: `repeat(${salesStages.value.length}, minmax(0, 1fr))`,
+  };
+});
+
+const swimlaneTrackClass = computed(() => {
+  if (usesResponsiveBoardGrid.value) {
+    return 'grid w-full items-stretch gap-3 md:gap-4';
+  }
+
+  return 'custom-scrollbar grid min-w-max grid-flow-col auto-cols-max snap-x snap-mandatory items-start gap-3 overflow-x-auto pb-4 md:gap-4';
+});
+
+const swimlaneTrackStyle = computed(() => {
+  if (!usesResponsiveBoardGrid.value) {
+    return {};
+  }
+
+  return {
+    gridTemplateColumns: `repeat(${salesStages.value.length}, minmax(0, 1fr))`,
+  };
 });
 
 watch(selectedItems, value => {
@@ -1245,14 +1287,16 @@ onMounted(async () => {
         <!-- Standard Board View -->
         <div
           v-else-if="salesStages.length > 0 && viewMode === 'board' && groupBy === 'none'"
-          class="flex min-h-full min-w-max snap-x snap-mandatory items-start gap-3 p-3 pb-5 md:gap-4 md:p-5 md:pb-6"
+          :class="boardLayoutClass"
+          :style="boardLayoutStyle"
         >
           <div
             v-for="stage in salesStages"
             :key="stage.stage"
             :data-stage-id="stage.stage"
             :style="boardColumnStyle"
-            class="flex min-h-[calc(100vh-20rem)] min-w-[13.5rem] flex-shrink-0 snap-start flex-col"
+            class="flex min-h-0 flex-col self-stretch snap-start"
+            :class="usesResponsiveBoardGrid ? 'min-w-0' : 'min-w-[13.5rem] flex-shrink-0'"
           >
             <KanbanColumn
               :stage="stage.stage"
@@ -1271,13 +1315,14 @@ onMounted(async () => {
               @add-item="handleAddItemToStage"
             />
           </div>
-          <div class="w-4 flex-shrink-0" />
+          <div v-if="!usesResponsiveBoardGrid" class="w-4 flex-shrink-0" />
         </div>
 
         <!-- Swimlane Board View -->
         <div
           v-else-if="salesStages.length > 0 && viewMode === 'board' && groupBy !== 'none'"
-          class="flex min-h-full min-w-max flex-col gap-6 p-3 pb-16 md:gap-8 md:p-5 md:pb-20"
+          class="flex min-h-full flex-col gap-6 p-3 pb-16 md:gap-8 md:p-5 md:pb-20"
+          :class="usesResponsiveBoardGrid ? 'min-w-0 w-full' : 'min-w-max'"
         >
           <div v-for="group in swimlaneGroups" :key="group.id" class="flex flex-col gap-3">
             <div class="sticky left-0 flex w-fit items-center gap-2 rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2">
@@ -1287,13 +1332,14 @@ onMounted(async () => {
               </span>
             </div>
 
-  	         <div class="custom-scrollbar flex min-w-max snap-x snap-mandatory items-start gap-3 overflow-x-auto pb-4 md:gap-4">
+	         <div :class="swimlaneTrackClass" :style="swimlaneTrackStyle">
                <div
                  v-for="stage in salesStages"
                  :key="stage.stage + group.id"
                  :data-stage-id="`${group.id}-${stage.stage}`"
                    :style="boardColumnStyle"
-                   class="flex min-w-[13.5rem] flex-shrink-0 snap-start flex-col"
+                   class="flex min-h-0 flex-col self-stretch snap-start"
+                   :class="usesResponsiveBoardGrid ? 'min-w-0' : 'min-w-[13.5rem] flex-shrink-0'"
                >
                  <KanbanColumn
                    :stage="stage.stage"
@@ -1303,7 +1349,7 @@ onMounted(async () => {
                    :wip-limit="null" 
                    :visible-attributes="visibleAttributes"
                    :can-manage-board="canManageBoards"
-                   class="min-h-[150px] max-h-[calc(100vh-24rem)]"
+                   class="h-full min-h-[150px]"
                    @stage-change="(payload) => handleStageChange({...payload, groupUpdate: { type: groupBy, value: group.value }})"
                    @card-click="handleCardClick"
                    @card-contextmenu="handleCardContextmenu"
