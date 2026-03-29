@@ -569,7 +569,7 @@ onMounted(async () => {
                 </p>
               </div>
 
-              <div class="inline-flex items-center gap-1 rounded-xl border border-n-weak bg-n-slate-2 p-1">
+              <div class="flex flex-wrap items-center gap-1 rounded-xl border border-n-weak bg-n-slate-2 p-1">
                 <Button
                   sm
                   :blue="activeViewButtonClass('board')"
@@ -671,7 +671,7 @@ onMounted(async () => {
 
         <div
           v-if="hasBoards"
-          class="grid gap-3 rounded-2xl border border-n-weak bg-n-slate-2/60 p-3 lg:grid-cols-[repeat(4,minmax(0,1fr))_auto]"
+          class="grid gap-3 rounded-2xl border border-n-weak bg-n-slate-2/60 p-3 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-[repeat(5,minmax(0,1fr))_auto]"
         >
           <div
             v-if="!route.params.boardId && kanbanConfig && kanbanConfig.boards && kanbanConfig.boards.length > 1"
@@ -839,7 +839,7 @@ onMounted(async () => {
       </div>
     </Modal>
 
-    <main class="flex-1 w-full overflow-hidden bg-n-slate-2" :class="viewMode === 'list' ? 'overflow-y-auto' : 'overflow-x-auto overflow-y-hidden'">
+    <main class="custom-scrollbar flex min-h-0 flex-1 w-full bg-n-slate-2" :class="viewMode === 'board' ? 'overflow-auto' : 'overflow-y-auto overflow-x-hidden'">
       <div
         v-if="isLoading && !allConversations.length"
         class="flex h-full items-center justify-center"
@@ -878,12 +878,12 @@ onMounted(async () => {
       <!-- Standard Board View -->
       <div
         v-else-if="salesStages.length > 0 && viewMode === 'board' && groupBy === 'none'"
-        class="inline-flex h-full items-start gap-4 p-4 md:p-6"
+        class="flex min-h-full min-w-max items-start gap-4 p-4 pb-6 md:p-6 md:pb-8"
       >
         <div
           v-for="stage in salesStages"
           :key="stage.stage"
-          class="flex h-full w-80 flex-shrink-0 flex-col"
+          class="flex min-h-[calc(100vh-20rem)] w-[19rem] flex-shrink-0 flex-col md:w-80"
         >
           <KanbanColumn
             :stage="stage.stage"
@@ -903,7 +903,7 @@ onMounted(async () => {
       <!-- Swimlane Board View -->
       <div
         v-else-if="salesStages.length > 0 && viewMode === 'board' && groupBy !== 'none'"
-        class="flex h-full flex-col gap-8 overflow-x-hidden overflow-y-auto bg-n-slate-2 p-4 pb-20 md:p-6"
+        class="flex min-h-full min-w-max flex-col gap-8 p-4 pb-20 md:p-6"
       >
         <div v-for="group in swimlaneGroups" :key="group.id" class="flex flex-col gap-3">
           <div class="sticky left-0 flex w-fit items-center gap-2 rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2">
@@ -913,11 +913,11 @@ onMounted(async () => {
             </span>
           </div>
 
-           <div class="flex items-start gap-4 overflow-x-auto pb-4">
+           <div class="custom-scrollbar flex min-w-max items-start gap-4 overflow-x-auto pb-4">
              <div
                v-for="stage in salesStages"
                :key="stage.stage + group.id"
-               class="flex flex-col w-80 flex-shrink-0"
+               class="flex w-[19rem] flex-shrink-0 flex-col md:w-80"
              >
                <KanbanColumn
                  :stage="stage.stage"
@@ -926,7 +926,7 @@ onMounted(async () => {
                  :conversations="getSwimlaneConversations(stage.stage, group.value)"
                  :wip-limit="null" 
                  :visible-attributes="visibleAttributes"
-                 class="min-h-[150px] max-h-[500px]"
+                 class="min-h-[150px] max-h-[calc(100vh-24rem)]"
                  @stage-change="(payload) => handleStageChange({...payload, groupUpdate: { type: groupBy, value: group.value }})"
                  @card-click="handleCardClick"
                  @card-contextmenu="handleCardContextmenu"
