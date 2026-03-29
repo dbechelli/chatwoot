@@ -200,6 +200,7 @@
     "DELETE_SUCCESS": "Quadro excluído com sucesso",
     "DELETE_ERROR": "Erro ao excluir quadro",
     "LOAD_ERROR": "Erro ao carregar configurações do Kanban",
+    "SCHEMA_MISSING": "A estrutura do Kanban ainda não está disponível neste ambiente. Rode as migrations do banco e tente novamente.",
     "SAVE_ERROR": "Erro ao salvar quadro",
     "BOARD_CREATED": "Quadro criado com sucesso",
     "BOARD_UPDATED": "Quadro atualizado com sucesso",

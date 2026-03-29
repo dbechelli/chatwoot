@@ -72,7 +72,9 @@ ActiveRecord::Schema[7.1].define(version: 2026_03_26_120000) do
     t.jsonb "custom_attributes", default: {}
     t.integer "status", default: 0
     t.jsonb "internal_attributes", default: {}, null: false
+    t.jsonb "kanban_config", default: {"enabled"=>false, "boards"=>[]}, null: false
     t.jsonb "settings", default: {}
+    t.index ["kanban_config"], name: "index_accounts_on_kanban_config", using: :gin
     t.index ["status"], name: "index_accounts_on_status"
   end
 

@@ -5,13 +5,13 @@ class Api::V1::Accounts::KanbanSettingsController < Api::V1::Accounts::BaseContr
 
   # GET /api/v1/accounts/:account_id/kanban_settings
   def show
-    @kanban_config = Current.account.kanban_config || default_config
+    @kanban_config = Current.account.kanban_configuration || default_config
   end
 
   # PUT /api/v1/accounts/:account_id/kanban_settings
   def update
-    Current.account.update!(kanban_config: kanban_params)
-    @kanban_config = Current.account.kanban_config
+    Current.account.update_kanban_config(kanban_params)
+    @kanban_config = Current.account.kanban_configuration
     render :show
   end
 

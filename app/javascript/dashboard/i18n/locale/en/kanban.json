@@ -207,6 +207,7 @@
     "DELETE_SUCCESS": "Board deleted successfully",
     "DELETE_ERROR": "Failed to delete board",
     "LOAD_ERROR": "Failed to load Kanban settings",
+    "SCHEMA_MISSING": "The Kanban schema is not available in this environment yet. Run the database migrations and try again.",
     "SAVE_ERROR": "Failed to save board",
     "BOARD_CREATED": "Board created successfully",
     "BOARD_UPDATED": "Board updated successfully",

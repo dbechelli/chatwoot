@@ -202,16 +202,20 @@ class Account < ApplicationRecord
   end
 
   # Kanban configuration helper methods
-  def kanban_enabled?
-    return false if kanban_config.nil?
+  def kanban_schema_ready?
+    has_attribute?(:kanban_config) || self.class.column_names.include?('kanban_config')
+  end
 
-    kanban_config['enabled'] == true
+  def kanban_configuration
+    stored_kanban_config.presence || default_kanban_config
+  end
+
+  def kanban_enabled?
+    kanban_configuration['enabled'] == true
   end
 
   def kanban_boards
-    return [] if kanban_config.nil?
-
-    kanban_config['boards'] || []
+    kanban_configuration['boards'] || []
   end
 
   def default_kanban_board
@@ -222,50 +226,111 @@ class Account < ApplicationRecord
     kanban_boards.find { |b| b['id'] == board_id }
   end
 
+  def update_kanban_config(config_data)
+    persist_kanban_config(normalize_kanban_config_data(config_data))
+    true
+  end
+
   def add_kanban_board(board_data)
     ensure_kanban_config
     board = normalize_kanban_board_data(board_data).merge('id' => SecureRandom.uuid)
     boards = kanban_boards
-    boards << board
-    persist_kanban_config(kanban_config.merge('boards' => boards))
+    persist_kanban_config(kanban_configuration.merge('boards' => normalize_default_kanban_board(boards + [board])))
     board
   end
 
   def update_kanban_board(board_id, board_data)
-    return nil if kanban_config.nil?
-
     boards = kanban_boards
     board_index = boards.find_index { |b| b['id'] == board_id }
     return nil if board_index.nil?
 
     boards[board_index] = boards[board_index].merge(normalize_kanban_board_data(board_data))
-    persist_kanban_config(kanban_config.merge('boards' => boards))
+    persist_kanban_config(kanban_configuration.merge('boards' => normalize_default_kanban_board(boards)))
     boards[board_index]
   end
 
   def delete_kanban_board(board_id)
-    return if kanban_config.nil?
-
-    boards = kanban_boards.reject { |b| b['id'] == board_id }
-    persist_kanban_config(kanban_config.merge('boards' => boards))
+    boards = normalize_default_kanban_board(kanban_boards.reject { |b| b['id'] == board_id })
+    persist_kanban_config(kanban_configuration.merge('boards' => boards))
+    true
   end
 
   private
 
   def ensure_kanban_config
-    return if kanban_config.present?
+    return if stored_kanban_config.present?
 
-    persist_kanban_config({ 'enabled' => false, 'boards' => [] })
+    persist_kanban_config(default_kanban_config)
+  end
+
+  def default_kanban_config
+    { 'enabled' => false, 'boards' => [] }
+  end
+
+  def normalize_kanban_config_data(config_data)
+    raw_config = config_data.respond_to?(:to_h) ? config_data.to_h : config_data
+    normalized_config = raw_config.deep_stringify_keys
+
+    normalized_config['enabled'] = ActiveModel::Type::Boolean.new.cast(normalized_config['enabled'])
+    normalized_config['boards'] = normalize_default_kanban_board(
+      Array(normalized_config['boards']).map { |board| normalize_kanban_board_data(board) }
+    )
+    normalized_config
   end
 
   def normalize_kanban_board_data(board_data)
     raw_board_data = board_data.respond_to?(:to_h) ? board_data.to_h : board_data
-    raw_board_data.deep_stringify_keys
+    normalized_board = raw_board_data.deep_stringify_keys
+
+    normalized_board['agent_ids'] = Array(normalized_board['agent_ids'])
+    normalized_board['visible_attributes'] = Array(normalized_board['visible_attributes'])
+    normalized_board['auto_assign_inboxes'] = Array(normalized_board['auto_assign_inboxes'])
+    normalized_board['enable_round_robin'] = ActiveModel::Type::Boolean.new.cast(normalized_board['enable_round_robin'])
+    normalized_board['isDefault'] = ActiveModel::Type::Boolean.new.cast(normalized_board['isDefault'])
+    normalized_board['stages'] = Array(normalized_board['stages']).map do |stage|
+      stage.deep_stringify_keys
+    end
+    normalized_board
+  end
+
+  def normalize_default_kanban_board(boards)
+    return boards if boards.empty?
+
+    return boards.each_with_index.map { |board, index| board.merge('isDefault' => index.zero?) } unless boards.any? { |board| board['isDefault'] }
+
+    default_assigned = false
+    boards.map do |board|
+      if board['isDefault'] && !default_assigned
+        default_assigned = true
+        board.merge('isDefault' => true)
+      else
+        board.merge('isDefault' => false)
+      end
+    end
+  end
+
+  def stored_kanban_config
+    if kanban_schema_ready?
+      self[:kanban_config].presence || settings_kanban_config
+    else
+      settings_kanban_config
+    end
+  end
+
+  def settings_kanban_config
+    settings_data = settings.is_a?(Hash) ? settings : {}
+    settings_data['kanban_config'] || settings_data[:kanban_config]
   end
 
   def persist_kanban_config(config)
-    update_column(:kanban_config, config)
-    self[:kanban_config] = config
+    if kanban_schema_ready?
+      update_column(:kanban_config, config)
+      self[:kanban_config] = config
+    else
+      updated_settings = (settings.is_a?(Hash) ? settings.deep_dup : {}).merge('kanban_config' => config)
+      update_column(:settings, updated_settings)
+      self[:settings] = updated_settings
+    end
   end
 
   def notify_creation

@@ -1,5 +1,16 @@
 import * as types from '../mutation-types';
 
+const buildKanbanError = error => {
+  const responseData = error?.response?.data || {};
+  const kanbanError = new Error(responseData.error || error?.message || '');
+
+  if (responseData.error_code) {
+    kanbanError.code = responseData.error_code;
+  }
+
+  return kanbanError;
+};
+
 const state = {
   records: [],
   uiFlags: {
@@ -44,7 +55,7 @@ const actions = {
       commit(types.default.ADD_KANBAN_BOARD, response.data);
       return response.data;
     } catch (error) {
-      throw error;
+      throw buildKanbanError(error);
     } finally {
       commit(types.default.SET_KANBAN_UI_FLAG, { isCreating: false });
     }
@@ -61,7 +72,7 @@ const actions = {
       commit(types.default.UPDATE_KANBAN_BOARD, response.data);
       return response.data;
     } catch (error) {
-      throw error;
+      throw buildKanbanError(error);
     } finally {
       commit(types.default.SET_KANBAN_UI_FLAG, { isUpdating: false });
     }
@@ -76,7 +87,7 @@ const actions = {
       );
       commit(types.default.DELETE_KANBAN_BOARD, id);
     } catch (error) {
-      throw error;
+      throw buildKanbanError(error);
     } finally {
       commit(types.default.SET_KANBAN_UI_FLAG, { isDeleting: false });
     }

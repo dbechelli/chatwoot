@@ -204,6 +204,14 @@ const toggleAttribute = key => {
     : [...attributes, key];
 };
 
+const resolveSaveErrorMessage = error => {
+  if (error?.code === 'kanban_schema_missing') {
+    return t('KANBAN_SETTINGS.SCHEMA_MISSING');
+  }
+
+  return error?.message || t('KANBAN_SETTINGS.SAVE_ERROR');
+};
+
 const handleSave = async () => {
   if (!canSave.value) return;
 
@@ -232,8 +240,8 @@ const handleSave = async () => {
 
     await store.dispatch('kanban/fetch');
     router.push({ name: 'kanban_board', params: { boardId: board.id } });
-  } catch {
-    useAlert(t('KANBAN_SETTINGS.SAVE_ERROR'));
+  } catch (error) {
+    useAlert(resolveSaveErrorMessage(error));
   } finally {
     isSaving.value = false;
   }
