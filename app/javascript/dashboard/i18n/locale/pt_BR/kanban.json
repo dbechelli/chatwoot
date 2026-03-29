@@ -5,24 +5,8 @@
     "SIDEBAR": {
       "NO_BOARD": "Nenhum quadro Kanban configurado.",
       "NOT_IN_KANBAN": "Esta conversa não está no Kanban.",
-      "NO_AVAILABLE_BOARDS": "Nenhum quadro disponível",
       "ADD_TO_KANBAN": "Adicionar ao Kanban",
-      "EDIT": "Editar",
-      "EDIT_TASK": "Editar tarefa",
-      "SELECT_BOARD_AND_STAGE": "Selecione um quadro e uma etapa",
-      "SELECT_STAGE": "Selecione uma etapa...",
-      "LINKED_CONVERSATION": "Conversa vinculada",
-      "ASSIGNED_AGENTS": "Agentes atribuídos",
-      "REMOVE_FROM_KANBAN": "Remover do Kanban",
-      "REMOVE_TITLE": "Remover item do Kanban",
-      "REMOVE_DESCRIPTION": "Esta conversa sairá do funil atual, mas continuará disponível na caixa de entrada.",
-      "REMOVE": "Remover",
-      "ADD_SUCCESS": "Tarefa adicionada ao Kanban",
-      "ADD_ERROR": "Não foi possível adicionar a tarefa ao Kanban",
-      "UPDATE_STAGE_SUCCESS": "Etapa atualizada com sucesso",
-      "UPDATE_STAGE_ERROR": "Não foi possível atualizar a etapa",
-      "REMOVE_SUCCESS": "Item removido do Kanban",
-      "REMOVE_ERROR": "Não foi possível remover o item do Kanban"
+      "EDIT": "Editar"
     },
     "MODAL": {
       "NEW_ITEM": "Novo Item",
@@ -88,11 +72,6 @@
       "NO_FUNNELS": "Nenhum funil criado ainda",
       "SETTINGS": "Configurações avançadas"
     },
-    "NAVIGATION": {
-      "NEXT": "Avançar colunas",
-      "PREVIOUS": "Voltar colunas",
-      "TITLE": "Navegação do funil"
-    },
     "OVERVIEW": {
       "TITLE": "Um workspace de Kanban organizado por funis",
       "DESCRIPTION": "Acompanhe pipelines ativos, mantenha o time alinhado e entre no funil certo sem cavar telas de configuração.",
@@ -121,29 +100,6 @@
       "NO_DESCRIPTION": "Sem descrição ainda.",
       "EMPTY_TITLE": "Nenhum funil disponível",
       "EMPTY_DESCRIPTION": "Comece com um modelo ou um funil em branco e monte o fluxo que seu time realmente usa."
-    },
-    "FUNNEL_SWITCHER": {
-      "DESCRIPTION": "Organize e gerencie os pipelines da sua empresa"
-    },
-    "COLUMN_ACTIONS": {
-      "ADD_STAGE": "Adicionar etapa",
-      "ADD_TASK": "Adicionar tarefa",
-      "COLOR": "Cor",
-      "DUPLICATE_STAGE": "Duplicar etapa",
-      "EDIT_STAGE": "Editar etapa",
-      "ERROR": "Não foi possível salvar a etapa",
-      "PREVIEW": "Pré-visualização",
-      "SAVE_STAGE": "Salvar etapa",
-      "STAGE_NAME": "Nome da etapa",
-      "STAGE_NAME_PLACEHOLDER": "Ex: Em validação",
-      "SUCCESS": "Etapa atualizada com sucesso",
-      "WIP_LIMIT": "Limite WIP",
-      "WIP_LIMIT_PLACEHOLDER": "Sem limite",
-      "MODAL": {
-        "CREATE_TITLE": "Adicionar etapa",
-        "DUPLICATE_TITLE": "Duplicar etapa",
-        "EDIT_TITLE": "Editar etapa"
-      }
     },
     "EDITOR": {
       "BACK_TO_FUNNELS": "Voltar para funis",
@@ -186,22 +142,7 @@
       "ASSIGNEE": "Atribuído para",
       "ALL_AGENTS": "Todos os Agentes",
       "MY_DEALS": "Meus Itens",
-      "UNASSIGNED": "Não Atribuído",
-      "GROUP_BY": "Agrupamento",
-      "GROUP_BY_OPTIONS": {
-        "NONE": "Nenhum",
-        "PRIORITY": "Prioridade",
-        "ASSIGNEE": "Agente"
-      },
-      "STATUS": "Status",
-      "STATUS_OPTIONS": {
-        "OPEN": "Abertos",
-        "RESOLVED": "Arquivados",
-        "ALL": "Todos"
-      },
-      "SAVED_VIEWS": "Vistas salvas",
-      "NO_SAVED_VIEWS": "Nenhuma vista salva",
-      "SAVE_CURRENT_VIEW": "Salvar filtros atuais"
+      "UNASSIGNED": "Não Atribuído"
     },
     "METRICS": {
       "TOTAL_DEALS": "Total de Itens",
@@ -213,7 +154,6 @@
     "VIEW_MODE": {
       "BOARD": "Quadro",
       "LIST": "Lista",
-      "CALENDAR": "Calendario",
       "REPORTS": "Relatórios"
     },
     "BULK_ACTIONS": {
@@ -257,11 +197,8 @@
     "SAVE": "Salvar",
     "CANCEL": "Cancelar",
     "CONFIRM_DELETE": "Tem certeza que deseja excluir este quadro? Esta ação não pode ser desfeita.",
-    "CONFIRM_DELETE_PROMPT": "Tem certeza de que deseja excluir {name}?",
     "DELETE_SUCCESS": "Quadro excluído com sucesso",
     "DELETE_ERROR": "Erro ao excluir quadro",
-    "DELETE_CANCEL": "Não, manter {name}",
-    "DELETE_CONFIRM": "Sim, excluir {name}",
     "LOAD_ERROR": "Erro ao carregar configurações do Kanban",
     "SCHEMA_MISSING": "A estrutura do Kanban ainda não está disponível neste ambiente. Rode as migrations do banco e tente novamente.",
     "SAVE_ERROR": "Erro ao salvar quadro",
@@ -269,20 +206,6 @@
     "BOARD_UPDATED": "Quadro atualizado com sucesso",
     "BOARD_EDITOR_DESCRIPTION": "Configure estágios, cores e limites de trabalho para seu pipeline",
     "BASIC_CONFIG": "Configuração Básica",
-    "SUMMARY_TITLE": "Resumo do funil",
-    "SUMMARY_DESCRIPTION": "Dê um nome claro, organize as etapas e use este painel para validar se o funil está pronto para uso.",
-    "SUMMARY_READY": "Pronto para salvar",
-    "SUMMARY_PENDING": "Ajustes pendentes",
-    "SUMMARY_STAGES": "Etapas",
-    "SUMMARY_RULES": "Regras",
-    "SUMMARY_AGENTS": "Agentes",
-    "SUMMARY_FIELDS": "Campos no cartão",
-    "SUMMARY_ALL": "Todos",
-    "SUMMARY_DEFAULT": "Quadro padrão",
-    "SUMMARY_WEBHOOK": "Webhook ativo",
-    "SUMMARY_AUTO_ASSIGN": "Entrada automática",
-    "SUMMARY_VALUE": "Valor monetário",
-    "SUMMARY_ATTRIBUTE_KEY": "Identificador técnico",
     "BOARD_NAME": "Nome do Quadro",
     "BOARD_NAME_PLACEHOLDER": "ex: Pipeline de Vendas",
     "REQUIRED": "*",
@@ -305,14 +228,6 @@
     "WEBHOOK_URL": "URL do Webhook",
     "WEBHOOK_PLACEHOLDER": "https://seu-dominio.com/webhook/...",
     "WEBHOOK_HELP": "Quando um cartão mudar de estágio, enviaremos um POST para esta URL com os dados do item",
-    "WEBHOOK_ENABLED": "Habilitar webhook deste quadro",
-    "WEBHOOK_PAUSED": "Pausar entregas do webhook",
-    "WEBHOOK_SECRET": "Segredo de Assinatura",
-    "WEBHOOK_SECRET_PLACEHOLDER": "segredo-compartilhado-opcional",
-    "WEBHOOK_SUBSCRIPTIONS": "Eventos enviados",
-    "WEBHOOK_STAGE_FILTER": "Restringir a etapas específicas",
-    "WEBHOOK_INCLUDE_MESSAGE_CONTENT": "Incluir conteúdo da última mensagem no payload",
-    "WEBHOOK_SEND_ON_OVERDUE": "Disparar também quando a tarefa estiver vencida",
     "AUTO_ASSIGN": "Atribuição Automática",
     "AUTO_ASSIGN_DESCRIPTION": "Adiciona automaticamente novas conversas das caixas selecionadas a este quadro",
     "INBOXES": "Caixas de Entrada",
@@ -324,31 +239,6 @@
     "STAGES": "Estágios",
     "ADD_STAGE": "Adicionar Estágio",
     "NEW_STAGE": "Novo Estágio",
-    "AUTOMATION_RULES": "Regras de Automação",
-    "AUTOMATION_RULES_HELP": "Defina como mensagens e conversas entram, movem ou atualizam este quadro sem engessar a regra de negócio do cliente.",
-    "ADD_RULE": "Adicionar Regra",
-    "NO_RULES": "Nenhuma regra criada ainda. Comece adicionando uma regra para este quadro.",
-    "RULE_NAME": "Nome da Regra",
-    "RULE_NAME_PLACEHOLDER": "ex: Mensagens de pagamento entram no Financeiro",
-    "RULE_DESCRIPTION": "Descrição da Regra",
-    "RULE_DESCRIPTION_PLACEHOLDER": "Explique o objetivo desta automação para facilitar manutenção futura.",
-    "RULE_TRIGGER": "Disparo",
-    "RULE_ENABLED": "Regra ativa",
-    "RULE_MATCH_TYPE": "Combinação das condições",
-    "RULE_MATCH_ALL": "Todas as condições devem ser atendidas",
-    "RULE_MATCH_ANY": "Qualquer condição pode ser atendida",
-    "RULE_CONDITIONS": "Condições",
-    "RULE_ACTIONS_TITLE": "Ações",
-    "ADD_CONDITION": "Adicionar Condição",
-    "ADD_ACTION": "Adicionar Ação",
-    "RULE_FIELD": "Campo",
-    "RULE_OPERATOR": "Operador",
-    "RULE_VALUE": "Valor",
-    "RULE_VALUE_PLACEHOLDER": "boleto,pagamento,consulta",
-    "RULE_ACTION": "Ação",
-    "RULE_ACTION_VALUE": "Valor da Ação",
-    "RULE_ACTION_VALUE_PLACEHOLDER": "ex: financeiro, high, etiqueta-vip",
-    "RULE_ACTION_STAGE": "Etapa de Destino",
     "NEW_BOARD": "Novo Quadro",
     "NO_STAGES": "Nenhum estágio ainda. Clique em 'Adicionar Estágio' para criar um",
     "STAGE_NAME": "Nome do Estágio",
@@ -361,46 +251,6 @@
     "USE_TEMPLATE": "Usar este Modelo",
     "CUSTOMIZE_AFTER_CREATE": "Você poderá personalizar os estágios depois de criar o quadro",
     "CREATE_BLANK_BOARD": "Criar Quadro em Branco",
-    "RULE_TRIGGERS": {
-      "MESSAGE_CREATED": "Mensagem criada",
-      "CONVERSATION_CREATED": "Conversa criada",
-      "CONVERSATION_UPDATED": "Conversa atualizada",
-      "TASK_OVERDUE": "Tarefa vencida"
-    },
-    "RULE_FIELDS": {
-      "MESSAGE_CONTENT": "Conteúdo da mensagem",
-      "MESSAGE_TYPE": "Tipo de mensagem",
-      "INBOX": "Caixa de entrada",
-      "STATUS": "Status da conversa",
-      "PRIORITY": "Prioridade",
-      "LABELS": "Etiquetas",
-      "ASSIGNEE": "Agente responsável",
-      "PHONE_NUMBER": "Telefone do contato"
-    },
-    "RULE_OPERATORS": {
-      "EQUALS": "é igual a",
-      "NOT_EQUALS": "é diferente de",
-      "CONTAINS": "contém",
-      "CONTAINS_ANY": "contém qualquer um",
-      "IN": "está em",
-      "PRESENT": "está preenchido"
-    },
-    "RULE_ACTIONS": {
-      "ENTER_BOARD": "Entrar no quadro",
-      "MOVE_STAGE": "Mover de etapa",
-      "SET_PRIORITY": "Definir prioridade",
-      "ASSIGN_AGENT": "Atribuir agente",
-      "ADD_LABEL": "Adicionar etiqueta",
-      "SEND_WEBHOOK": "Enviar webhook",
-      "SEND_TEMPLATE": "Enviar template"
-    },
-    "WEBHOOK_EVENTS": {
-      "CARD_CREATED": "Tarefa criada",
-      "CARD_UPDATED": "Tarefa atualizada",
-      "STAGE_CHANGED": "Mudança de etapa",
-      "CARD_DELETED": "Tarefa removida",
-      "TASK_OVERDUE": "Tarefa vencida"
-    },
     "TEMPLATES": {
       "SALES_PIPELINE": {
         "NAME": "Pipeline de Vendas",

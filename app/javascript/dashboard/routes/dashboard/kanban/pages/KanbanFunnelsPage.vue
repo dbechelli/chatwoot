@@ -1,10 +1,9 @@
 <script setup>
-import { computed, ref } from 'vue';
+import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 import { useStore } from 'vuex';
 import { useI18n } from 'vue-i18n';
 import { useAlert } from 'dashboard/composables';
-import Modal from 'dashboard/components/Modal.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
 
 const store = useStore();
@@ -13,18 +12,6 @@ const { t } = useI18n();
 
 const boards = computed(() => store.getters['kanban/getBoards'] || []);
 const uiFlags = computed(() => store.getters['kanban/getUIFlags'] || {});
-const boardPendingDelete = ref(null);
-const totalStages = computed(() =>
-  boards.value.reduce((sum, board) => sum + (board.stages?.length || 0), 0)
-);
-const automationCount = computed(() =>
-  boards.value.filter(
-    board =>
-      board.webhook_url ||
-      board.webhook?.enabled ||
-      (board.automation_rules && board.automation_rules.length > 0)
-  ).length
-);
 const canManageBoards = computed(
   () =>
     store.getters.getCurrentRole === 'administrator' &&
@@ -51,22 +38,13 @@ const duplicateBoard = async boardId => {
   }
 };
 
-const openDeleteBoardModal = board => {
-  boardPendingDelete.value = board;
-};
-
-const closeDeleteBoardModal = () => {
-  boardPendingDelete.value = null;
-};
-
-const deleteBoard = async () => {
-  if (!boardPendingDelete.value) return;
+const deleteBoard = async boardId => {
+  if (!confirm(t('KANBAN_SETTINGS.CONFIRM_DELETE'))) return;
 
   try {
-    await store.dispatch('kanban/delete', boardPendingDelete.value.id);
+    await store.dispatch('kanban/delete', boardId);
     useAlert(t('KANBAN_SETTINGS.DELETE_SUCCESS'));
     await store.dispatch('kanban/fetch');
-    closeDeleteBoardModal();
   } catch {
     useAlert(t('KANBAN_SETTINGS.DELETE_ERROR'));
   }
@@ -94,27 +72,6 @@ const deleteBoard = async () => {
             <Button sm blue solid icon="i-lucide-plus" :label="t('KANBAN.NAV.NEW_FUNNEL')" />
           </router-link>
         </div>
-
-        <div class="mt-6 grid gap-3 md:grid-cols-3">
-          <div class="rounded-2xl border border-n-weak bg-n-slate-1 px-4 py-4">
-            <p class="text-xs font-medium uppercase tracking-wide text-n-slate-10">
-              {{ t('KANBAN.OVERVIEW.TOTAL_FUNNELS') }}
-            </p>
-            <p class="mt-2 text-2xl font-semibold text-n-slate-12">{{ boards.length }}</p>
-          </div>
-          <div class="rounded-2xl border border-n-weak bg-n-slate-1 px-4 py-4">
-            <p class="text-xs font-medium uppercase tracking-wide text-n-slate-10">
-              {{ t('KANBAN.OVERVIEW.TOTAL_STAGES') }}
-            </p>
-            <p class="mt-2 text-2xl font-semibold text-n-slate-12">{{ totalStages }}</p>
-          </div>
-          <div class="rounded-2xl border border-n-weak bg-n-slate-1 px-4 py-4">
-            <p class="text-xs font-medium uppercase tracking-wide text-n-slate-10">
-              {{ t('KANBAN.OVERVIEW.AUTOMATIONS') }}
-            </p>
-            <p class="mt-2 text-2xl font-semibold text-n-slate-12">{{ automationCount }}</p>
-          </div>
-        </div>
       </section>
 
       <section v-if="boards.length" class="grid gap-4 xl:grid-cols-2 2xl:grid-cols-3">
@@ -123,11 +80,6 @@ const deleteBoard = async () => {
           :key="board.id"
           class="flex flex-col rounded-[28px] border border-n-weak bg-n-surface-1 p-5 transition-colors hover:border-n-brand/60"
         >
-          <div
-            class="mb-4 h-1.5 rounded-full bg-n-slate-2"
-            :style="{ background: board.stages?.length ? `linear-gradient(90deg, ${board.stages.slice(0, 5).map(stage => stage.color || '#94a3b8').join(', ')})` : undefined }"
-          />
-
           <div class="flex items-start justify-between gap-4">
             <div class="min-w-0">
               <div class="flex flex-wrap items-center gap-2">
@@ -164,21 +116,9 @@ const deleteBoard = async () => {
             </span>
           </div>
 
-          <div class="mt-4 flex flex-wrap gap-2 text-xs font-medium text-n-slate-11">
-            <span class="inline-flex items-center rounded-full bg-n-slate-2 px-2.5 py-1">
-              {{ board.stages?.length || 0 }} {{ t('KANBAN.FUNNELS.STAGE_COUNT') }}
-            </span>
-            <span
-              v-if="board.automation_rules?.length || board.webhook?.enabled || board.webhook_url"
-              class="inline-flex items-center rounded-full bg-n-brand/10 px-2.5 py-1 text-n-blue-11"
-            >
-              {{ t('KANBAN.OVERVIEW.AUTOMATIONS') }}
-            </span>
-          </div>
-
           <div class="mt-5 flex items-center justify-between gap-3 border-t border-n-weak pt-4">
             <span class="text-sm font-medium text-n-slate-11">
-              {{ board.customAttributeKey || t('KANBAN_SETTINGS.CUSTOM_ATTRIBUTE_PLACEHOLDER') }}
+              {{ board.stages?.length || 0 }} {{ t('KANBAN.FUNNELS.STAGE_COUNT') }}
             </span>
 
             <div class="flex items-center gap-2">
@@ -195,7 +135,7 @@ const deleteBoard = async () => {
                 v-if="canManageBoards"
                 class="inline-flex h-9 w-9 items-center justify-center rounded-xl text-n-ruby-11 transition-colors hover:bg-n-ruby-3/40"
                 :title="t('KANBAN.FUNNELS.DELETE_FUNNEL')"
-                @click="openDeleteBoardModal(board)"
+                @click="deleteBoard(board.id)"
               >
                 <i class="i-lucide-trash-2" />
               </button>
@@ -224,34 +164,6 @@ const deleteBoard = async () => {
       <div v-if="uiFlags.isFetching" class="text-sm text-n-slate-11">
         {{ t('KANBAN.LOADING') }}
       </div>
-
-      <Modal :show="!!boardPendingDelete" :on-close="closeDeleteBoardModal" :show-close-button="false">
-        <div class="w-full max-w-2xl p-8">
-          <div class="flex items-start justify-between gap-4">
-            <div>
-              <h3 class="text-2xl font-semibold text-n-slate-12">{{ t('KANBAN.FUNNELS.DELETE_FUNNEL') }}</h3>
-              <p class="mt-3 text-lg text-n-slate-11">
-                {{ t('KANBAN_SETTINGS.CONFIRM_DELETE_PROMPT', { name: boardPendingDelete?.name || '' }) }}
-              </p>
-            </div>
-            <button
-              class="rounded-lg p-2 text-n-slate-10 transition-colors hover:bg-n-slate-2 hover:text-n-slate-12"
-              @click="closeDeleteBoardModal"
-            >
-              <i class="i-lucide-x text-lg" />
-            </button>
-          </div>
-
-          <div class="mt-6 rounded-xl border border-n-weak bg-n-slate-1 px-4 py-3 text-base text-n-slate-12">
-            {{ boardPendingDelete?.name }}
-          </div>
-
-          <div class="mt-8 flex justify-end gap-3">
-            <Button slate faded :label="t('KANBAN_SETTINGS.DELETE_CANCEL', { name: boardPendingDelete?.name || '' })" @click="closeDeleteBoardModal" />
-            <Button ruby solid :label="t('KANBAN_SETTINGS.DELETE_CONFIRM', { name: boardPendingDelete?.name || '' })" @click="deleteBoard" />
-          </div>
-        </div>
-      </Modal>
     </div>
   </div>
 </template>

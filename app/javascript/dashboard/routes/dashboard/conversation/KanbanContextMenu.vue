@@ -1,9 +1,9 @@
 <template>
-  <div
+  <div 
     v-if="show"
-    ref="containerRef"
     class="fixed z-50 w-56 rounded-2xl border border-n-weak bg-n-surface-1 py-2 shadow-lg"
     :style="{ top: `${y}px`, left: `${x}px` }"
+    v-click-outside="close"
   >
     <div class="mb-1 border-b border-n-weak px-3 py-2">
       <p class="truncate text-xs font-medium text-n-slate-12">
@@ -49,7 +49,7 @@
 </template>
 
 <script setup>
-import { onMounted, onUnmounted, ref } from 'vue';
+import { onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useAdmin } from 'dashboard/composables/useAdmin';
 
@@ -63,7 +63,6 @@ const props = defineProps({
 const emit = defineEmits(['close', 'action']);
 const { t } = useI18n();
 const { isAdmin } = useAdmin();
-const containerRef = ref(null);
 
 const close = () => emit('close');
 
@@ -73,8 +72,8 @@ const handleAction = (action) => {
 };
 
 // Simple click outside directive logic
-const handleClickOutside = event => {
-  if (props.show && containerRef.value && !containerRef.value.contains(event.target)) {
+const handleClickOutside = (event) => {
+  if (props.show && !event.target.closest('.fixed.z-50')) {
     close();
   }
 };
