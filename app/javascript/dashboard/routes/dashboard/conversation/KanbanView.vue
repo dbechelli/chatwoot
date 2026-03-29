@@ -1328,38 +1328,38 @@ onMounted(async () => {
             <div class="sticky left-0 flex w-fit items-center gap-2 rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2">
               <span class="text-sm font-medium text-n-slate-12">{{ group.name }}</span>
               <span class="rounded-lg bg-n-slate-2 px-1.5 py-0.5 text-xs font-medium text-n-slate-11">
-                 {{ salesStages.reduce((acc, stage) => acc + getSwimlaneConversations(stage.stage, group.value).length, 0) }}
+                {{ salesStages.reduce((acc, stage) => acc + getSwimlaneConversations(stage.stage, group.value).length, 0) }}
               </span>
             </div>
 
-	         <div :class="swimlaneTrackClass" :style="swimlaneTrackStyle">
-               <div
-                 v-for="stage in salesStages"
-                 :key="stage.stage + group.id"
-                 :data-stage-id="`${group.id}-${stage.stage}`"
-                   :style="boardColumnStyle"
-                   class="flex min-h-0 flex-col self-stretch snap-start"
-                   :class="usesResponsiveBoardGrid ? 'min-w-0' : 'min-w-[13.5rem] flex-shrink-0'"
-               >
-                 <KanbanColumn
-                   :stage="stage.stage"
-                   :title="stage.title"
-                   :color="stage.color"
-                   :conversations="getSwimlaneConversations(stage.stage, group.value)"
-                   :wip-limit="null" 
-                   :visible-attributes="visibleAttributes"
-                   :can-manage-board="canManageBoards"
-                   class="h-full min-h-[150px]"
-                   @stage-change="(payload) => handleStageChange({...payload, groupUpdate: { type: groupBy, value: group.value }})"
-                   @card-click="handleCardClick"
-                   @card-contextmenu="handleCardContextmenu"
-                   @edit-stage="handleEditStage"
-                   @duplicate-stage="handleDuplicateStage"
-                   @add-stage-after="handleAddStageAfter"
-                   @add-item="handleAddItemToStage"
-                 />
-               </div>
-             </div>
+            <div :class="swimlaneTrackClass" :style="swimlaneTrackStyle">
+              <div
+                v-for="stage in salesStages"
+                :key="stage.stage + group.id"
+                :data-stage-id="`${group.id}-${stage.stage}`"
+                :style="boardColumnStyle"
+                class="flex min-h-0 flex-col self-stretch snap-start"
+                :class="usesResponsiveBoardGrid ? 'min-w-0' : 'min-w-[13.5rem] flex-shrink-0'"
+              >
+                <KanbanColumn
+                  :stage="stage.stage"
+                  :title="stage.title"
+                  :color="stage.color"
+                  :conversations="getSwimlaneConversations(stage.stage, group.value)"
+                  :wip-limit="null"
+                  :visible-attributes="visibleAttributes"
+                  :can-manage-board="canManageBoards"
+                  class="h-full min-h-[150px]"
+                  @stage-change="(payload) => handleStageChange({ ...payload, groupUpdate: { type: groupBy, value: group.value } })"
+                  @card-click="handleCardClick"
+                  @card-contextmenu="handleCardContextmenu"
+                  @edit-stage="handleEditStage"
+                  @duplicate-stage="handleDuplicateStage"
+                  @add-stage-after="handleAddStageAfter"
+                  @add-item="handleAddItemToStage"
+                />
+              </div>
+            </div>
           </div>
         </div>
 
