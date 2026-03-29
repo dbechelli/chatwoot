@@ -806,7 +806,11 @@ onMounted(async () => {
 
     <transition name="fade">
       <div v-if="showMetrics && filteredConversations.length" class="border-b border-n-weak bg-n-surface-1 px-4 py-4 md:px-6">
-        <KanbanMetrics :conversations="filteredConversations" />
+        <KanbanMetrics
+          :conversations="filteredConversations"
+          :stages="salesStages"
+          :stage-attribute-key="customAttributeKey"
+        />
       </div>
     </transition>
 

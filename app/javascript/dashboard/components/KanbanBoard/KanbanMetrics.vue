@@ -3,8 +3,9 @@ import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 const props = defineProps({
-  conversations: { type: Array, required: true },
-  stages: { type: Array, required: true },
+  conversations: { type: Array, default: () => [] },
+  stages: { type: Array, default: () => [] },
+  stageAttributeKey: { type: String, default: 'sales_stage' },
 });
 
 const { t } = useI18n();
@@ -13,7 +14,8 @@ const totalDeals = computed(() => props.conversations.length);
 
 const totalValue = computed(() => {
   return props.conversations.reduce((sum, conv) => {
-    return sum + (conv.custom_attributes?.deal_value || 0);
+    const dealValue = Number(conv.custom_attributes?.deal_value) || 0;
+    return sum + dealValue;
   }, 0);
 });
 
@@ -22,12 +24,13 @@ const avgDealValue = computed(() => {
 });
 
 const conversionRate = computed(() => {
-  // Ajustado para refletir sua nova chave 'paciente_ativo' (antigo 'won')
-  const wonStage = props.stages.find(s => s.stage === 'paciente_ativo' || s.stage === 'won');
+  const wonStage = props.stages.find(
+    stage => stage?.stage === 'paciente_ativo' || stage?.stage === 'won'
+  );
   if (!wonStage) return 0;
 
   const wonConversations = props.conversations.filter(
-    conv => conv.custom_attributes?.sales_stage === wonStage.stage
+    conv => conv.custom_attributes?.[props.stageAttributeKey] === wonStage.stage
   );
 
   return totalDeals.value > 0
@@ -37,8 +40,8 @@ const conversionRate = computed(() => {
 
 const forecastValue = computed(() => {
   return props.conversations.reduce((sum, conv) => {
-    const dealValue = conv.custom_attributes?.deal_value || 0;
-    const probability = conv.custom_attributes?.win_probability || 0;
+    const dealValue = Number(conv.custom_attributes?.deal_value) || 0;
+    const probability = Number(conv.custom_attributes?.win_probability) || 0;
     return sum + (dealValue * probability) / 100;
   }, 0);
 });
@@ -52,7 +55,8 @@ const formatCurrency = value => {
 };
 
 const formatPercentage = value => {
-  return `${value.toFixed(1)}%`;
+  const normalizedValue = Number.isFinite(value) ? value : 0;
+  return `${normalizedValue.toFixed(1)}%`;
 };
 </script>
 
