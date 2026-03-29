@@ -39,6 +39,44 @@ RSpec.describe 'Kanban Settings API', type: :request do
               'valueAttributeKey' => 'deal_value',
               'isDefault' => true,
               'webhook_url' => 'https://example.com/webhook',
+              'webhook' => {
+                'enabled' => true,
+                'paused' => false,
+                'url' => 'https://example.com/webhook',
+                'secret' => 'shared-secret',
+                'subscriptions' => ['card_created'],
+                'stage_ids' => ['new_ticket'],
+                'include_message_content' => true,
+                'send_on_overdue' => true
+              },
+              'automation_rules' => [
+                {
+                  'id' => 'rule-1',
+                  'name' => 'Route finance requests',
+                  'description' => 'Finance intake automation',
+                  'trigger' => 'message_created',
+                  'enabled' => true,
+                  'match_type' => 'all',
+                  'conditions' => [
+                    {
+                      'id' => 'condition-1',
+                      'field' => 'message.content',
+                      'operator' => 'contains_any',
+                      'value' => 'payment,invoice'
+                    }
+                  ],
+                  'actions' => [
+                    {
+                      'id' => 'action-1',
+                      'type' => 'move_stage',
+                      'value' => 'finance',
+                      'stage_id' => 'new_ticket',
+                      'message_template' => '',
+                      'payload' => {}
+                    }
+                  ]
+                }
+              ],
               'enable_round_robin' => true,
               'auto_assign_stage_id' => 'new_ticket',
               'agent_ids' => [administrator.id],
@@ -68,6 +106,8 @@ RSpec.describe 'Kanban Settings API', type: :request do
       expect(board['agent_ids']).to eq([administrator.id])
       expect(board['visible_attributes']).to eq(['company'])
       expect(board['auto_assign_inboxes']).to eq([1])
+      expect(board.dig('webhook', 'secret')).to eq('shared-secret')
+      expect(board['automation_rules'].first['name']).to eq('Route finance requests')
     end
   end
 
@@ -81,6 +121,44 @@ RSpec.describe 'Kanban Settings API', type: :request do
           valueAttributeKey: 'deal_value',
           isDefault: false,
           webhook_url: '',
+          webhook: {
+            enabled: true,
+            paused: false,
+            url: 'https://example.com/kanban',
+            secret: 'shared-secret',
+            subscriptions: ['card_created', 'task_overdue'],
+            stage_ids: ['new_ticket'],
+            include_message_content: true,
+            send_on_overdue: true
+          },
+          automation_rules: [
+            {
+              id: 'rule-1',
+              name: 'Finance messages',
+              description: 'Route payment conversations to this board',
+              trigger: 'message_created',
+              enabled: true,
+              match_type: 'all',
+              conditions: [
+                {
+                  id: 'condition-1',
+                  field: 'message.content',
+                  operator: 'contains_any',
+                  value: 'invoice,payment'
+                }
+              ],
+              actions: [
+                {
+                  id: 'action-1',
+                  type: 'move_stage',
+                  value: 'finance',
+                  stage_id: 'new_ticket',
+                  message_template: '',
+                  payload: {}
+                }
+              ]
+            }
+          ],
           enable_round_robin: false,
           auto_assign_stage_id: '',
           agent_ids: [],
@@ -110,6 +188,8 @@ RSpec.describe 'Kanban Settings API', type: :request do
       expect(response).to have_http_status(:success)
       expect(response.parsed_body['name']).to eq('Support Funnel')
       expect(response.parsed_body['customAttributeKey']).to eq('support_funnel_status')
+      expect(response.parsed_body.dig('webhook', 'url')).to eq('https://example.com/kanban')
+      expect(response.parsed_body['automation_rules'].first['name']).to eq('Finance messages')
     end
 
     it 'creates a board even when the account has invalid unrelated settings' do

@@ -14,6 +14,8 @@ json.boards @kanban_config['boards'] do |board|
   json.agent_ids board['agent_ids'] || []
   json.visible_attributes board['visible_attributes'] || []
   json.auto_assign_inboxes board['auto_assign_inboxes'] || []
+  json.webhook board['webhook'] || {}
+  json.automation_rules board['automation_rules'] || []
   json.stages board['stages'] do |stage|
     json.id stage['id']
     json.name stage['name']

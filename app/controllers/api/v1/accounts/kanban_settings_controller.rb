@@ -69,6 +69,12 @@ class Api::V1::Accounts::KanbanSettingsController < Api::V1::Accounts::BaseContr
         { agent_ids: [] },
         { visible_attributes: [] },
         { auto_assign_inboxes: [] },
+        { webhook: [:enabled, :paused, :url, :secret, :include_message_content, :send_on_overdue, { subscriptions: [] }, { stage_ids: [] }] },
+        { automation_rules: [
+          :id, :name, :description, :trigger, :enabled, :match_type,
+          { conditions: [:id, :field, :operator, :value] },
+          { actions: [:id, :type, :value, :stage_id, :message_template, { payload: {} }] }
+        ] },
         stages: [:id, :name, :color, :order, :wipLimit]
       ]
     )
@@ -80,6 +86,12 @@ class Api::V1::Accounts::KanbanSettingsController < Api::V1::Accounts::BaseContr
       { agent_ids: [] },
       { visible_attributes: [] },
       { auto_assign_inboxes: [] },
+      { webhook: [:enabled, :paused, :url, :secret, :include_message_content, :send_on_overdue, { subscriptions: [] }, { stage_ids: [] }] },
+      { automation_rules: [
+        :id, :name, :description, :trigger, :enabled, :match_type,
+        { conditions: [:id, :field, :operator, :value] },
+        { actions: [:id, :type, :value, :stage_id, :message_template, { payload: {} }] }
+      ] },
       stages: [:id, :name, :color, :order, :wipLimit]
     )
   end

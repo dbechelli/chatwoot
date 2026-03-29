@@ -3,7 +3,9 @@ import { ref, computed, onMounted, watch } from 'vue';
 import { useStore } from 'vuex';
 import { useI18n } from 'vue-i18n';
 import { useAlert } from 'dashboard/composables';
+import Modal from 'dashboard/components/Modal.vue';
 import Button from 'dashboard/components-next/button/Button.vue';
+import KanbanItemModal from 'dashboard/routes/dashboard/conversation/KanbanItemModal.vue';
 
 const props = defineProps({
   conversationId: { type: [Number, String], required: true },
@@ -20,9 +22,11 @@ const priority = ref('medium');
 const dueDate = ref('');
 const startDate = ref('');
 const notes = ref('');
-const isExpanded = ref(false);
+const showItemModal = ref(false);
+const showRemoveModal = ref(false);
 
 const kanbanBoards = computed(() => store.getters['kanban/getBoards'] || []);
+const agents = computed(() => store.getters['agents/getAgents'] || []);
 const conversation = computed(() => 
   store.getters.getConversationById(props.conversationId)
 );
@@ -38,6 +42,48 @@ const availableBoards = computed(() => {
 const currentBoardStages = computed(() => {
   if (!selectedBoard.value) return [];
   return selectedBoard.value.stages || [];
+});
+
+const currentStageOption = computed(() => {
+  return currentBoardStages.value.find(stage => stage.id === currentStage.value) || null;
+});
+
+const assignedBoardAgents = computed(() => {
+  if (!selectedBoard.value?.agent_ids?.length) return [];
+  return agents.value.filter(agent => selectedBoard.value.agent_ids.includes(agent.id));
+});
+
+const hexToRgb = hex => {
+  if (!hex) return null;
+
+  const normalized = hex.replace('#', '');
+  const value = normalized.length === 3
+    ? normalized.split('').map(char => `${char}${char}`).join('')
+    : normalized;
+
+  if (value.length !== 6) return null;
+
+  const int = Number.parseInt(value, 16);
+
+  return {
+    r: (int >> 16) & 255,
+    g: (int >> 8) & 255,
+    b: int & 255,
+  };
+};
+
+const currentStageStyle = computed(() => {
+  const rgb = hexToRgb(currentStageOption.value?.color);
+
+  if (!rgb || !currentStageOption.value?.color) {
+    return {};
+  }
+
+  return {
+    backgroundColor: `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.12)`,
+    color: currentStageOption.value.color,
+    borderColor: `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.22)`,
+  };
 });
 
 const isInKanban = computed(() => {
@@ -62,7 +108,7 @@ const loadCurrentState = () => {
 
 const addToKanban = async () => {
   if (!selectedBoard.value || !currentStage.value) {
-    useAlert('Selecione um quadro e um estágio');
+    useAlert(t('KANBAN.SIDEBAR.SELECT_BOARD_AND_STAGE'));
     return;
   }
   
@@ -91,16 +137,17 @@ const addToKanban = async () => {
       });
     }
     
-    useAlert('Tarefa adicionada ao Kanban');
-    isExpanded.value = false;
+    useAlert(t('KANBAN.SIDEBAR.ADD_SUCCESS'));
   } catch (error) {
-    useAlert('Erro ao adicionar ao Kanban');
+    useAlert(t('KANBAN.SIDEBAR.ADD_ERROR'));
   } finally {
     isLoading.value = false;
   }
 };
 
 const updateStage = async (newStage) => {
+  if (!selectedBoard.value || !newStage) return;
+
   isLoading.value = true;
   try {
     const attrKey = selectedBoard.value.customAttributeKey;
@@ -115,17 +162,15 @@ const updateStage = async (newStage) => {
     });
     
     currentStage.value = newStage;
-    useAlert('Estágio atualizado');
+        useAlert(t('KANBAN.SIDEBAR.UPDATE_STAGE_SUCCESS'));
   } catch (error) {
-    useAlert('Erro ao atualizar estágio');
+        useAlert(t('KANBAN.SIDEBAR.UPDATE_STAGE_ERROR'));
   } finally {
     isLoading.value = false;
   }
 };
 
 const removeFromKanban = async () => {
-  if (!confirm('Remover esta conversa do Kanban?')) return;
-  
   isLoading.value = true;
   try {
     const attrKey = selectedBoard.value.customAttributeKey;
@@ -140,9 +185,10 @@ const removeFromKanban = async () => {
     });
     
     currentStage.value = null;
-    useAlert('Removido do Kanban');
+    showRemoveModal.value = false;
+    useAlert(t('KANBAN.SIDEBAR.REMOVE_SUCCESS'));
   } catch (error) {
-    useAlert('Erro ao remover do Kanban');
+    useAlert(t('KANBAN.SIDEBAR.REMOVE_ERROR'));
   } finally {
     isLoading.value = false;
   }
@@ -165,35 +211,33 @@ onMounted(async () => {
   
   loadCurrentState();
 });
+
+const openFullEditor = () => {
+  showItemModal.value = true;
+};
+
+const handleModalSaved = () => {
+  loadCurrentState();
+};
 </script>
 
 <template>
-  <div class="flex h-full flex-col border-l border-n-weak bg-n-surface-1">
-    <div class="flex items-center justify-between border-b border-n-weak px-4 py-4">
+  <div class="space-y-4 rounded-2xl border border-n-weak bg-n-surface-1 p-4">
+    <div class="flex items-center justify-between gap-3 border-b border-n-weak pb-3">
       <div class="flex items-center gap-2">
-        <i class="i-lucide-kanban-square text-xl text-n-blue-11" />
-        <h3 class="font-medium text-n-slate-12">Kanban</h3>
+        <h3 class="font-medium text-n-slate-12">{{ t('KANBAN.TITLE') }}</h3>
       </div>
-      <button
-        v-if="isInKanban"
-        @click="isExpanded = !isExpanded"
-        class="rounded-lg p-1 text-n-slate-10 transition-colors hover:bg-n-slate-2"
-      >
-        <i :class="isExpanded ? 'i-lucide-chevron-up' : 'i-lucide-chevron-down'" class="text-n-slate-10" />
-      </button>
     </div>
 
-    <div class="flex-1 space-y-4 overflow-y-auto p-4">
+    <div class="space-y-4">
       <div v-if="availableBoards.length === 0" class="py-8 text-center">
         <i class="i-lucide-kanban-square mb-2 text-4xl text-n-slate-8" />
-        <p class="text-sm text-n-slate-11">Nenhum quadro disponível</p>
+        <p class="text-sm text-n-slate-11">{{ t('KANBAN.SIDEBAR.NO_AVAILABLE_BOARDS') }}</p>
       </div>
 
-      <div v-else>
-        <div>
-          <label class="mb-2 block text-xs font-medium uppercase tracking-wide text-n-slate-10">
-            Quadro
-          </label>
+      <div v-else class="space-y-4">
+        <div class="space-y-1.5">
+          <label class="block text-xs font-medium uppercase tracking-wide text-n-slate-10">{{ t('KANBAN.BOARD') }}</label>
           <select
             v-model="selectedBoard"
             class="w-full rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2 text-sm text-n-slate-12 outline-none transition focus:border-n-brand"
@@ -204,67 +248,86 @@ onMounted(async () => {
           </select>
         </div>
 
-        <div v-if="isInKanban" class="rounded-2xl border border-n-brand/20 bg-n-brand/5 p-3">
-          <div class="mb-2 flex items-center gap-2">
-            <i class="i-lucide-check-circle text-n-blue-11" />
-            <span class="text-xs font-medium uppercase tracking-wide text-n-blue-11">No Kanban</span>
+        <div class="rounded-2xl border border-n-weak bg-n-surface-1 p-3">
+          <div v-if="selectedBoard" class="mb-3 flex flex-wrap items-center gap-2">
+            <span class="inline-flex items-center rounded-full bg-n-slate-2 px-2.5 py-1 text-xs font-medium text-n-slate-11">
+              {{ selectedBoard.name }}
+            </span>
+            <span
+              v-if="currentStageOption"
+              class="inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium"
+              :style="currentStageStyle"
+            >
+              {{ currentStageOption.name }}
+            </span>
+            <span
+              v-else
+              class="inline-flex items-center rounded-full bg-n-amber-3 px-2.5 py-1 text-xs font-medium text-n-amber-11"
+            >
+              {{ t('KANBAN.SIDEBAR.NOT_IN_KANBAN') }}
+            </span>
           </div>
-          
+
+          <div v-if="conversation" class="mb-3 rounded-xl bg-n-slate-2 p-3 text-sm text-n-slate-11">
+            <p class="text-xs font-medium uppercase tracking-wide text-n-slate-10">
+              {{ t('KANBAN.SIDEBAR.LINKED_CONVERSATION') }}
+            </p>
+            <p class="mt-1 truncate font-medium text-n-slate-12">
+              {{ conversation.meta?.sender?.name || t('KANBAN.UNKNOWN_CONTACT') }}
+            </p>
+            <p class="mt-0.5 text-xs text-n-slate-10">#{{ conversation.id }}</p>
+          </div>
+
           <div class="space-y-3">
-            <div>
-              <label class="mb-1 block text-xs font-medium text-n-slate-11">
-                Estágio Atual
-              </label>
-              <select
-                v-model="currentStage"
-                @change="updateStage(currentStage)"
-                :disabled="isLoading"
-                class="w-full rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2 text-sm text-n-slate-12 outline-none transition focus:border-n-brand"
-              >
-                <option
-                  v-for="stage in currentBoardStages"
-                  :key="stage.id"
-                  :value="stage.id"
+            <div class="space-y-1.5">
+              <label class="block text-xs font-medium text-n-slate-12">{{ t('KANBAN.MODAL.STAGE') }}</label>
+              <div class="flex items-center gap-2">
+                <select
+                  v-model="currentStage"
+                  :disabled="isLoading"
+                  class="min-w-0 flex-1 rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2 text-sm text-n-slate-12 outline-none transition focus:border-n-brand"
                 >
-                  {{ stage.name }}
-                </option>
-              </select>
+                  <option value="">{{ t('KANBAN.SIDEBAR.SELECT_STAGE') }}</option>
+                  <option v-for="stage in currentBoardStages" :key="stage.id" :value="stage.id">
+                    {{ stage.name }}
+                  </option>
+                </select>
+                <button
+                  v-if="isInKanban"
+                  :disabled="isLoading || !currentStage || currentStage === currentStageOption?.id"
+                  class="inline-flex h-9 w-9 items-center justify-center rounded-lg text-n-brand transition-colors hover:bg-n-brand/10"
+                  @click="updateStage(currentStage)"
+                >
+                  <i class="i-lucide-check text-sm" />
+                </button>
+              </div>
             </div>
 
-            <div v-if="isExpanded" class="space-y-3 border-t border-n-brand/20 pt-2">
-              <div>
-                <label class="mb-1 block text-xs font-medium text-n-slate-11">
-                  Prioridade
-                </label>
-                <select
-                  v-model="priority"
-                  class="w-full rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2 text-sm text-n-slate-12 outline-none transition focus:border-n-brand"
-                >
-                  <option value="low">Baixa</option>
-                  <option value="medium">Média</option>
-                  <option value="high">Alta</option>
-                  <option value="urgent">Urgente</option>
-                </select>
+            <div v-if="assignedBoardAgents.length" class="space-y-1.5">
+              <label class="block text-xs font-medium text-n-slate-12">{{ t('KANBAN.SIDEBAR.ASSIGNED_AGENTS') }}</label>
+              <div class="rounded-xl bg-n-slate-2 p-2">
+                <div class="flex flex-wrap gap-1.5">
+                  <span
+                    v-for="agent in assignedBoardAgents"
+                    :key="agent.id"
+                    class="inline-flex items-center rounded-lg bg-n-surface-1 px-2 py-1 text-xs font-medium text-n-slate-11"
+                  >
+                    {{ agent.name }}
+                  </span>
+                </div>
               </div>
+            </div>
 
-              <div v-if="selectedBoard?.valueAttributeKey">
-                <label class="mb-1 block text-xs font-medium text-n-slate-11">
-                  Valor
-                </label>
-                <input
-                  v-model.number="dealValue"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  class="w-full rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2 text-sm text-n-slate-12 outline-none transition focus:border-n-brand"
-                  placeholder="R$ 0,00"
-                />
+            <div class="space-y-1.5">
+              <label class="block text-xs font-medium text-n-slate-12">{{ t('KANBAN.MODAL.PRIORITY') }}</label>
+              <div class="rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2 text-sm text-n-slate-11">
+                {{ t(`KANBAN.MODAL.PRIORITY_LABEL.${priority.toUpperCase()}`) || 'Nenhuma' }}
               </div>
+            </div>
 
-              <div>
-                <label class="mb-1 block text-xs font-medium text-n-slate-11">
-                  Data de Início
-                </label>
+            <div class="grid grid-cols-1 gap-3">
+              <div class="space-y-1.5">
+                <label class="block text-xs font-medium text-n-slate-12">{{ t('KANBAN.MODAL.START_DATE') }}</label>
                 <input
                   v-model="startDate"
                   type="date"
@@ -272,85 +335,88 @@ onMounted(async () => {
                 />
               </div>
 
-              <div>
-                <label class="mb-1 block text-xs font-medium text-n-slate-11">
-                  Data de Vencimento
-                </label>
+              <div class="space-y-1.5">
+                <label class="block text-xs font-medium text-n-slate-12">{{ t('KANBAN.MODAL.DUE_DATE') }}</label>
                 <input
                   v-model="dueDate"
                   type="date"
                   class="w-full rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2 text-sm text-n-slate-12 outline-none transition focus:border-n-brand"
                 />
               </div>
-
-              <div>
-                <label class="mb-1 block text-xs font-medium text-n-slate-11">
-                  Notas
-                </label>
-                <textarea
-                  v-model="notes"
-                  rows="3"
-                  class="w-full resize-none rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2 text-sm text-n-slate-12 outline-none transition focus:border-n-brand"
-                  placeholder="Notas sobre esta tarefa..."
-                />
-              </div>
-
-              <Button
-                @click="addToKanban"
-                :disabled="isLoading"
-                blue
-                solid
-                class="w-full"
-                label="Salvar Alterações"
-              />
             </div>
-
-            <Button
-              @click="removeFromKanban"
-              ruby
-              ghost
-              icon="i-lucide-trash-2"
-              class="w-full justify-start"
-              label="Remover do Kanban"
-            />
           </div>
         </div>
 
-        <div v-else class="space-y-3">
-          <p class="text-xs text-n-slate-11">
-            Esta conversa não está no Kanban ainda
-          </p>
-
-          <div>
-            <label class="mb-2 block text-xs font-medium uppercase tracking-wide text-n-slate-10">
-              Estágio Inicial
-            </label>
-            <select
-              v-model="currentStage"
-              class="w-full rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2 text-sm text-n-slate-12 outline-none transition focus:border-n-brand"
-            >
-              <option value="">Selecione um estágio...</option>
-              <option
-                v-for="stage in currentBoardStages"
-                :key="stage.id"
-                :value="stage.id"
-              >
-                {{ stage.name }}
-              </option>
-            </select>
-          </div>
-
+        <div class="flex gap-2">
           <Button
+            v-if="!isInKanban"
             @click="addToKanban"
             :disabled="!currentStage || isLoading"
             blue
             solid
             icon="i-lucide-plus"
-            class="w-full"
-            label="Adicionar ao Kanban"
+            class="flex-1"
+            :label="t('KANBAN.SIDEBAR.ADD_TO_KANBAN')"
+          />
+          <Button
+            v-else
+            @click="openFullEditor"
+            slate
+            outline
+            icon="i-lucide-pencil"
+            class="flex-1"
+            :label="t('KANBAN.SIDEBAR.EDIT_TASK')"
+          />
+          <Button
+            v-if="isInKanban"
+            @click="showRemoveModal = true"
+            ruby
+            ghost
+            icon="i-lucide-trash-2"
+            :title="t('KANBAN.SIDEBAR.REMOVE_FROM_KANBAN')"
+            :aria-label="t('KANBAN.SIDEBAR.REMOVE_FROM_KANBAN')"
           />
         </div>
       </div>
     </div>
+
+    <KanbanItemModal
+      v-if="showItemModal && selectedBoard"
+      :show="showItemModal"
+      :board="selectedBoard"
+      :stage-id="currentStage || ''"
+      :item="conversation"
+      :conversation-id="conversationId"
+      @close="showItemModal = false"
+      @save="handleModalSaved"
+    />
+
+    <Modal :show="showRemoveModal" :on-close="() => (showRemoveModal = false)">
+      <div class="w-full max-w-md p-6">
+        <h3 class="text-lg font-medium text-n-slate-12">
+          {{ t('KANBAN.SIDEBAR.REMOVE_TITLE') }}
+        </h3>
+        <p class="mt-2 text-sm text-n-slate-11">
+          {{ t('KANBAN.SIDEBAR.REMOVE_DESCRIPTION') }}
+        </p>
+        <div class="mt-5 flex justify-end gap-2">
+          <Button
+            slate
+            outline
+            sm
+            :label="t('KANBAN.MODAL.CANCEL')"
+            @click="showRemoveModal = false"
+          />
+          <Button
+            ruby
+            solid
+            sm
+            :is-loading="isLoading"
+            :label="t('KANBAN.SIDEBAR.REMOVE')"
+            @click="removeFromKanban"
+          />
+        </div>
+      </div>
+    </Modal>
   </div>
 </template>

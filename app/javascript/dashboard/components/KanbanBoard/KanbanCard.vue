@@ -111,7 +111,7 @@ const formatCurrency = value => {
 
 <template>
   <div
-    class="group relative flex flex-col gap-3 rounded-2xl border border-n-weak bg-n-surface-1 p-3 transition-all duration-200 hover:border-n-brand/30 hover:bg-n-slate-2/40"
+    class="group relative flex flex-col gap-3 rounded-2xl border border-n-weak bg-n-surface-1 p-3 transition-all duration-200 hover:border-n-brand/30 hover:bg-n-slate-2/30"
     @contextmenu.prevent="$emit('contextmenu', { event: $event, conversation })"
   >
     <div
@@ -119,6 +119,19 @@ const formatCurrency = value => {
       class="absolute left-0 top-4 bottom-4 w-1 rounded-r-full bg-n-ruby-9"
     />
     
+    <div class="flex items-center justify-between gap-2 text-[11px] font-medium text-n-slate-10">
+      <div class="flex min-w-0 items-center gap-2">
+        <span
+          v-if="inbox"
+          class="inline-flex min-w-0 items-center gap-1 rounded-full bg-n-slate-2 px-2 py-1 text-[10px] uppercase tracking-wide text-n-slate-11"
+        >
+          <i class="i-lucide-message-circle text-[10px] text-n-brand" />
+          <span class="truncate">{{ inbox.name }}</span>
+        </span>
+      </div>
+      <span class="whitespace-nowrap">{{ timeAgo }}</span>
+    </div>
+
     <div class="flex items-start justify-between gap-2">
       <div class="flex-1 min-w-0">
         <h4 class="truncate text-sm font-medium text-n-slate-12 transition-colors group-hover:text-n-blue-11">
@@ -140,11 +153,19 @@ const formatCurrency = value => {
       </div>
     </div>
 
-    <div v-if="kanbanDescription" class="line-clamp-2 text-xs text-n-slate-11">
-      {{ kanbanDescription }}
+    <div class="space-y-2 rounded-xl border border-n-weak bg-n-slate-2/40 p-2.5">
+      <p v-if="kanbanDescription" class="line-clamp-2 text-xs leading-relaxed text-n-slate-11">
+        {{ kanbanDescription }}
+      </p>
+      <p
+        v-else
+        class="line-clamp-2 text-xs leading-relaxed text-n-slate-11"
+      >
+        {{ conversation.messages?.[0]?.content || t('KANBAN.NO_MESSAGES') }}
+      </p>
     </div>
 
-    <div v-if="displayAttributes.length > 0" class="flex flex-col gap-1.5">
+    <div v-if="displayAttributes.length > 0" class="grid gap-1.5 rounded-xl bg-n-slate-2/40 p-2.5">
       <div 
         v-for="attr in displayAttributes" 
         :key="attr.key"
@@ -160,8 +181,8 @@ const formatCurrency = value => {
     <div v-if="conversation.labels?.length" class="flex flex-wrap gap-1.5">
       <span
         v-for="label in conversation.labels.slice(0, 3)"
-        :key="label"
-        class="inline-flex items-center rounded-lg border px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide"
+        :key="label.title || label"
+        class="inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide"
         :style="{
           backgroundColor: `${label.color}15`,
           color: label.color,
@@ -176,12 +197,6 @@ const formatCurrency = value => {
       >
         +{{ conversation.labels.length - 3 }}
       </span>
-    </div>
-
-    <div class="relative rounded-xl border border-n-weak bg-n-slate-2/60 p-2.5">
-      <p class="line-clamp-2 text-xs leading-relaxed text-n-slate-11">
-        "{{ conversation.messages?.[0]?.content || t('KANBAN.NO_MESSAGES') }}"
-      </p>
     </div>
 
     <div
@@ -199,14 +214,6 @@ const formatCurrency = value => {
         >
           <i class="i-lucide-calendar text-xs" />
           {{ formatDate(dueDate) }}
-        </span>
-
-        <span
-          v-if="inbox"
-          class="inline-flex items-center gap-1 rounded-lg bg-n-slate-2 px-1.5 py-0.5 text-[11px] font-medium text-n-slate-11"
-        >
-          <i class="i-lucide-message-circle text-xs text-n-brand" />
-          {{ inbox.name }}
         </span>
 
         <span
@@ -231,10 +238,6 @@ const formatCurrency = value => {
       </div>
 
       <div class="flex items-center gap-2 flex-shrink-0">
-        <span class="whitespace-nowrap text-[10px] font-medium text-n-slate-10">
-          {{ timeAgo }}
-        </span>
-        
         <div class="relative">
           <img
             v-if="assignee?.thumbnail"

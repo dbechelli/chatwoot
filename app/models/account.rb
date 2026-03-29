@@ -287,10 +287,79 @@ class Account < ApplicationRecord
     normalized_board['auto_assign_inboxes'] = Array(normalized_board['auto_assign_inboxes'])
     normalized_board['enable_round_robin'] = ActiveModel::Type::Boolean.new.cast(normalized_board['enable_round_robin'])
     normalized_board['isDefault'] = ActiveModel::Type::Boolean.new.cast(normalized_board['isDefault'])
+    normalized_board['webhook'] = normalize_kanban_webhook_config(
+      normalized_board['webhook'] || { 'url' => normalized_board['webhook_url'] }
+    )
+    normalized_board['webhook_url'] = normalized_board['webhook']['url']
+    normalized_board['automation_rules'] = Array(normalized_board['automation_rules']).map do |rule|
+      normalize_kanban_automation_rule(rule)
+    end
     normalized_board['stages'] = Array(normalized_board['stages']).map do |stage|
       stage.deep_stringify_keys
     end
     normalized_board
+  end
+
+  def normalize_kanban_webhook_config(webhook_config)
+    raw_webhook_config = webhook_config.respond_to?(:to_h) ? webhook_config.to_h : webhook_config
+    normalized_webhook = raw_webhook_config.deep_stringify_keys
+
+    {
+      'enabled' => ActiveModel::Type::Boolean.new.cast(normalized_webhook['enabled']),
+      'paused' => ActiveModel::Type::Boolean.new.cast(normalized_webhook['paused']),
+      'url' => normalized_webhook['url'].to_s,
+      'secret' => normalized_webhook['secret'].to_s,
+      'subscriptions' => Array(normalized_webhook['subscriptions']).map(&:to_s),
+      'stage_ids' => Array(normalized_webhook['stage_ids']).map(&:to_s),
+      'include_message_content' => ActiveModel::Type::Boolean.new.cast(normalized_webhook['include_message_content']),
+      'send_on_overdue' => ActiveModel::Type::Boolean.new.cast(normalized_webhook['send_on_overdue'])
+    }
+  end
+
+  def normalize_kanban_automation_rule(rule)
+    raw_rule = rule.respond_to?(:to_h) ? rule.to_h : rule
+    normalized_rule = raw_rule.deep_stringify_keys
+
+    {
+      'id' => normalized_rule['id'].presence || SecureRandom.uuid,
+      'name' => normalized_rule['name'].to_s,
+      'description' => normalized_rule['description'].to_s,
+      'trigger' => normalized_rule['trigger'].presence || 'message_created',
+      'enabled' => ActiveModel::Type::Boolean.new.cast(normalized_rule['enabled']),
+      'match_type' => normalized_rule['match_type'].presence || 'all',
+      'conditions' => Array(normalized_rule['conditions']).map do |condition|
+        normalize_kanban_automation_condition(condition)
+      end,
+      'actions' => Array(normalized_rule['actions']).map do |action|
+        normalize_kanban_automation_action(action)
+      end
+    }
+  end
+
+  def normalize_kanban_automation_condition(condition)
+    raw_condition = condition.respond_to?(:to_h) ? condition.to_h : condition
+    normalized_condition = raw_condition.deep_stringify_keys
+
+    {
+      'id' => normalized_condition['id'].presence || SecureRandom.uuid,
+      'field' => normalized_condition['field'].to_s,
+      'operator' => normalized_condition['operator'].to_s,
+      'value' => normalized_condition['value']
+    }
+  end
+
+  def normalize_kanban_automation_action(action)
+    raw_action = action.respond_to?(:to_h) ? action.to_h : action
+    normalized_action = raw_action.deep_stringify_keys
+
+    {
+      'id' => normalized_action['id'].presence || SecureRandom.uuid,
+      'type' => normalized_action['type'].to_s,
+      'value' => normalized_action['value'],
+      'stage_id' => normalized_action['stage_id'].to_s,
+      'message_template' => normalized_action['message_template'].to_s,
+      'payload' => normalized_action['payload'].is_a?(Hash) ? normalized_action['payload'].deep_stringify_keys : {}
+    }
   end
 
   def normalize_default_kanban_board(boards)

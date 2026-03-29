@@ -375,8 +375,8 @@ const openAttachment = (url) => {
 </script>
 
 <template>
-  <Modal :show="show" :on-close="() => emit('close')" size="lg" :show-close-button="false">
-    <div class="flex h-full max-h-[85vh] flex-col overflow-hidden rounded-2xl bg-n-surface-1">
+  <Modal :show="show" :on-close="() => emit('close')" size="medium" :show-close-button="false">
+    <div class="flex h-full max-h-[90vh] flex-col overflow-hidden rounded-2xl bg-n-surface-1">
       <div class="flex items-center justify-between border-b border-n-weak bg-n-slate-2/60 px-6 py-4">
         <div class="flex items-center gap-3">
           <div class="flex h-8 w-8 items-center justify-center rounded-full border border-n-weak bg-n-surface-1 text-n-blue-11">
@@ -461,341 +461,353 @@ const openAttachment = (url) => {
             
             <input
               v-if="['text', 'link', 'number', 'date'].includes(attr.attribute_display_type)"
-              v-model="form.custom_attributes[attr.attribute_key]"
-              :type="attr.attribute_display_type === 'link' ? 'url' : attr.attribute_display_type"
-              :placeholder="attr.attribute_display_name"
-              class="w-full rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2.5 text-sm text-n-slate-12 outline-none transition focus:border-n-brand"
-            />
+              <div class="flex-1 overflow-y-auto px-6 py-6">
+                <div class="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(19rem,0.8fr)]">
+                  <div class="space-y-6">
+                    <div class="space-y-1.5">
+                      <label class="text-xs font-medium uppercase tracking-wide text-n-slate-10">{{ $t('KANBAN.MODAL.TITLE') }}</label>
+                      <input
+                        v-model="form.title"
+                        type="text"
+                        :placeholder="$t('KANBAN.MODAL.TITLE_PLACEHOLDER')"
+                        class="w-full rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2.5 text-sm font-medium text-n-slate-12 outline-none transition focus:border-n-brand"
+                      />
+                    </div>
 
-            <select
-              v-else-if="attr.attribute_display_type === 'list'"
-              v-model="form.custom_attributes[attr.attribute_key]"
-              class="w-full rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2.5 text-sm text-n-slate-12 outline-none transition focus:border-n-brand"
-            >
-              <option value="">Selecione...</option>
-              <option v-for="opt in attr.attribute_values" :key="opt" :value="opt">
-                {{ opt }}
-              </option>
-            </select>
+                    <div class="space-y-1.5">
+                      <label class="text-xs font-medium uppercase tracking-wide text-n-slate-10">{{ $t('KANBAN.MODAL.DESCRIPTION') }}</label>
+                      <textarea
+                        v-model="form.description"
+                        rows="5"
+                        :placeholder="$t('KANBAN.MODAL.DESCRIPTION_PLACEHOLDER')"
+                        class="w-full resize-none rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2.5 text-sm text-n-slate-11 outline-none transition focus:border-n-brand"
+                      />
+                    </div>
 
-            <label v-else-if="attr.attribute_display_type === 'checkbox'" class="flex cursor-pointer items-center gap-2">
-              <input 
-                type="checkbox" 
-                v-model="form.custom_attributes[attr.attribute_key]" 
-                class="h-4 w-4 rounded border-n-strong text-n-brand focus:ring-n-brand" 
-              />
-              <span class="text-sm text-n-slate-11">{{ attr.attribute_display_name }}</span>
-            </label>
-          </div>
-        </div>
+                    <div class="space-y-1.5">
+                      <label class="text-xs font-medium uppercase tracking-wide text-n-slate-10">{{ $t('KANBAN.MODAL.NOTES') }}</label>
+                      <textarea
+                        v-model="form.notes"
+                        rows="4"
+                        :placeholder="$t('KANBAN.MODAL.NOTES_PLACEHOLDER')"
+                        class="w-full resize-none rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2.5 text-sm text-n-slate-11 outline-none transition focus:border-n-brand"
+                      />
+                    </div>
 
-        <div class="space-y-3 border-t border-n-weak pt-4">
-           <label class="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-n-slate-10">
-            <i class="i-lucide-paperclip text-n-slate-10" />
-            Anexar Arquivos
-          </label>
-          <div class="space-y-2">
-             <input type="file" ref="fileInputRef" @change="handleAttachmentUpload" class="hidden" />
-             <button 
-               @click="triggerFileUpload" 
-               class="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-n-weak bg-n-slate-2 px-3 py-2 text-sm text-n-slate-11 transition-colors hover:bg-n-slate-3"
-               :disabled="isUploading"
-             >
-               <i v-if="isUploading" class="i-lucide-loader-2 animate-spin" />
-               <i v-else class="i-lucide-upload-cloud" />
-               {{ isUploading ? 'Enviando...' : 'Clique para enviar arquivo' }}
-             </button>
+                    <div class="space-y-3 border-t border-n-weak pt-4">
+                      <label class="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-n-slate-10">
+                        <i class="i-lucide-paperclip text-n-slate-10" />
+                        Anexar Arquivos
+                      </label>
+                      <div class="space-y-2">
+                        <input type="file" ref="fileInputRef" @change="handleAttachmentUpload" class="hidden" />
+                        <button 
+                          @click="triggerFileUpload" 
+                          class="flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-n-weak bg-n-slate-2 px-3 py-2 text-sm text-n-slate-11 transition-colors hover:bg-n-slate-3"
+                          :disabled="isUploading"
+                        >
+                          <i v-if="isUploading" class="i-lucide-loader-2 animate-spin" />
+                          <i v-else class="i-lucide-upload-cloud" />
+                          {{ isUploading ? 'Enviando...' : 'Clique para enviar arquivo' }}
+                        </button>
 
-             <div v-if="form.attachments.length > 0" class="mt-2 space-y-2">
-                <div v-for="(att, idx) in form.attachments" :key="idx" class="group flex items-center gap-3 rounded-xl border border-n-weak bg-n-slate-2/60 p-2">
-                   <div 
-                     class="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-lg bg-n-slate-3"
-                     @click="att.url ? openAttachment(att.url) : null"
-                   >
-                     <img v-if="att.url && (att.type?.startsWith('image') || att.url?.match(/\.(jpeg|jpg|gif|png)$/i))" :src="att.url" class="h-full w-full object-cover" />
-                     <i v-else class="i-lucide-file-text text-n-slate-10" />
-                   </div>
+                        <div v-if="form.attachments.length > 0" class="mt-2 space-y-2">
+                          <div v-for="(att, idx) in form.attachments" :key="idx" class="group flex items-center gap-3 rounded-xl border border-n-weak bg-n-slate-2/60 p-2">
+                            <div 
+                              class="flex h-10 w-10 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-lg bg-n-slate-3"
+                              @click="att.url ? openAttachment(att.url) : null"
+                            >
+                              <img v-if="att.url && (att.type?.startsWith('image') || att.url?.match(/\.(jpeg|jpg|gif|png)$/i))" :src="att.url" class="h-full w-full object-cover" />
+                              <i v-else class="i-lucide-file-text text-n-slate-10" />
+                            </div>
 
-                   <div class="flex-1 min-w-0" @click="att.url ? openAttachment(att.url) : null">
-                     <div class="cursor-pointer truncate text-xs font-medium text-n-slate-12 hover:underline">
-                       {{ att.name || (typeof att === 'object' ? `Anexo #${att.id}` : `Anexo (Legado)`) }}
-                     </div>
-                     <div class="truncate text-[10px] text-n-slate-10" v-if="att.id">ID: {{ att.id }}</div>
-                   </div>
+                            <div class="min-w-0 flex-1" @click="att.url ? openAttachment(att.url) : null">
+                              <div class="cursor-pointer truncate text-xs font-medium text-n-slate-12 hover:underline">
+                                {{ att.name || (typeof att === 'object' ? `Anexo #${att.id}` : `Anexo (Legado)`) }}
+                              </div>
+                              <div v-if="att.id" class="truncate text-[10px] text-n-slate-10">ID: {{ att.id }}</div>
+                            </div>
 
-                   <button @click="removeAttachment(idx)" class="rounded p-1.5 text-n-slate-10 transition-colors hover:bg-n-ruby-3 hover:text-n-ruby-11">
-                     <i class="i-lucide-trash-2 text-xs" />
-                   </button>
-                </div>
-             </div>
-          </div>
-        </div>
-
-        <div class="border-t border-n-weak pt-4">
-           <button class="flex items-center gap-2 text-sm font-medium text-n-slate-11 hover:text-n-slate-12">
-             <i class="i-lucide-history" />
-             Ver Histórico da Tarefa (Em breve)
-           </button>
-        </div>
-
-        <div class="space-y-1.5">
-          <label class="text-xs font-medium uppercase tracking-wide text-n-slate-10">{{ $t('KANBAN.MODAL.STAGE') || 'Estágio' }}</label>
-          <select
-            v-model="form.stage_id"
-            class="w-full rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2.5 text-sm text-n-slate-12 outline-none transition focus:border-n-brand"
-          >
-            <option v-for="stage in board.stages" :key="stage.id" :value="stage.id">
-              {{ stage.name }}
-            </option>
-          </select>
-        </div>
-
-        <div class="grid grid-cols-2 gap-6">
-          <div class="space-y-1.5">
-            <div class="flex items-center justify-between">
-              <label class="text-xs font-medium uppercase tracking-wide text-n-slate-10">{{ $t('KANBAN.MODAL.DEAL_VALUE') }}</label>
-              <label class="flex cursor-pointer items-center gap-2">
-                <input type="checkbox" v-model="form.hasValue" class="h-3 w-3 rounded border-n-strong text-n-brand focus:ring-n-brand" />
-                <span class="text-[10px] font-medium uppercase text-n-slate-10">{{ $t('KANBAN.MODAL.ACTIVATE') }}</span>
-              </label>
-            </div>
-            <div class="flex overflow-hidden rounded-xl border border-n-weak bg-n-surface-1 transition focus-within:border-n-brand">
-              <div class="flex items-center border-r border-n-weak bg-n-slate-2 px-3 py-2.5 text-sm font-medium text-n-slate-10">
-                R$
-              </div>
-              <input
-                v-model="form.value"
-                type="number"
-                step="0.01"
-                min="0"
-                placeholder="0.00"
-                :disabled="!form.hasValue"
-                class="flex-1 bg-transparent px-3 py-2.5 text-sm font-medium text-n-slate-12 outline-none disabled:bg-n-slate-2 disabled:text-n-slate-10 disabled:cursor-not-allowed"
-              />
-            </div>
-          </div>
-
-          <div class="space-y-1.5">
-            <label class="text-xs font-medium uppercase tracking-wide text-n-slate-10">{{ $t('KANBAN.MODAL.PRIORITY') }}</label>
-            <div class="flex gap-2">
-              <button
-                v-for="p in ['low', 'medium', 'high', 'urgent']"
-                :key="p"
-                @click="form.priority = p"
-                class="flex-1 rounded-lg border py-2 text-xs font-medium capitalize transition-all"
-                :class="form.priority === p ? getPriorityClasses(p) : 'border-n-weak text-n-slate-11 hover:bg-n-slate-2'"
-              >
-                {{ $t(`KANBAN.MODAL.PRIORITY_LABEL.${p.toUpperCase()}`) }}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-6 pt-2">
-          <div class="space-y-1.5">
-            <label class="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-n-slate-10">
-              <i class="i-lucide-calendar-clock text-n-slate-10" />
-              {{ $t('KANBAN.MODAL.START_DATE') }}
-            </label>
-            <input
-              v-model="form.start_date"
-              type="date"
-              class="w-full rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2.5 text-sm text-n-slate-12 outline-none transition focus:border-n-brand"
-            />
-          </div>
-
-          <div class="space-y-1.5">
-            <label class="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-n-slate-10">
-              <i class="i-lucide-calendar-x text-n-slate-10" />
-              {{ $t('KANBAN.MODAL.DUE_DATE') }}
-            </label>
-            <input
-              v-model="form.due_date"
-              type="date"
-              class="w-full rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2.5 text-sm text-n-slate-12 outline-none transition focus:border-n-brand"
-            />
-          </div>
-        </div>
-
-        <div class="space-y-3 border-t border-n-weak pt-4">
-           <label class="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-n-slate-10">
-            <i class="i-lucide-message-square-clock text-n-slate-10" />
-            Agendar Mensagem Automática
-          </label>
-          <div class="grid grid-cols-1 gap-4">
-            <div class="space-y-1.5">
-               <textarea
-                v-model="form.scheduled_message"
-                rows="2"
-                placeholder="Digite a mensagem para enviar automaticamente..."
-                class="w-full resize-none rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2.5 text-sm text-n-slate-11 outline-none transition focus:border-n-brand"
-              />
-            </div>
-             <div class="space-y-1.5">
-               <label class="text-xs font-medium uppercase tracking-wide text-n-slate-10">Data e Hora do Envio</label>
-               <input
-                v-model="form.scheduled_at"
-                type="datetime-local"
-                class="w-full rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2.5 text-sm text-n-slate-12 outline-none transition focus:border-n-brand"
-              />
-            </div>
-          </div>
-        </div>
-
-        <div class="space-y-3 border-t border-n-weak pt-4">
-          <div class="flex items-center justify-between">
-            <label class="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-n-slate-10">
-              <i class="i-lucide-check-square text-n-slate-10" />
-              {{ $t('KANBAN.MODAL.CHECKLIST') }}
-            </label>
-            <span class="text-xs font-medium text-n-slate-10">
-              {{ checklistProgress }}
-            </span>
-          </div>
-
-          <div class="h-1.5 w-full overflow-hidden rounded-full bg-n-slate-3">
-            <div 
-              class="h-full bg-n-brand transition-all duration-500 ease-out"
-              :style="{ width: checklistPercentage + '%' }"
-            />
-          </div>
-
-          <div class="flex gap-2">
-            <input
-              v-model="newChecklistItem"
-              @keydown.enter.prevent="addChecklistItem"
-              type="text"
-              :placeholder="$t('KANBAN.MODAL.ADD_CHECKLIST_ITEM')"
-              class="flex-1 rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2 text-sm text-n-slate-12 outline-none transition focus:border-n-brand"
-            />
-            <Button @click="addChecklistItem" :disabled="!newChecklistItem" slate faded :label="$t('KANBAN.MODAL.ADD')" />
-          </div>
-
-          <div class="space-y-1">
-            <div 
-              v-for="(item, index) in form.checklist" 
-              :key="index"
-              class="group flex items-center gap-3 rounded-xl p-2 transition-colors hover:bg-n-slate-2/60"
-            >
-              <input 
-                type="checkbox" 
-                v-model="item.done"
-                class="h-4 w-4 cursor-pointer rounded border-n-strong text-n-brand focus:ring-n-brand"
-              />
-              <input
-                v-model="item.text"
-                class="flex-1 border-none bg-transparent p-0 text-sm text-n-slate-12 focus:ring-0"
-                :class="{ 'line-through text-n-slate-10': item.done }"
-              />
-              <button 
-                @click="removeChecklistItem(index)"
-                class="p-1 text-n-slate-10 opacity-0 transition-all group-hover:opacity-100 hover:text-n-ruby-11"
-              >
-                <i class="i-lucide-trash-2 text-xs" />
-              </button>
-            </div>
-            <div v-if="form.checklist.length === 0" class="py-4 text-center text-sm italic text-n-slate-10">
-              {{ $t('KANBAN.MODAL.NO_CHECKLIST_ITEMS') }}
-            </div>
-          </div>
-        </div>
-
-        <div class="space-y-1.5 border-t border-n-weak pt-4">
-          <label class="text-xs font-medium uppercase tracking-wide text-n-slate-10">{{ $t('KANBAN.MODAL.LINK_CONVERSATION') }}</label>
-          
-          <div v-if="!form.conversation_id" class="relative">
-            <i class="i-lucide-search absolute left-3 top-1/2 -translate-y-1/2 text-n-slate-10" />
-            <input
-              type="text"
-              :placeholder="$t('KANBAN.MODAL.SEARCH_PLACEHOLDER')"
-              class="w-full rounded-xl border border-n-weak bg-n-surface-1 py-2.5 pl-9 pr-3 text-sm text-n-slate-12 outline-none transition focus:border-n-brand"
-              @input="e => searchConversations(e.target.value)"
-            />
-            
-            <div v-if="searchResults.length > 0" class="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-xl border border-n-weak bg-n-surface-1 shadow-xl">
-              <button
-                v-for="conv in searchResults"
-                :key="conv.id"
-                @click="selectConversation(conv)"
-                class="group flex w-full items-center justify-between px-4 py-2 text-left hover:bg-n-slate-2"
-              >
-                <div>
-                  <div class="text-sm font-medium text-n-slate-12">
-                    #{{ conv.id }} - {{ conv.meta?.sender?.name || conv.contact?.name || 'Sem nome' }}
+                            <button @click="removeAttachment(idx)" class="rounded p-1.5 text-n-slate-10 transition-colors hover:bg-n-ruby-3 hover:text-n-ruby-11">
+                              <i class="i-lucide-trash-2 text-xs" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div class="text-xs text-n-slate-10">{{ conv.messages?.[0]?.content?.substring(0, 40) }}...</div>
+
+                  <div class="space-y-6">
+                    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+                      <div class="space-y-1.5">
+                        <label class="text-xs font-medium uppercase tracking-wide text-n-slate-10">{{ $t('KANBAN.MODAL.ASSIGNEE') }}</label>
+                        <select
+                          v-model="form.assignee_id"
+                          class="w-full rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2.5 text-sm text-n-slate-12 outline-none transition focus:border-n-brand"
+                        >
+                          <option :value="null">{{ $t('KANBAN.MODAL.NO_ASSIGNEE') }}</option>
+                          <option v-for="agent in agents" :key="agent.id" :value="agent.id">
+                            {{ agent.name }}
+                          </option>
+                        </select>
+                      </div>
+
+                      <div class="space-y-1.5">
+                        <label class="text-xs font-medium uppercase tracking-wide text-n-slate-10">Etiquetas</label>
+                        <TagMultiSelectComboBox
+                          v-model="form.labels"
+                          :options="allLabels"
+                          placeholder="Selecionar etiquetas"
+                          search-placeholder="Buscar etiqueta"
+                        />
+                      </div>
+                    </div>
+
+                    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+                      <div class="space-y-1.5">
+                        <label class="text-xs font-medium uppercase tracking-wide text-n-slate-10">{{ $t('KANBAN.MODAL.STAGE') || 'Estágio' }}</label>
+                        <select
+                          v-model="form.stage_id"
+                          class="w-full rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2.5 text-sm text-n-slate-12 outline-none transition focus:border-n-brand"
+                        >
+                          <option v-for="stage in board.stages" :key="stage.id" :value="stage.id">
+                            {{ stage.name }}
+                          </option>
+                        </select>
+                      </div>
+
+                      <div class="space-y-1.5">
+                        <div class="flex items-center justify-between">
+                          <label class="text-xs font-medium uppercase tracking-wide text-n-slate-10">{{ $t('KANBAN.MODAL.DEAL_VALUE') }}</label>
+                          <label class="flex cursor-pointer items-center gap-2">
+                            <input type="checkbox" v-model="form.hasValue" class="h-3 w-3 rounded border-n-strong text-n-brand focus:ring-n-brand" />
+                            <span class="text-[10px] font-medium uppercase text-n-slate-10">{{ $t('KANBAN.MODAL.ACTIVATE') }}</span>
+                          </label>
+                        </div>
+                        <div class="flex overflow-hidden rounded-xl border border-n-weak bg-n-surface-1 transition focus-within:border-n-brand">
+                          <div class="flex items-center border-r border-n-weak bg-n-slate-2 px-3 py-2.5 text-sm font-medium text-n-slate-10">
+                            R$
+                          </div>
+                          <input
+                            v-model="form.value"
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            placeholder="0.00"
+                            :disabled="!form.hasValue"
+                            class="flex-1 bg-transparent px-3 py-2.5 text-sm font-medium text-n-slate-12 outline-none disabled:cursor-not-allowed disabled:bg-n-slate-2 disabled:text-n-slate-10"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div class="space-y-1.5">
+                      <label class="text-xs font-medium uppercase tracking-wide text-n-slate-10">{{ $t('KANBAN.MODAL.PRIORITY') }}</label>
+                      <div class="grid grid-cols-2 gap-2">
+                        <button
+                          v-for="p in ['low', 'medium', 'high', 'urgent']"
+                          :key="p"
+                          @click="form.priority = p"
+                          class="rounded-lg border py-2 text-xs font-medium capitalize transition-all"
+                          :class="form.priority === p ? getPriorityClasses(p) : 'border-n-weak text-n-slate-11 hover:bg-n-slate-2'"
+                        >
+                          {{ $t(`KANBAN.MODAL.PRIORITY_LABEL.${p.toUpperCase()}`) }}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+                      <div class="space-y-1.5">
+                        <label class="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-n-slate-10">
+                          <i class="i-lucide-calendar-clock text-n-slate-10" />
+                          {{ $t('KANBAN.MODAL.START_DATE') }}
+                        </label>
+                        <input
+                          v-model="form.start_date"
+                          type="date"
+                          class="w-full rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2.5 text-sm text-n-slate-12 outline-none transition focus:border-n-brand"
+                        />
+                      </div>
+
+                      <div class="space-y-1.5">
+                        <label class="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-n-slate-10">
+                          <i class="i-lucide-calendar-x text-n-slate-10" />
+                          {{ $t('KANBAN.MODAL.DUE_DATE') }}
+                        </label>
+                        <input
+                          v-model="form.due_date"
+                          type="date"
+                          class="w-full rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2.5 text-sm text-n-slate-12 outline-none transition focus:border-n-brand"
+                        />
+                      </div>
+                    </div>
+
+                    <div class="space-y-1.5 border-t border-n-weak pt-4">
+                      <label class="text-xs font-medium uppercase tracking-wide text-n-slate-10">{{ $t('KANBAN.MODAL.LINK_CONVERSATION') }}</label>
+              
+                      <div v-if="!form.conversation_id" class="relative">
+                        <i class="i-lucide-search absolute left-3 top-1/2 -translate-y-1/2 text-n-slate-10" />
+                        <input
+                          type="text"
+                          :placeholder="$t('KANBAN.MODAL.SEARCH_PLACEHOLDER')"
+                          class="w-full rounded-xl border border-n-weak bg-n-surface-1 py-2.5 pl-9 pr-3 text-sm text-n-slate-12 outline-none transition focus:border-n-brand"
+                          @input="e => searchConversations(e.target.value)"
+                        />
+                
+                        <div v-if="searchResults.length > 0" class="absolute z-50 mt-1 max-h-60 w-full overflow-y-auto rounded-xl border border-n-weak bg-n-surface-1 shadow-xl">
+                          <button
+                            v-for="conv in searchResults"
+                            :key="conv.id"
+                            @click="selectConversation(conv)"
+                            class="group flex w-full items-center justify-between px-4 py-2 text-left hover:bg-n-slate-2"
+                          >
+                            <div>
+                              <div class="text-sm font-medium text-n-slate-12">
+                                #{{ conv.id }} - {{ conv.meta?.sender?.name || conv.contact?.name || 'Sem nome' }}
+                              </div>
+                              <div class="text-xs text-n-slate-10">{{ conv.messages?.[0]?.content?.substring(0, 40) }}...</div>
+                            </div>
+                            <i class="i-lucide-link text-n-slate-9 group-hover:text-n-blue-11" />
+                          </button>
+                        </div>
+                      </div>
+
+                      <div v-else class="flex items-center justify-between rounded-xl border border-n-brand/20 bg-n-brand/5 p-3">
+                        <div class="flex items-center gap-3">
+                          <div class="flex h-8 w-8 items-center justify-center rounded-full bg-n-brand/10 text-xs font-medium text-n-blue-11">
+                            #{{ form.conversation_id }}
+                          </div>
+                          <div>
+                            <div class="text-sm font-medium text-n-slate-12">{{ $t('KANBAN.MODAL.LINKED_CONVERSATION') }}</div>
+                            <div class="text-xs text-n-slate-10">Clique em salvar para confirmar as alterações</div>
+                          </div>
+                        </div>
+                        <button 
+                          @click="form.conversation_id = null"
+                          class="text-xs font-medium text-n-ruby-11 hover:underline"
+                        >
+                          {{ $t('KANBAN.MODAL.UNLINK') }}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <i class="i-lucide-link text-n-slate-9 group-hover:text-n-blue-11" />
-              </button>
-            </div>
-          </div>
 
-          <div v-else class="flex items-center justify-between rounded-xl border border-n-brand/20 bg-n-brand/5 p-3">
-            <div class="flex items-center gap-3">
-              <div class="flex h-8 w-8 items-center justify-center rounded-full bg-n-brand/10 text-xs font-medium text-n-blue-11">
-                #{{ form.conversation_id }}
-              </div>
-              <div>
-                <div class="text-sm font-medium text-n-slate-12">{{ $t('KANBAN.MODAL.LINKED_CONVERSATION') }}</div>
-                <div class="text-xs text-n-slate-10">Clique em salvar para confirmar as alterações</div>
-              </div>
-            </div>
-            <button 
-              @click="form.conversation_id = null"
-              class="text-xs font-medium text-n-ruby-11 hover:underline"
-            >
-              {{ $t('KANBAN.MODAL.UNLINK') }}
-            </button>
-          </div>
-        </div>
+                <div v-if="customAttributes.length > 0" class="mt-6 grid gap-4 border-t border-n-weak pt-4 sm:grid-cols-2">
+                  <div v-for="attr in customAttributes" :key="attr.id" class="space-y-1.5">
+                    <label class="text-xs font-medium uppercase tracking-wide text-n-slate-10">{{ attr.attribute_display_name }}</label>
+            
+                    <input
+                      v-if="['text', 'link', 'number', 'date'].includes(attr.attribute_display_type)"
+                      v-model="form.custom_attributes[attr.attribute_key]"
+                      :type="attr.attribute_display_type === 'link' ? 'url' : attr.attribute_display_type"
+                      :placeholder="attr.attribute_display_name"
+                      class="w-full rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2.5 text-sm text-n-slate-12 outline-none transition focus:border-n-brand"
+                    />
 
-        <div class="space-y-1.5">
-          <label class="text-xs font-medium uppercase tracking-wide text-n-slate-10">{{ $t('KANBAN.MODAL.ASSIGNEE') }}</label>
-          <select
-            v-model="form.assignee_id"
-            class="w-full rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2.5 text-sm text-n-slate-12 outline-none transition focus:border-n-brand"
-          >
-            <option :value="null">{{ $t('KANBAN.MODAL.NO_ASSIGNEE') }}</option>
-            <option v-for="agent in agents" :key="agent.id" :value="agent.id">
-              {{ agent.name }}
-            </option>
-          </select>
-        </div>
-      </div>
+                    <select
+                      v-else-if="attr.attribute_display_type === 'list'"
+                      v-model="form.custom_attributes[attr.attribute_key]"
+                      class="w-full rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2.5 text-sm text-n-slate-12 outline-none transition focus:border-n-brand"
+                    >
+                      <option value="">Selecione...</option>
+                      <option v-for="opt in attr.attribute_values" :key="opt" :value="opt">
+                        {{ opt }}
+                      </option>
+                    </select>
 
-      <div class="flex items-center justify-between gap-3 border-t border-n-weak bg-n-slate-2/60 px-6 py-4">
-        <div class="flex items-center gap-2">
-          <Button
-            v-if="wonStage && form.stage_id !== wonStage.id"
-            @click="moveToStage(wonStage.id)"
-            teal
-            faded
-            icon="i-lucide-trophy"
-            :label="'Ganho'"
-            :title="wonStage.name"
-          />
-          <Button
-            v-if="lostStage && form.stage_id !== lostStage.id"
-            @click="moveToStage(lostStage.id)"
-            ruby
-            faded
-            icon="i-lucide-thumbs-down"
-            :label="'Perdido'"
-            :title="lostStage.name"
-          />
-        </div>
-        <div class="flex gap-3">
-          <Button @click="emit('close')" slate outline :label="$t('KANBAN.MODAL.CANCEL')" />
-          <Button
-            @click="handleSave"
-            :disabled="isLoading"
-            blue
-            solid
-            :is-loading="isLoading"
-            :label="isLoading ? $t('KANBAN.MODAL.SAVING') : $t('KANBAN.MODAL.SAVE')"
-          />
-        </div>
-      </div>
-    </div>
-  </Modal>
-</template>
+                    <label v-else-if="attr.attribute_display_type === 'checkbox'" class="flex min-h-11 cursor-pointer items-center gap-2 rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2.5">
+                      <input 
+                        type="checkbox" 
+                        v-model="form.custom_attributes[attr.attribute_key]" 
+                        class="h-4 w-4 rounded border-n-strong text-n-brand focus:ring-n-brand" 
+                      />
+                      <span class="text-sm text-n-slate-11">{{ attr.attribute_display_name }}</span>
+                    </label>
+                  </div>
+                </div>
+
+                <div class="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+                  <div class="space-y-3 border-t border-n-weak pt-4">
+                    <div class="flex items-center justify-between">
+                      <label class="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-n-slate-10">
+                        <i class="i-lucide-check-square text-n-slate-10" />
+                        {{ $t('KANBAN.MODAL.CHECKLIST') }}
+                      </label>
+                      <span class="text-xs font-medium text-n-slate-10">
+                        {{ checklistProgress }}
+                      </span>
+                    </div>
+
+                    <div class="h-1.5 w-full overflow-hidden rounded-full bg-n-slate-3">
+                      <div 
+                        class="h-full bg-n-brand transition-all duration-500 ease-out"
+                        :style="{ width: checklistPercentage + '%' }"
+                      />
+                    </div>
+
+                    <div class="flex gap-2">
+                      <input
+                        v-model="newChecklistItem"
+                        @keydown.enter.prevent="addChecklistItem"
+                        type="text"
+                        :placeholder="$t('KANBAN.MODAL.ADD_CHECKLIST_ITEM')"
+                        class="flex-1 rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2 text-sm text-n-slate-12 outline-none transition focus:border-n-brand"
+                      />
+                      <Button @click="addChecklistItem" :disabled="!newChecklistItem" slate faded :label="$t('KANBAN.MODAL.ADD')" />
+                    </div>
+
+                    <div class="space-y-1">
+                      <div 
+                        v-for="(item, index) in form.checklist" 
+                        :key="index"
+                        class="group flex items-center gap-3 rounded-xl p-2 transition-colors hover:bg-n-slate-2/60"
+                      >
+                        <input 
+                          type="checkbox" 
+                          v-model="item.done"
+                          class="h-4 w-4 cursor-pointer rounded border-n-strong text-n-brand focus:ring-n-brand"
+                        />
+                        <input
+                          v-model="item.text"
+                          class="flex-1 border-none bg-transparent p-0 text-sm text-n-slate-12 focus:ring-0"
+                          :class="{ 'line-through text-n-slate-10': item.done }"
+                        />
+                        <button 
+                          @click="removeChecklistItem(index)"
+                          class="p-1 text-n-slate-10 opacity-0 transition-all group-hover:opacity-100 hover:text-n-ruby-11"
+                        >
+                          <i class="i-lucide-trash-2 text-xs" />
+                        </button>
+                      </div>
+                      <div v-if="form.checklist.length === 0" class="py-4 text-center text-sm italic text-n-slate-10">
+                        {{ $t('KANBAN.MODAL.NO_CHECKLIST_ITEMS') }}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="space-y-3 border-t border-n-weak pt-4">
+                    <label class="flex items-center gap-2 text-xs font-medium uppercase tracking-wide text-n-slate-10">
+                      <i class="i-lucide-message-square-clock text-n-slate-10" />
+                      Agendar Mensagem Automática
+                    </label>
+                    <div class="grid gap-4">
+                      <div class="space-y-1.5">
+                        <textarea
+                          v-model="form.scheduled_message"
+                          rows="3"
+                          placeholder="Digite a mensagem para enviar automaticamente..."
+                          class="w-full resize-none rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2.5 text-sm text-n-slate-11 outline-none transition focus:border-n-brand"
+                        />
+                      </div>
+                      <div class="space-y-1.5">
+                        <label class="text-xs font-medium uppercase tracking-wide text-n-slate-10">Data e Hora do Envio</label>
+                        <input
+                          v-model="form.scheduled_at"
+                          type="datetime-local"
+                          class="w-full rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2.5 text-sm text-n-slate-12 outline-none transition focus:border-n-brand"
+                        />
+                      </div>
+                    </div>
+                  </div>
+            <input
