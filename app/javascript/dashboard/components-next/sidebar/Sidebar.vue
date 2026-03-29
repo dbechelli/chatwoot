@@ -328,15 +328,21 @@ const menuItems = computed(() => {
           label: t('KANBAN.NAV.FUNNELS'),
           to: accountScopedRoute('kanban_funnels'),
           icon: 'i-lucide-panels-top-left',
+          activeOn: [
+            'kanban_funnels',
+            'kanban_board',
+            'kanban_board_new',
+            'kanban_board_edit',
+          ],
+          children: kanbanBoards.value.map(board => ({
+            name: `Kanban-${board.id}`,
+            label: board.name,
+            to: accountScopedRoute('kanban_board', {
+              boardId: board.id,
+            }),
+            icon: 'i-lucide-kanban-square',
+          })),
         },
-        ...kanbanBoards.value.map(board => ({
-          name: `Kanban-${board.id}`,
-          label: board.name,
-          to: accountScopedRoute('kanban_board', {
-            boardId: board.id,
-          }),
-          icon: 'i-lucide-kanban-square',
-        })),
       ],
     },
     {
