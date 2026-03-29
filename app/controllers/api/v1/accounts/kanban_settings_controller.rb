@@ -41,13 +41,13 @@ class Api::V1::Accounts::KanbanSettingsController < Api::V1::Accounts::BaseContr
   # POST /api/v1/accounts/:account_id/kanban_settings/boards/:id/duplicate
   def duplicate_board
     original_board = Current.account.find_kanban_board(params[:id])
-    
+
     if original_board
       duplicated_board = original_board.deep_dup
       duplicated_board['id'] = SecureRandom.uuid
-      duplicated_board['name'] = "#{original_board['name']} (Cópia)"
+      duplicated_board['name'] = format(I18n.t('kanban_settings.duplicate_name'), name: original_board['name'])
       duplicated_board['isDefault'] = false
-      
+
       board = Current.account.add_kanban_board(duplicated_board)
       render json: board
     else

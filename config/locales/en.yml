@@ -172,6 +172,8 @@ en:
       no_payment_method: No payment methods found. Please add a payment method before making a purchase.
     reports:
       date_range_too_long: Date range cannot exceed 6 months
+  kanban_settings:
+    duplicate_name: '%{name} (Copy)'
   profile:
     mfa:
       enabled: MFA enabled successfully
