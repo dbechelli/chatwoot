@@ -519,6 +519,52 @@ const activeViewButtonClass = mode => {
   return viewMode.value === mode;
 };
 
+const usesResponsiveBoardGrid = computed(
+  () => viewMode.value === 'board' && salesStages.value.length > 0 && salesStages.value.length <= 4
+);
+
+const boardLayoutClass = computed(() => {
+  if (usesResponsiveBoardGrid.value) {
+    return 'grid h-full min-h-0 w-full items-stretch gap-4 p-4 md:gap-6 md:p-6';
+  }
+
+  return 'inline-flex h-full min-h-0 items-start gap-4 p-4 md:p-6';
+});
+
+const boardLayoutStyle = computed(() => {
+  if (!usesResponsiveBoardGrid.value) {
+    return {};
+  }
+
+  return {
+    gridTemplateColumns: `repeat(${salesStages.value.length}, minmax(0, 1fr))`,
+  };
+});
+
+const boardColumnClass = computed(() => {
+  return usesResponsiveBoardGrid.value
+    ? 'flex h-full min-h-0 min-w-0 flex-col'
+    : 'flex h-full w-80 flex-shrink-0 flex-col';
+});
+
+const swimlaneTrackClass = computed(() => {
+  if (usesResponsiveBoardGrid.value) {
+    return 'grid min-h-0 w-full items-stretch gap-4';
+  }
+
+  return 'flex items-start gap-4 overflow-x-auto pb-4';
+});
+
+const swimlaneTrackStyle = computed(() => {
+  if (!usesResponsiveBoardGrid.value) {
+    return {};
+  }
+
+  return {
+    gridTemplateColumns: `repeat(${salesStages.value.length}, minmax(0, 1fr))`,
+  };
+});
+
 watch(selectedItems, value => {
   showBulkActions.value = value.length > 0;
 });
@@ -843,7 +889,16 @@ onMounted(async () => {
       </div>
     </Modal>
 
-    <main class="flex-1 w-full overflow-hidden bg-n-slate-2" :class="viewMode === 'list' ? 'overflow-y-auto' : 'overflow-x-auto overflow-y-hidden'">
+    <main
+      class="flex-1 w-full overflow-hidden bg-n-slate-2"
+      :class="
+        viewMode === 'list'
+          ? 'overflow-y-auto'
+          : usesResponsiveBoardGrid
+            ? 'overflow-y-hidden overflow-x-hidden'
+            : 'overflow-x-auto overflow-y-hidden'
+      "
+    >
       <div
         v-if="isLoading && !allConversations.length"
         class="flex h-full items-center justify-center"
@@ -882,12 +937,13 @@ onMounted(async () => {
       <!-- Standard Board View -->
       <div
         v-else-if="salesStages.length > 0 && viewMode === 'board' && groupBy === 'none'"
-        class="inline-flex h-full items-start gap-4 p-4 md:p-6"
+        :class="boardLayoutClass"
+        :style="boardLayoutStyle"
       >
         <div
           v-for="stage in salesStages"
           :key="stage.stage"
-          class="flex h-full w-80 flex-shrink-0 flex-col"
+          :class="boardColumnClass"
         >
           <KanbanColumn
             :stage="stage.stage"
@@ -901,7 +957,7 @@ onMounted(async () => {
             @card-contextmenu="handleCardContextmenu"
           />
         </div>
-        <div class="w-4 flex-shrink-0" />
+        <div v-if="!usesResponsiveBoardGrid" class="w-4 flex-shrink-0" />
       </div>
 
       <!-- Swimlane Board View -->
@@ -917,11 +973,11 @@ onMounted(async () => {
             </span>
           </div>
 
-           <div class="flex items-start gap-4 overflow-x-auto pb-4">
+           <div :class="swimlaneTrackClass" :style="swimlaneTrackStyle">
              <div
                v-for="stage in salesStages"
                :key="stage.stage + group.id"
-               class="flex flex-col w-80 flex-shrink-0"
+               :class="boardColumnClass"
              >
                <KanbanColumn
                  :stage="stage.stage"
@@ -930,7 +986,7 @@ onMounted(async () => {
                  :conversations="getSwimlaneConversations(stage.stage, group.value)"
                  :wip-limit="null" 
                  :visible-attributes="visibleAttributes"
-                 class="min-h-[150px] max-h-[500px]"
+                 class="h-full min-h-[150px]"
                  @stage-change="(payload) => handleStageChange({...payload, groupUpdate: { type: groupBy, value: group.value }})"
                  @card-click="handleCardClick"
                  @card-contextmenu="handleCardContextmenu"
