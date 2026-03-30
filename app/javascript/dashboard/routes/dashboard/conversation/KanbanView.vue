@@ -525,10 +525,10 @@ const usesResponsiveBoardGrid = computed(
 
 const boardLayoutClass = computed(() => {
   if (usesResponsiveBoardGrid.value) {
-    return 'grid h-full min-h-0 w-full items-stretch gap-4 p-4 md:gap-6 md:p-6';
+    return 'grid h-full min-h-0 min-w-full items-stretch gap-4 p-4 md:gap-6 md:p-6';
   }
 
-  return 'inline-flex h-full min-h-0 items-start gap-4 p-4 md:p-6';
+  return 'custom-scrollbar flex h-full min-h-0 min-w-max items-stretch gap-4 p-4 pb-6 md:gap-6 md:p-6';
 });
 
 const boardLayoutStyle = computed(() => {
@@ -544,7 +544,7 @@ const boardLayoutStyle = computed(() => {
 const boardColumnClass = computed(() => {
   return usesResponsiveBoardGrid.value
     ? 'flex h-full min-h-0 min-w-0 flex-col'
-    : 'flex h-full w-80 flex-shrink-0 flex-col';
+    : 'flex h-full min-h-0 w-[18rem] flex-shrink-0 flex-col xl:w-80';
 });
 
 const swimlaneTrackClass = computed(() => {
@@ -552,7 +552,7 @@ const swimlaneTrackClass = computed(() => {
     return 'grid min-h-0 w-full items-stretch gap-4';
   }
 
-  return 'flex items-start gap-4 overflow-x-auto pb-4';
+  return 'custom-scrollbar flex min-w-max items-stretch gap-4 overflow-x-auto pb-4';
 });
 
 const swimlaneTrackStyle = computed(() => {
@@ -890,7 +890,7 @@ onMounted(async () => {
     </Modal>
 
     <main
-      class="flex-1 w-full overflow-hidden bg-n-slate-2"
+      class="custom-scrollbar flex min-h-0 flex-1 w-full overflow-hidden bg-n-slate-2"
       :class="
         viewMode === 'list'
           ? 'overflow-y-auto'
@@ -957,13 +957,12 @@ onMounted(async () => {
             @card-contextmenu="handleCardContextmenu"
           />
         </div>
-        <div v-if="!usesResponsiveBoardGrid" class="w-4 flex-shrink-0" />
       </div>
 
       <!-- Swimlane Board View -->
       <div
         v-else-if="salesStages.length > 0 && viewMode === 'board' && groupBy !== 'none'"
-        class="flex h-full flex-col gap-8 overflow-x-hidden overflow-y-auto bg-n-slate-2 p-4 pb-20 md:p-6"
+        class="custom-scrollbar flex h-full min-h-0 flex-col gap-8 overflow-x-hidden overflow-y-auto bg-n-slate-2 p-4 pb-20 md:p-6"
       >
         <div v-for="group in swimlaneGroups" :key="group.id" class="flex flex-col gap-3">
           <div class="sticky left-0 flex w-fit items-center gap-2 rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2">
