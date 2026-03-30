@@ -427,6 +427,7 @@ const forwardMessage = () => {
         :inbox-id="inbox.id"
         :priority="chat.priority"
         :chat-id="chat.id"
+        :conversation-custom-attributes="chat.custom_attributes"
         :has-unread-messages="hasUnread"
         :conversation-labels="chat.labels"
         :conversation-url="conversationPath"

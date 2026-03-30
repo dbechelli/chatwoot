@@ -55,6 +55,10 @@ export default {
       type: String,
       default: null,
     },
+    conversationCustomAttributes: {
+      type: Object,
+      default: () => ({}),
+    },
     conversationLabels: {
       type: Array,
       default: () => [],
@@ -232,7 +236,7 @@ export default {
       return {
         key: MENU.SALES_STAGE,
         icon: 'kanban-square',
-        label: this.$t('CONVERSATION.CARD_CONTEXT_MENU.ASSIGN_STAGE'),
+        label: this.$t('CONVERSATION.CARD_CONTEXT_MENU.AVAILABLE_FUNNELS'),
       };
     },
     forwardMessageOption() {
@@ -253,8 +257,14 @@ export default {
     filteredKanbanBoards() {
       if (!this.kanbanBoards) return [];
       return this.kanbanBoards.filter(board => {
-        if (!board.agent_ids || board.agent_ids.length === 0) return true;
-        return board.agent_ids.includes(this.currentUser.id);
+        if (!board.stages?.length) return false;
+        const isAllowedForAgent =
+          !board.agent_ids?.length || board.agent_ids.includes(this.currentUser.id);
+        const isAllowedForInbox =
+          !board.auto_assign_inboxes?.length ||
+          board.auto_assign_inboxes.includes(this.inboxId);
+
+        return isAllowedForAgent && isAllowedForInbox;
       });
     },
     salesStages() {
@@ -357,8 +367,14 @@ export default {
         ...(type === 'team' && { label: option.name }),
       };
     },
+    isAssignedToStage(board, stage) {
+      return (
+        this.conversationCustomAttributes?.[board.customAttributeKey] === stage.id
+      );
+    },
     assignSalesStage(stage) {
       this.$emit('assignSalesStage', stage);
+      this.$emit('close');
     },
     forwardMessage() {
       this.$emit('forwardMessage');
@@ -427,13 +443,14 @@ export default {
            <MenuItemWithSubmenu
               v-for="board in salesStages"
               :key="board.id"
-              :option="{ label: board.name, icon: 'kanban-board' }"
+            :option="{ label: board.name, icon: 'kanban-square' }"
               :sub-menu-available="!!board.stages.length"
            >
               <MenuItem
                   v-for="stage in board.stages"
                   :key="stage.id"
                   :option="{ label: stage.name, color: stage.color }"
+              :variant="isAssignedToStage(board, stage) ? 'label-assigned' : 'label'"
                   @click.stop="assignSalesStage({ board, stage })"
               />
            </MenuItemWithSubmenu>

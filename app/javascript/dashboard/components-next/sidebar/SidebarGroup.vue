@@ -71,11 +71,6 @@ const isActive = computed(() => {
 // nested correctly, so we need to check the active state ourselves
 // TODO: Audit the routes and fix the nesting and remove this
 const activeChild = computed(() => {
-  const pathSame = navigableChildren.value.find(
-    child => child.to && route.path === resolvePath(child.to)
-  );
-  if (pathSame) return pathSame;
-
   // Rank the activeOn Prop higher than the path match
   // There will be cases where the path name is the same but the params are different
   // So we need to rank them based on the params
@@ -101,6 +96,11 @@ const activeChild = computed(() => {
     // But this is good enough for now
     return rankedPage ?? activeOnPages[0];
   }
+
+  const pathSame = navigableChildren.value.find(
+    child => child.to && route.path === resolvePath(child.to)
+  );
+  if (pathSame) return pathSame;
 
   return navigableChildren.value.find(child => {
     if (!child.to) return false;
