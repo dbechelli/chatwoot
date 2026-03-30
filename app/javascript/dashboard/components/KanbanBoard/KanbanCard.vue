@@ -111,7 +111,7 @@ const formatCurrency = value => {
 
 <template>
   <div
-    class="group relative flex flex-col gap-3 rounded-2xl border border-n-weak bg-n-surface-1 p-3 transition-all duration-200 hover:border-n-brand/30 hover:bg-n-slate-2/40"
+    class="group relative flex flex-col gap-2.5 rounded-2xl border border-n-weak bg-n-surface-1 p-3 transition-all duration-200 hover:border-n-brand/30 hover:bg-n-slate-2/40"
     @contextmenu.prevent="$emit('contextmenu', { event: $event, conversation })"
   >
     <div
@@ -178,14 +178,14 @@ const formatCurrency = value => {
       </span>
     </div>
 
-    <div class="relative rounded-xl border border-n-weak bg-n-slate-2/60 p-2.5">
+    <div class="relative rounded-xl border border-n-weak bg-n-slate-2/60 p-2">
       <p class="line-clamp-2 text-xs leading-relaxed text-n-slate-11">
         "{{ conversation.messages?.[0]?.content || t('KANBAN.NO_MESSAGES') }}"
       </p>
     </div>
 
     <div
-      class="mt-1 flex items-center justify-between gap-2 border-t border-n-weak pt-3"
+      class="mt-1 flex flex-wrap items-center justify-between gap-2 border-t border-n-weak pt-2.5"
     >
       <div class="flex flex-wrap items-center gap-2">
         <span
@@ -230,7 +230,7 @@ const formatCurrency = value => {
         </span>
       </div>
 
-      <div class="flex items-center gap-2 flex-shrink-0">
+      <div class="flex items-center gap-2 flex-shrink-0 ml-auto">
         <span class="whitespace-nowrap text-[10px] font-medium text-n-slate-10">
           {{ timeAgo }}
         </span>

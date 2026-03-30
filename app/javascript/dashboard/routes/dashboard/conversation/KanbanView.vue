@@ -534,7 +534,7 @@ const boardColumnMinWidth = computed(() => {
 });
 
 const boardLayoutClass = computed(() => {
-  return 'grid h-full min-h-0 min-w-full items-stretch gap-3 p-3 pb-5 md:gap-4 md:p-4';
+  return 'flex h-full min-h-0 min-w-full flex-col gap-3 p-3 pb-5 md:gap-4 md:p-4 xl:grid xl:items-stretch';
 });
 
 const boardLayoutStyle = computed(() => {
@@ -548,11 +548,11 @@ const boardLayoutStyle = computed(() => {
 });
 
 const boardColumnClass = computed(() => {
-  return 'flex h-full min-h-0 min-w-0 flex-col';
+  return 'flex min-h-0 min-w-0 flex-col xl:h-full';
 });
 
 const swimlaneTrackClass = computed(() => {
-  return 'grid min-h-0 min-w-full items-stretch gap-3 md:gap-4';
+  return 'flex min-h-0 min-w-full flex-col gap-3 md:gap-4 xl:grid xl:items-stretch';
 });
 
 const swimlaneTrackStyle = computed(() => {
