@@ -12,11 +12,6 @@ import KanbanHelpModal from './KanbanHelpModal.vue';
 import KanbanItemModal from './KanbanItemModal.vue';
 import KanbanContextMenu from './KanbanContextMenu.vue';
 import KanbanBulkActions from './KanbanBulkActions.vue';
-import Modal from 'dashboard/components/Modal.vue';
-import DropdownContainer from 'next/dropdown-menu/base/DropdownContainer.vue';
-import DropdownBody from 'next/dropdown-menu/base/DropdownBody.vue';
-import DropdownSection from 'next/dropdown-menu/base/DropdownSection.vue';
-import DropdownItem from 'next/dropdown-menu/base/DropdownItem.vue';
 import wootConstants from 'dashboard/constants/globals';
 import { useAlert } from 'dashboard/composables';
 
@@ -440,77 +435,6 @@ const handleBulkUpdate = async (bulkData) => {
   }
 };
 
-// Saved Views (Smart Views)
-const showSaveViewModal = ref(false);
-const newViewName = ref('');
-
-const currentUser = computed(() => store.getters.getCurrentUser);
-const uiSettings = computed(() => currentUser.value.ui_settings || {});
-const savedViews = computed(() => {
-  const views = uiSettings.value.kanban_views || [];
-  return views.filter(v => v.board_id === (selectedBoardId.value || 'default'));
-});
-
-const saveCurrentView = async () => {
-  if (!newViewName.value) return;
-
-  const newView = {
-    id: Date.now().toString(),
-    name: newViewName.value,
-    board_id: selectedBoardId.value || 'default',
-    filters: {
-      inbox: selectedInbox.value,
-      assignee: selectedAssignee.value,
-      status: statusFilter.value,
-    }
-  };
-
-  const currentViews = uiSettings.value.kanban_views || [];
-  const updatedViews = [...currentViews, newView];
-
-  try {
-    await store.dispatch('updateProfile', {
-      ui_settings: {
-        ...uiSettings.value,
-        kanban_views: updatedViews
-      }
-    });
-    useAlert('Filtro salvo com sucesso');
-    showSaveViewModal.value = false;
-    newViewName.value = '';
-  } catch (error) {
-    useAlert('Erro ao salvar filtro');
-  }
-};
-
-const applyView = (view) => {
-  if (view.filters) {
-    selectedInbox.value = view.filters.inbox;
-    selectedAssignee.value = view.filters.assignee;
-    statusFilter.value = view.filters.status || 'open';
-    useAlert(`Filtro "${view.name}" aplicado`);
-  }
-};
-
-const deleteView = async (viewId) => {
-  if (!confirm('Tem certeza que deseja excluir este filtro?')) return;
-
-  const currentViews = uiSettings.value.kanban_views || [];
-  const updatedViews = currentViews.filter(v => v.id !== viewId);
-
-  try {
-    await store.dispatch('updateProfile', {
-      ui_settings: {
-        ...uiSettings.value,
-        kanban_views: updatedViews,
-      },
-    });
-    useAlert('Filtro removido com sucesso');
-  } catch (error) {
-    useAlert('Erro ao remover filtro');
-  }
-};
-
 const activeViewButtonClass = mode => {
   return viewMode.value === mode;
 };
@@ -708,95 +632,6 @@ onMounted(async () => {
               </template>
             </div>
           </div>
-
-          <div v-if="hasBoards" class="flex flex-wrap items-center gap-2">
-            <select
-              v-model="groupBy"
-              class="h-10 rounded-xl border border-n-weak bg-n-surface-1 px-3 text-sm text-n-slate-12 outline-none transition focus:border-n-brand min-w-[170px]"
-            >
-              <option value="none">Nenhum</option>
-              <option value="priority">Prioridade</option>
-              <option value="assignee">Agente</option>
-            </select>
-
-            <select
-              v-model="selectedInbox"
-              class="h-10 rounded-xl border border-n-weak bg-n-surface-1 px-3 text-sm text-n-slate-12 outline-none transition focus:border-n-brand min-w-[190px]"
-            >
-              <option :value="null">{{ t('KANBAN.FILTERS.ALL_INBOXES') }}</option>
-              <option v-for="inbox in inboxes" :key="inbox.id" :value="inbox.id">
-                {{ inbox.name }}
-              </option>
-            </select>
-
-            <select
-              v-model="selectedAssignee"
-              class="h-10 rounded-xl border border-n-weak bg-n-surface-1 px-3 text-sm text-n-slate-12 outline-none transition focus:border-n-brand min-w-[190px]"
-            >
-              <option value="all">{{ t('KANBAN.FILTERS.ALL_AGENTS') }}</option>
-              <option value="me">{{ t('KANBAN.FILTERS.MY_DEALS') }}</option>
-              <option value="unassigned">{{ t('KANBAN.FILTERS.UNASSIGNED') }}</option>
-            </select>
-
-            <select
-              v-model="statusFilter"
-              class="h-10 rounded-xl border border-n-weak bg-n-surface-1 px-3 text-sm text-n-slate-12 outline-none transition focus:border-n-brand min-w-[150px]"
-            >
-              <option value="open">Abertos</option>
-              <option value="resolved">Arquivados</option>
-              <option value="all">Todos</option>
-            </select>
-
-            <div class="ml-auto">
-              <DropdownContainer>
-                <template #trigger="{ toggle }">
-                  <Button
-                    sm
-                    slate
-                    outline
-                    icon="i-lucide-bookmark"
-                    label="Vistas salvas"
-                    @click="toggle"
-                  />
-                </template>
-                <DropdownBody class="right-0 top-full z-50 mt-2 min-w-72" strong>
-                  <DropdownSection v-if="savedViews.length">
-                    <div
-                      v-for="view in savedViews"
-                      :key="view.id"
-                      class="flex items-center gap-2 px-2 py-1"
-                    >
-                      <button
-                        class="flex min-w-0 flex-1 items-center gap-2 rounded-lg px-2 py-2 text-left text-sm text-n-slate-12 hover:bg-n-slate-2"
-                        @click="applyView(view)"
-                      >
-                        <i class="i-lucide-bookmark text-n-blue-11" />
-                        <span class="truncate">{{ view.name }}</span>
-                      </button>
-                      <button
-                        class="rounded-lg p-2 text-n-ruby-11 hover:bg-n-ruby-3"
-                        @click="deleteView(view.id)"
-                      >
-                        <i class="i-lucide-trash-2" />
-                      </button>
-                    </div>
-                  </DropdownSection>
-                  <DropdownSection v-else>
-                    <div class="px-3 py-2 text-sm text-n-slate-11">
-                      Nenhuma vista salva
-                    </div>
-                  </DropdownSection>
-                  <DropdownSection>
-                    <DropdownItem
-                      icon="i-lucide-plus"
-                      label="Salvar filtros atuais"
-                      :click="() => (showSaveViewModal = true)"
-                    />
-                  </DropdownSection>
-                </DropdownBody>
-              </DropdownContainer>
-            </div>
-          </div>
         </div>
       </header>
 
@@ -810,35 +645,6 @@ onMounted(async () => {
         </div>
       </transition>
     </section>
-
-    <Modal :show="showSaveViewModal" :on-close="() => (showSaveViewModal = false)">
-      <div class="w-full max-w-md p-6">
-        <h3 class="mb-4 text-lg font-medium text-n-slate-12">Salvar Vista Atual</h3>
-        <div class="space-y-4">
-          <div>
-            <label class="mb-1 block text-sm font-medium text-n-slate-12">Nome da Vista</label>
-            <input
-              v-model="newViewName"
-              type="text"
-              class="w-full rounded-xl border border-n-weak px-3 py-2 text-sm text-n-slate-12 outline-none focus:border-n-brand"
-              placeholder="Ex: Tickets Alta Prioridade"
-            >
-          </div>
-          <div class="rounded-xl bg-n-slate-2 p-3 text-sm text-n-slate-11">
-            <p class="mb-1 font-medium text-n-slate-12">Filtros que serão salvos:</p>
-            <ul class="list-inside list-disc space-y-1 text-xs">
-              <li>Inbox: {{ selectedInbox ? inboxes.find(i => i.id === selectedInbox)?.name : 'Todos' }}</li>
-              <li>Agente: {{ selectedAssignee === 'me' ? 'Eu' : (selectedAssignee === 'all' ? 'Todos' : selectedAssignee) }}</li>
-              <li>Status: {{ statusFilter }}</li>
-            </ul>
-          </div>
-          <div class="flex justify-end gap-2 pt-2">
-            <Button slate outline sm label="Cancelar" @click="showSaveViewModal = false" />
-            <Button blue solid sm label="Salvar" @click="saveCurrentView" />
-          </div>
-        </div>
-      </div>
-    </Modal>
 
     <main class="flex min-h-0 flex-1 w-full items-stretch overflow-hidden bg-n-slate-2">
       <div
