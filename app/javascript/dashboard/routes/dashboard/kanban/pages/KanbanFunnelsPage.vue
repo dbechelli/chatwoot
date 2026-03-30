@@ -53,35 +53,30 @@ const deleteBoard = async boardId => {
 
 <template>
   <div class="flex h-full flex-col overflow-y-auto bg-n-slate-2 px-4 py-5 md:px-6 md:py-6">
-    <div class="mx-auto flex w-full max-w-7xl flex-col gap-6">
-      <section class="rounded-[28px] border border-n-weak bg-n-surface-1 p-6 md:p-8">
-        <div class="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-          <div class="max-w-3xl space-y-3">
-            <p class="text-sm font-semibold uppercase tracking-[0.18em] text-n-brand">
-              {{ t('KANBAN.NAV.FUNNELS') }}
-            </p>
-            <h1 class="text-3xl font-semibold tracking-tight text-n-slate-12 md:text-4xl">
-              {{ t('KANBAN.FUNNELS.TITLE') }}
-            </h1>
-            <p class="text-base text-n-slate-11 md:text-lg">
-              {{ t('KANBAN.FUNNELS.DESCRIPTION') }}
-            </p>
-          </div>
-
-          <router-link v-if="canManageBoards" :to="{ name: 'kanban_board_new' }">
-            <Button sm blue solid icon="i-lucide-plus" :label="t('KANBAN.NAV.NEW_FUNNEL')" />
-          </router-link>
+    <div class="mx-auto flex w-full max-w-6xl flex-col gap-4">
+      <section class="flex flex-wrap items-center justify-between gap-3">
+        <div class="space-y-1">
+          <h1 class="text-2xl font-semibold text-n-slate-12 md:text-3xl">
+            {{ t('KANBAN.FUNNELS.TITLE') }}
+          </h1>
+          <p class="text-sm text-n-slate-11 md:text-base">
+            {{ t('KANBAN.FUNNELS.DESCRIPTION') }}
+          </p>
         </div>
+
+        <router-link v-if="canManageBoards" :to="{ name: 'kanban_board_new' }">
+          <Button sm blue solid icon="i-lucide-plus" :label="t('KANBAN.NAV.NEW_FUNNEL')" />
+        </router-link>
       </section>
 
-      <section v-if="boards.length" class="grid gap-4 xl:grid-cols-2 2xl:grid-cols-3">
+      <section v-if="boards.length" class="flex flex-col gap-3">
         <article
           v-for="board in boards"
           :key="board.id"
-          class="flex flex-col rounded-[28px] border border-n-weak bg-n-surface-1 p-5 transition-colors hover:border-n-brand/60"
+          class="rounded-[24px] border border-n-weak bg-n-surface-1 p-5 transition-colors hover:border-n-brand/60"
         >
-          <div class="flex items-start justify-between gap-4">
-            <div class="min-w-0">
+          <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+            <div class="min-w-0 flex-1">
               <div class="flex flex-wrap items-center gap-2">
                 <h2 class="truncate text-lg font-semibold text-n-slate-12">
                   {{ board.name }}
@@ -90,22 +85,20 @@ const deleteBoard = async boardId => {
                   {{ t('KANBAN.NAV.DEFAULT') }}
                 </span>
               </div>
-              <p class="mt-2 min-h-[3rem] text-sm text-n-slate-11">
+              <p class="mt-1 text-sm text-n-slate-11">
                 {{ board.description || t('KANBAN.FUNNELS.NO_DESCRIPTION') }}
               </p>
-            </div>
 
-            <button
-              v-if="canManageBoards"
-              class="inline-flex h-9 w-9 items-center justify-center rounded-xl text-n-slate-11 transition-colors hover:bg-n-slate-2 hover:text-n-slate-12"
-              :title="t('KANBAN.FUNNELS.EDIT_FUNNEL')"
-              @click="editBoard(board.id)"
-            >
-              <i class="i-lucide-pencil-line" />
-            </button>
-          </div>
+              <div class="mt-3 flex flex-wrap gap-2">
+                <span class="inline-flex items-center rounded-full bg-n-slate-2 px-2.5 py-1 text-xs font-medium text-n-slate-11">
+                  {{ board.stages?.length || 0 }} {{ t('KANBAN.FUNNELS.STAGE_COUNT') }}
+                </span>
+                <span class="inline-flex items-center rounded-full bg-n-slate-2 px-2.5 py-1 text-xs font-medium text-n-slate-11">
+                  {{ board.conversationCount || 0 }} tarefas
+                </span>
+              </div>
 
-          <div class="mt-5 flex flex-wrap gap-2">
+              <div class="mt-4 flex flex-wrap gap-2">
             <span
               v-for="stage in board.stages?.slice(0, 6) || []"
               :key="stage.id"
@@ -114,15 +107,25 @@ const deleteBoard = async boardId => {
               <span class="h-2 w-2 rounded-full" :style="{ backgroundColor: stage.color }" />
               {{ stage.name }}
             </span>
-          </div>
+                <span
+                  v-if="(board.stages?.length || 0) > 6"
+                  class="inline-flex items-center rounded-full border border-n-weak bg-n-slate-1 px-2.5 py-1 text-xs font-medium text-n-slate-11"
+                >
+                  +{{ (board.stages?.length || 0) - 6 }}
+                </span>
+              </div>
+            </div>
 
-          <div class="mt-5 flex items-center justify-between gap-3 border-t border-n-weak pt-4">
-            <span class="text-sm font-medium text-n-slate-11">
-              {{ board.stages?.length || 0 }} {{ t('KANBAN.FUNNELS.STAGE_COUNT') }}
-            </span>
-
-            <div class="flex items-center gap-2">
+            <div class="flex flex-wrap items-center gap-2 lg:justify-end">
               <Button sm slate outline icon="i-lucide-arrow-right" :label="t('KANBAN.FUNNELS.OPEN_FUNNEL')" @click="openBoard(board.id)" />
+              <button
+                v-if="canManageBoards"
+                class="inline-flex h-9 w-9 items-center justify-center rounded-xl text-n-slate-11 transition-colors hover:bg-n-slate-2 hover:text-n-slate-12"
+                :title="t('KANBAN.FUNNELS.EDIT_FUNNEL')"
+                @click="editBoard(board.id)"
+              >
+                <i class="i-lucide-pencil-line" />
+              </button>
               <button
                 v-if="canManageBoards"
                 class="inline-flex h-9 w-9 items-center justify-center rounded-xl text-n-slate-11 transition-colors hover:bg-n-slate-2 hover:text-n-slate-12"

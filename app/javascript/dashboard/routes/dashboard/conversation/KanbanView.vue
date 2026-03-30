@@ -583,60 +583,67 @@ onMounted(async () => {
 <template>
   <div class="flex h-full min-h-0 min-w-0 flex-col bg-n-slate-2">
     <header class="z-20 border-b border-n-weak bg-n-surface-1">
-      <div class="flex flex-col gap-3 px-4 py-3 md:px-6">
-        <div class="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
-          <div class="flex min-w-0 items-start gap-3">
-            <div
-              class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-n-brand/10 text-n-blue-11"
-            >
-              <i class="i-lucide-kanban-square text-xl" />
+      <div class="flex flex-col gap-2 px-4 py-3 md:px-6">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div class="flex min-w-0 flex-wrap items-center gap-2 md:gap-3">
+            <div v-if="hasBoards" class="min-w-0">
+              <select
+                v-if="!route.params.boardId && kanbanConfig && kanbanConfig.boards && kanbanConfig.boards.length > 1"
+                v-model="selectedBoardId"
+                class="h-10 min-w-[220px] max-w-full rounded-xl border border-n-weak bg-n-surface-1 px-3 text-sm font-medium text-n-slate-12 outline-none transition focus:border-n-brand"
+              >
+                <option
+                  v-for="board in kanbanConfig.boards"
+                  :key="board.id"
+                  :value="board.id"
+                >
+                  {{ board.name }}
+                </option>
+              </select>
+              <div v-else class="flex items-center gap-2 text-sm font-medium text-n-slate-12">
+                <i class="i-lucide-chevron-down text-xs text-n-slate-9" />
+                <span class="truncate">{{ currentBoard?.name || t('KANBAN.TITLE') }}</span>
+                <span class="rounded-full bg-n-slate-2 px-2 py-0.5 text-xs text-n-slate-11">
+                  {{ filteredConversations.length }}
+                </span>
+              </div>
             </div>
-            <div class="min-w-0 space-y-2">
-              <div class="space-y-1">
-                <h1 class="truncate text-lg font-medium text-n-slate-12 md:text-xl">
-                  {{ currentBoard?.name || t('KANBAN.TITLE') }}
-                </h1>
-                <p class="text-sm text-n-slate-11 line-clamp-2">
-                  {{ currentBoard?.description || t('KANBAN.WORKSPACE.DEFAULT_DESCRIPTION') }}
-                </p>
-              </div>
 
-              <div class="inline-flex w-full max-w-full items-center gap-1 rounded-xl border border-n-weak bg-n-slate-2 p-1 sm:w-auto">
-                <Button
-                  sm
-                  :blue="activeViewButtonClass('board')"
-                  :slate="!activeViewButtonClass('board')"
-                  :solid="activeViewButtonClass('board')"
-                  :ghost="!activeViewButtonClass('board')"
-                  icon="i-lucide-kanban-square"
-                  label="Quadro"
-                  @click="viewMode = 'board'"
-                />
-                <Button
-                  sm
-                  :blue="activeViewButtonClass('list')"
-                  :slate="!activeViewButtonClass('list')"
-                  :solid="activeViewButtonClass('list')"
-                  :ghost="!activeViewButtonClass('list')"
-                  icon="i-lucide-list"
-                  label="Lista"
-                  @click="viewMode = 'list'"
-                />
-                <Button
-                  sm
-                  :blue="activeViewButtonClass('calendar')"
-                  :slate="!activeViewButtonClass('calendar')"
-                  :solid="activeViewButtonClass('calendar')"
-                  :ghost="!activeViewButtonClass('calendar')"
-                  icon="i-lucide-calendar"
-                  label="Calendário"
-                  @click="viewMode = 'calendar'"
-                />
-              </div>
+            <div class="inline-flex items-center gap-1 rounded-xl border border-n-weak bg-n-slate-2 p-1">
+              <Button
+                sm
+                :blue="activeViewButtonClass('board')"
+                :slate="!activeViewButtonClass('board')"
+                :solid="activeViewButtonClass('board')"
+                :ghost="!activeViewButtonClass('board')"
+                icon="i-lucide-kanban-square"
+                label="Quadro"
+                @click="viewMode = 'board'"
+              />
+              <Button
+                sm
+                :blue="activeViewButtonClass('list')"
+                :slate="!activeViewButtonClass('list')"
+                :solid="activeViewButtonClass('list')"
+                :ghost="!activeViewButtonClass('list')"
+                icon="i-lucide-list"
+                label="Lista"
+                @click="viewMode = 'list'"
+              />
+              <Button
+                sm
+                :blue="activeViewButtonClass('calendar')"
+                :slate="!activeViewButtonClass('calendar')"
+                :solid="activeViewButtonClass('calendar')"
+                :ghost="!activeViewButtonClass('calendar')"
+                icon="i-lucide-calendar"
+                label="Calendário"
+                @click="viewMode = 'calendar'"
+              />
             </div>
           </div>
 
-          <div class="flex flex-wrap items-center gap-2 xl:justify-end">
+          <div class="flex flex-wrap items-center gap-2">
             <template v-if="hasBoards">
               <router-link
                 v-if="canManageBoards && currentBoard"
@@ -703,36 +710,12 @@ onMounted(async () => {
 
         <div
           v-if="hasBoards"
-          class="flex flex-wrap items-end gap-2 rounded-2xl border border-n-weak bg-n-slate-2/60 p-3"
+          class="flex flex-wrap items-center gap-2"
         >
-          <div
-            v-if="!route.params.boardId && kanbanConfig && kanbanConfig.boards && kanbanConfig.boards.length > 1"
-            class="min-w-0 flex-1 basis-[220px] space-y-1"
-          >
-            <label class="text-xs font-medium uppercase tracking-wide text-n-slate-10">
-              {{ t('KANBAN.BOARD') }}
-            </label>
-            <select
-              v-model="selectedBoardId"
-              class="h-10 w-full rounded-xl border border-n-weak bg-n-surface-1 px-3 text-sm text-n-slate-12 outline-none transition focus:border-n-brand"
-            >
-              <option
-                v-for="board in kanbanConfig.boards"
-                :key="board.id"
-                :value="board.id"
-              >
-                {{ board.name }}
-              </option>
-            </select>
-          </div>
-
-          <div class="min-w-0 flex-1 basis-[180px] space-y-1">
-            <label class="text-xs font-medium uppercase tracking-wide text-n-slate-10">
-              Agrupamento
-            </label>
+          <div class="min-w-0 w-full sm:w-auto">
             <select
               v-model="groupBy"
-              class="h-10 w-full rounded-xl border border-n-weak bg-n-surface-1 px-3 text-sm text-n-slate-12 outline-none transition focus:border-n-brand"
+              class="h-10 w-full rounded-xl border border-n-weak bg-n-surface-1 px-3 text-sm text-n-slate-12 outline-none transition focus:border-n-brand sm:min-w-[170px]"
             >
               <option value="none">Nenhum</option>
               <option value="priority">Prioridade</option>
@@ -740,13 +723,10 @@ onMounted(async () => {
             </select>
           </div>
 
-          <div class="min-w-0 flex-1 basis-[220px] space-y-1">
-            <label class="text-xs font-medium uppercase tracking-wide text-n-slate-10">
-              {{ t('KANBAN.FILTERS.INBOX') }}
-            </label>
+          <div class="min-w-0 w-full sm:w-auto">
             <select
               v-model="selectedInbox"
-              class="h-10 w-full rounded-xl border border-n-weak bg-n-surface-1 px-3 text-sm text-n-slate-12 outline-none transition focus:border-n-brand"
+              class="h-10 w-full rounded-xl border border-n-weak bg-n-surface-1 px-3 text-sm text-n-slate-12 outline-none transition focus:border-n-brand sm:min-w-[190px]"
             >
               <option :value="null">{{ t('KANBAN.FILTERS.ALL_INBOXES') }}</option>
               <option v-for="inbox in inboxes" :key="inbox.id" :value="inbox.id">
@@ -755,13 +735,10 @@ onMounted(async () => {
             </select>
           </div>
 
-          <div class="min-w-0 flex-1 basis-[220px] space-y-1">
-            <label class="text-xs font-medium uppercase tracking-wide text-n-slate-10">
-              {{ t('KANBAN.FILTERS.ASSIGNEE') }}
-            </label>
+          <div class="min-w-0 w-full sm:w-auto">
             <select
               v-model="selectedAssignee"
-              class="h-10 w-full rounded-xl border border-n-weak bg-n-surface-1 px-3 text-sm text-n-slate-12 outline-none transition focus:border-n-brand"
+              class="h-10 w-full rounded-xl border border-n-weak bg-n-surface-1 px-3 text-sm text-n-slate-12 outline-none transition focus:border-n-brand sm:min-w-[190px]"
             >
               <option value="all">{{ t('KANBAN.FILTERS.ALL_AGENTS') }}</option>
               <option value="me">{{ t('KANBAN.FILTERS.MY_DEALS') }}</option>
@@ -769,13 +746,10 @@ onMounted(async () => {
             </select>
           </div>
 
-          <div class="min-w-0 w-full sm:w-[180px] space-y-1">
-            <label class="text-xs font-medium uppercase tracking-wide text-n-slate-10">
-              Status
-            </label>
+          <div class="min-w-0 w-full sm:w-auto">
             <select
               v-model="statusFilter"
-              class="h-10 w-full rounded-xl border border-n-weak bg-n-surface-1 px-3 text-sm text-n-slate-12 outline-none transition focus:border-n-brand"
+              class="h-10 w-full rounded-xl border border-n-weak bg-n-surface-1 px-3 text-sm text-n-slate-12 outline-none transition focus:border-n-brand sm:min-w-[150px]"
             >
               <option value="open">Abertos</option>
               <option value="resolved">Arquivados</option>
@@ -783,7 +757,7 @@ onMounted(async () => {
             </select>
           </div>
 
-          <div class="flex w-full items-end justify-start sm:w-auto sm:justify-end sm:ml-auto">
+          <div class="flex w-full items-center justify-start sm:ml-auto sm:w-auto">
             <DropdownContainer>
               <template #trigger="{ toggle }">
                 <Button
@@ -922,7 +896,7 @@ onMounted(async () => {
       <!-- Standard Board View -->
       <div
         v-else-if="salesStages.length > 0 && viewMode === 'board' && groupBy === 'none'"
-        class="min-h-0"
+        class="min-h-0 items-start"
         :class="boardLayoutClass"
         :style="boardLayoutStyle"
       >
@@ -948,7 +922,7 @@ onMounted(async () => {
       <!-- Swimlane Board View -->
       <div
         v-else-if="salesStages.length > 0 && viewMode === 'board' && groupBy !== 'none'"
-        class="custom-scrollbar flex h-full min-h-0 flex-col gap-6 overflow-x-hidden overflow-y-auto bg-n-slate-2 p-3 pb-16 md:p-4"
+        class="custom-scrollbar flex h-full min-h-0 flex-col gap-6 overflow-x-auto overflow-y-auto bg-n-slate-2 p-3 pb-16 md:p-4"
       >
         <div v-for="group in swimlaneGroups" :key="group.id" class="flex flex-col gap-3">
           <div class="sticky left-0 flex w-fit items-center gap-2 rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2">
