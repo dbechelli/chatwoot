@@ -57,7 +57,7 @@ const handleCardClick = conversation => {
 
 <template>
   <div 
-    class="flex min-h-0 flex-col overflow-hidden rounded-2xl border border-n-weak bg-n-surface-1 transition-colors xl:h-full"
+    class="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-n-weak bg-n-surface-1 transition-colors"
     :class="{ 'border-n-ruby-7 bg-n-ruby-3/20': isOverLimit }"
   >
     <div class="flex flex-col gap-2 border-b border-n-weak bg-n-slate-2/50 px-3 py-3 md:px-4 md:py-4">
@@ -109,7 +109,7 @@ const handleCardClick = conversation => {
       v-model="localConversations"
       group="kanban-conversations"
       item-key="id"
-      class="custom-scrollbar-inside flex min-h-[120px] flex-1 flex-col gap-3 overflow-visible p-3 xl:min-h-[150px] xl:overflow-x-hidden xl:overflow-y-auto"
+      class="custom-scrollbar-inside flex min-h-[150px] flex-1 flex-col gap-3 overflow-x-hidden overflow-y-auto p-3"
       ghost-class="ghost-card"
       drag-class="dragging-card"
       @change="handleChange"
@@ -125,7 +125,7 @@ const handleCardClick = conversation => {
       </template>
 
       <template #footer v-if="!conversations.length">
-        <div class="flex flex-col items-center justify-center gap-3 py-8 text-center xl:py-10">
+        <div class="flex flex-col items-center justify-center gap-3 py-10 text-center">
           <div class="rounded-2xl bg-n-slate-3 p-4 text-n-slate-10">
             <i class="i-lucide-inbox text-3xl" />
           </div>

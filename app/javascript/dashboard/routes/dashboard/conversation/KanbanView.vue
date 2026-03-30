@@ -516,25 +516,11 @@ const activeViewButtonClass = mode => {
 };
 
 const boardColumnMinWidth = computed(() => {
-  const stageCount = salesStages.value.length;
-
-  if (stageCount <= 4) {
-    return '0px';
-  }
-
-  if (stageCount <= 6) {
-    return '11rem';
-  }
-
-  if (stageCount <= 8) {
-    return '9.5rem';
-  }
-
-  return '14rem';
+  return '20rem';
 });
 
 const boardLayoutClass = computed(() => {
-  return 'flex h-full min-h-0 min-w-full flex-col gap-3 p-3 pb-5 md:gap-4 md:p-4 xl:grid xl:items-stretch';
+  return 'inline-flex h-full min-h-0 gap-3 p-3 pb-5 md:gap-4 md:p-4';
 });
 
 const boardLayoutStyle = computed(() => {
@@ -543,16 +529,16 @@ const boardLayoutStyle = computed(() => {
   }
 
   return {
-    gridTemplateColumns: `repeat(${salesStages.value.length}, minmax(${boardColumnMinWidth.value}, 1fr))`,
+    width: 'max-content',
   };
 });
 
 const boardColumnClass = computed(() => {
-  return 'flex min-h-0 min-w-0 flex-col xl:h-full';
+  return 'flex h-full min-h-0 min-w-[20rem] w-[20rem] flex-col';
 });
 
 const swimlaneTrackClass = computed(() => {
-  return 'flex min-h-0 min-w-full flex-col gap-3 md:gap-4 xl:grid xl:items-stretch';
+  return 'inline-flex min-h-0 gap-3 md:gap-4';
 });
 
 const swimlaneTrackStyle = computed(() => {
@@ -561,7 +547,7 @@ const swimlaneTrackStyle = computed(() => {
   }
 
   return {
-    gridTemplateColumns: `repeat(${salesStages.value.length}, minmax(${boardColumnMinWidth.value}, 1fr))`,
+    width: 'max-content',
   };
 });
 
