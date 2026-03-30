@@ -129,7 +129,7 @@ const handleItemClick = (item) => {
 </script>
 
 <template>
-  <div class="flex h-full flex-col overflow-hidden rounded-2xl border border-n-weak bg-n-surface-1">
+  <div class="flex h-full w-full min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-n-weak bg-n-surface-1">
     <div class="flex items-center justify-between border-b border-n-weak px-4 py-4 md:px-5">
       <div class="flex items-center gap-4">
         <h2 class="text-lg font-medium capitalize text-n-slate-12">{{ monthTitle }}</h2>
@@ -141,7 +141,7 @@ const handleItemClick = (item) => {
       </div>
     </div>
 
-    <div class="flex flex-1 flex-col overflow-hidden">
+    <div class="flex min-h-0 flex-1 flex-col overflow-hidden">
       <div class="grid grid-cols-7 border-b border-n-weak bg-n-slate-2/80">
         <div 
           v-for="dayName in weekDays" 
@@ -152,7 +152,7 @@ const handleItemClick = (item) => {
         </div>
       </div>
 
-      <div class="grid flex-1 grid-cols-7 grid-rows-5 overflow-y-auto bg-n-weak/30">
+      <div class="grid min-h-0 flex-1 grid-cols-7 grid-rows-5 overflow-y-auto bg-n-weak/30">
         <div 
           v-for="day in calendarDays" 
           :key="day.date"

@@ -151,7 +151,7 @@ const sortOptions = [
 </script>
 
 <template>
-  <div class="flex h-full min-h-0 flex-col rounded-2xl border border-n-weak bg-n-surface-1">
+  <div class="flex h-full min-h-0 w-full min-w-0 flex-1 flex-col rounded-2xl border border-n-weak bg-n-surface-1">
     <div class="flex flex-wrap items-center justify-between gap-3 border-b border-n-weak px-4 py-3 md:px-5">
       <div class="flex flex-wrap items-center gap-3">
         <label class="flex cursor-pointer items-center gap-2">

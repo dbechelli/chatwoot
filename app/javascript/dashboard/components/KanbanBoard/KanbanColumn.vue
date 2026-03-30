@@ -13,7 +13,7 @@ const props = defineProps({
   visibleAttributes: { type: Array, default: () => [] },
 });
 
-const emit = defineEmits(['update:conversations', 'stageChange', 'cardClick', 'cardContextmenu']);
+const emit = defineEmits(['update:conversations', 'stageChange', 'cardClick', 'cardContextmenu', 'addItem']);
 
 const { t } = useI18n();
 
@@ -53,32 +53,71 @@ const handleChange = evt => {
 const handleCardClick = conversation => {
   emit('cardClick', conversation);
 };
+
+const hexToRgb = value => {
+  const normalized = value.replace('#', '');
+  const expanded = normalized.length === 3
+    ? normalized.split('').map(char => `${char}${char}`).join('')
+    : normalized;
+
+  const numeric = Number.parseInt(expanded, 16);
+
+  return {
+    red: (numeric >> 16) & 255,
+    green: (numeric >> 8) & 255,
+    blue: numeric & 255,
+  };
+};
+
+const rgba = (value, alpha) => {
+  const { red, green, blue } = hexToRgb(value);
+  return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+};
+
+const isLightColor = computed(() => {
+  const { red, green, blue } = hexToRgb(props.color);
+  const luminance = (red * 299 + green * 587 + blue * 114) / 1000;
+  return luminance > 160;
+});
+
+const columnStyle = computed(() => ({
+  backgroundColor: isOverLimit.value ? rgba('#ef4444', 0.08) : rgba(props.color, 0.08),
+  borderColor: isOverLimit.value ? rgba('#ef4444', 0.18) : rgba(props.color, 0.18),
+}));
+
+const headerStyle = computed(() => ({
+  backgroundColor: isOverLimit.value ? rgba('#ef4444', 0.92) : rgba(props.color, 0.82),
+  borderColor: isOverLimit.value ? rgba('#ef4444', 0.3) : rgba(props.color, 0.22),
+  color: isLightColor.value ? '#111827' : '#ffffff',
+}));
+
+const counterStyle = computed(() => ({
+  backgroundColor: isLightColor.value ? 'rgba(255,255,255,0.55)' : 'rgba(255,255,255,0.16)',
+  borderColor: isLightColor.value ? 'rgba(17,24,39,0.08)' : 'rgba(255,255,255,0.18)',
+  color: isLightColor.value ? '#111827' : '#ffffff',
+}));
 </script>
 
 <template>
   <div 
-    class="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border border-n-weak bg-n-surface-1 transition-colors"
-    :class="{ 'border-n-ruby-7 bg-n-ruby-3/20': isOverLimit }"
+    class="flex h-full min-h-0 flex-col overflow-hidden rounded-2xl border transition-colors"
+    :style="columnStyle"
   >
-    <div class="flex flex-col gap-2 border-b border-n-weak bg-n-slate-2/50 px-3 py-3 md:px-4 md:py-4">
+    <div class="flex flex-col gap-2 border-b px-3 py-3 md:px-4 md:py-4" :style="headerStyle">
       <div class="flex items-center justify-between">
         <div class="flex items-center gap-2.5 overflow-hidden">
           <div
             class="h-2.5 w-2.5 flex-shrink-0 rounded-full"
-            :style="{ backgroundColor: color }"
+            :style="{ backgroundColor: isLightColor ? 'rgba(17,24,39,0.55)' : 'rgba(255,255,255,0.7)' }"
           />
-          <h3 class="truncate text-sm font-medium uppercase tracking-wide text-n-slate-12">
+          <h3 class="truncate text-sm font-medium uppercase tracking-wide">
             {{ title }}
           </h3>
         </div>
         
         <div
           class="flex items-center gap-1 rounded-lg border px-2 py-0.5 text-[11px] font-medium"
-          :class="
-            isOverLimit
-              ? 'border-n-ruby-7 bg-n-ruby-3 text-n-ruby-11'
-              : 'border-n-weak bg-n-surface-1 text-n-slate-11'
-          "
+          :style="counterStyle"
         >
           <span>{{ conversations.length }}</span>
           <span v-if="wipLimit" class="opacity-70">/ {{ wipLimit }}</span>
@@ -114,6 +153,17 @@ const handleCardClick = conversation => {
       drag-class="dragging-card"
       @change="handleChange"
     >
+      <template #header>
+        <button
+          type="button"
+          class="inline-flex items-center gap-2 self-start rounded-xl px-2 py-1 text-sm font-medium text-n-slate-12 transition hover:bg-white/55"
+          @click.stop="emit('addItem', stage)"
+        >
+          <i class="i-lucide-plus text-base" />
+          {{ t('KANBAN.MODAL.NEW_ITEM') }}
+        </button>
+      </template>
+
       <template #item="{ element }">
         <div @click="handleCardClick(element)" class="cursor-pointer transition-transform active:scale-[0.99]">
           <KanbanCard 
@@ -125,11 +175,8 @@ const handleCardClick = conversation => {
       </template>
 
       <template #footer v-if="!conversations.length">
-        <div class="flex flex-col items-center justify-center gap-3 py-10 text-center">
-          <div class="rounded-2xl bg-n-slate-3 p-4 text-n-slate-10">
-            <i class="i-lucide-inbox text-3xl" />
-          </div>
-          <p class="px-4 text-xs font-medium uppercase tracking-wide text-n-slate-10">
+        <div class="flex flex-1 items-center justify-center py-8 text-center">
+          <p class="px-4 text-xs font-medium uppercase tracking-wide text-n-slate-10/80">
             {{ t('KANBAN.EMPTY_COLUMN') }}
           </p>
         </div>

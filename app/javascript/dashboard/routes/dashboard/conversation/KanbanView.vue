@@ -520,7 +520,7 @@ const boardColumnMinWidth = computed(() => {
 });
 
 const boardLayoutClass = computed(() => {
-  return 'inline-flex h-full min-h-0 gap-3 p-3 pb-5 md:gap-4 md:p-4';
+  return 'inline-flex min-h-0 gap-3 p-3 pb-4 md:gap-4 md:p-4';
 });
 
 const boardLayoutStyle = computed(() => {
@@ -581,245 +581,235 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="flex h-full min-h-0 min-w-0 flex-col bg-n-slate-2">
-    <header class="z-20 border-b border-n-weak bg-n-surface-1">
-      <div class="flex flex-col gap-2 px-4 py-3 md:px-6">
-        <div class="flex flex-wrap items-center justify-between gap-3">
-          <div class="flex min-w-0 flex-wrap items-center gap-2 md:gap-3">
-            <div v-if="hasBoards" class="min-w-0">
-              <select
-                v-if="!route.params.boardId && kanbanConfig && kanbanConfig.boards && kanbanConfig.boards.length > 1"
-                v-model="selectedBoardId"
-                class="h-10 min-w-[220px] max-w-full rounded-xl border border-n-weak bg-n-surface-1 px-3 text-sm font-medium text-n-slate-12 outline-none transition focus:border-n-brand"
-              >
-                <option
-                  v-for="board in kanbanConfig.boards"
-                  :key="board.id"
-                  :value="board.id"
+  <div class="flex h-full min-h-0 min-w-0 flex-col overflow-hidden bg-n-slate-2">
+    <section class="shrink-0 border-b border-n-weak bg-n-surface-1">
+      <header class="px-4 py-3 md:px-6">
+        <div class="flex flex-col gap-3">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div class="flex min-w-0 flex-wrap items-center gap-2 md:gap-3">
+              <div v-if="hasBoards" class="min-w-0">
+                <select
+                  v-if="!route.params.boardId && kanbanConfig && kanbanConfig.boards && kanbanConfig.boards.length > 1"
+                  v-model="selectedBoardId"
+                  class="h-10 min-w-[220px] max-w-full rounded-xl border border-n-weak bg-n-surface-1 px-3 text-sm font-medium text-n-slate-12 outline-none transition focus:border-n-brand"
                 >
-                  {{ board.name }}
-                </option>
-              </select>
-              <div v-else class="flex items-center gap-2 text-sm font-medium text-n-slate-12">
-                <i class="i-lucide-chevron-down text-xs text-n-slate-9" />
-                <span class="truncate">{{ currentBoard?.name || t('KANBAN.TITLE') }}</span>
-                <span class="rounded-full bg-n-slate-2 px-2 py-0.5 text-xs text-n-slate-11">
-                  {{ filteredConversations.length }}
-                </span>
+                  <option
+                    v-for="board in kanbanConfig.boards"
+                    :key="board.id"
+                    :value="board.id"
+                  >
+                    {{ board.name }}
+                  </option>
+                </select>
+                <div v-else class="flex items-center gap-2 text-sm font-medium text-n-slate-12">
+                  <i class="i-lucide-chevron-down text-xs text-n-slate-9" />
+                  <span class="truncate">{{ currentBoard?.name || t('KANBAN.TITLE') }}</span>
+                  <span class="rounded-full bg-n-slate-2 px-2 py-0.5 text-xs text-n-slate-11">
+                    {{ filteredConversations.length }}
+                  </span>
+                </div>
+              </div>
+
+              <div class="inline-flex items-center gap-1 rounded-xl border border-n-weak bg-n-slate-2 p-1">
+                <Button
+                  sm
+                  :blue="activeViewButtonClass('board')"
+                  :slate="!activeViewButtonClass('board')"
+                  :solid="activeViewButtonClass('board')"
+                  :ghost="!activeViewButtonClass('board')"
+                  icon="i-lucide-kanban-square"
+                  label="Quadro"
+                  @click="viewMode = 'board'"
+                />
+                <Button
+                  sm
+                  :blue="activeViewButtonClass('list')"
+                  :slate="!activeViewButtonClass('list')"
+                  :solid="activeViewButtonClass('list')"
+                  :ghost="!activeViewButtonClass('list')"
+                  icon="i-lucide-list"
+                  label="Lista"
+                  @click="viewMode = 'list'"
+                />
+                <Button
+                  sm
+                  :blue="activeViewButtonClass('calendar')"
+                  :slate="!activeViewButtonClass('calendar')"
+                  :solid="activeViewButtonClass('calendar')"
+                  :ghost="!activeViewButtonClass('calendar')"
+                  icon="i-lucide-calendar"
+                  label="Calendário"
+                  @click="viewMode = 'calendar'"
+                />
               </div>
             </div>
 
-            <div class="inline-flex items-center gap-1 rounded-xl border border-n-weak bg-n-slate-2 p-1">
-              <Button
-                sm
-                :blue="activeViewButtonClass('board')"
-                :slate="!activeViewButtonClass('board')"
-                :solid="activeViewButtonClass('board')"
-                :ghost="!activeViewButtonClass('board')"
-                icon="i-lucide-kanban-square"
-                label="Quadro"
-                @click="viewMode = 'board'"
-              />
-              <Button
-                sm
-                :blue="activeViewButtonClass('list')"
-                :slate="!activeViewButtonClass('list')"
-                :solid="activeViewButtonClass('list')"
-                :ghost="!activeViewButtonClass('list')"
-                icon="i-lucide-list"
-                label="Lista"
-                @click="viewMode = 'list'"
-              />
-              <Button
-                sm
-                :blue="activeViewButtonClass('calendar')"
-                :slate="!activeViewButtonClass('calendar')"
-                :solid="activeViewButtonClass('calendar')"
-                :ghost="!activeViewButtonClass('calendar')"
-                icon="i-lucide-calendar"
-                label="Calendário"
-                @click="viewMode = 'calendar'"
-              />
-            </div>
-          </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <template v-if="hasBoards">
+                <router-link
+                  v-if="canManageBoards && currentBoard"
+                  :to="{ name: 'kanban_board_edit', params: { boardId: currentBoard.id } }"
+                >
+                  <Button
+                    sm
+                    slate
+                    outline
+                    icon="i-lucide-pencil-line"
+                    :label="t('KANBAN.FUNNELS.EDIT_FUNNEL')"
+                  />
+                </router-link>
 
-          <div class="flex flex-wrap items-center gap-2">
-            <template v-if="hasBoards">
-              <router-link
-                v-if="canManageBoards && currentBoard"
-                :to="{ name: 'kanban_board_edit', params: { boardId: currentBoard.id } }"
-              >
                 <Button
                   sm
                   slate
                   outline
-                  icon="i-lucide-pencil-line"
-                  :label="t('KANBAN.FUNNELS.EDIT_FUNNEL')"
+                  :icon="showMetrics ? 'i-lucide-eye-off' : 'i-lucide-eye'"
+                  :label="showMetrics ? t('KANBAN.HIDE_METRICS') : t('KANBAN.SHOW_METRICS')"
+                  @click="toggleMetrics"
                 />
-              </router-link>
 
-              <Button
-                sm
-                slate
-                outline
-                :icon="showMetrics ? 'i-lucide-eye-off' : 'i-lucide-eye'"
-                :label="showMetrics ? t('KANBAN.HIDE_METRICS') : t('KANBAN.SHOW_METRICS')"
-                @click="toggleMetrics"
-              />
-
-              <Button
-                sm
-                blue
-                solid
-                icon="i-lucide-plus"
-                :label="t('KANBAN.MODAL.NEW_ITEM')"
-                @click="openAddItemModal()"
-              />
-
-              <Button
-                sm
-                slate
-                faded
-                icon="i-lucide-refresh-cw"
-                :label="t('KANBAN.REFRESH')"
-                :is-loading="isLoading"
-                @click="handleRefresh"
-              />
-            </template>
-            <template v-else>
-              <router-link :to="{ name: 'kanban_board_new' }">
                 <Button
                   sm
                   blue
                   solid
-                  icon="i-lucide-plus-circle"
-                  :label="t('KANBAN.CREATE_FIRST_BOARD')"
+                  icon="i-lucide-plus"
+                  :label="t('KANBAN.MODAL.NEW_ITEM')"
+                  @click="openAddItemModal()"
                 />
-              </router-link>
-              <Button
-                sm
-                slate
-                outline
-                icon="i-lucide-book-open"
-                label="Ver Exemplos de Uso"
-                @click="showHelpModal = true"
-              />
-            </template>
-          </div>
-        </div>
 
-        <div
-          v-if="hasBoards"
-          class="flex flex-wrap items-center gap-2"
-        >
-          <div class="min-w-0 w-full sm:w-auto">
+                <Button
+                  sm
+                  slate
+                  faded
+                  icon="i-lucide-refresh-cw"
+                  :label="t('KANBAN.REFRESH')"
+                  :is-loading="isLoading"
+                  @click="handleRefresh"
+                />
+              </template>
+              <template v-else>
+                <router-link :to="{ name: 'kanban_board_new' }">
+                  <Button
+                    sm
+                    blue
+                    solid
+                    icon="i-lucide-plus-circle"
+                    :label="t('KANBAN.CREATE_FIRST_BOARD')"
+                  />
+                </router-link>
+                <Button
+                  sm
+                  slate
+                  outline
+                  icon="i-lucide-book-open"
+                  label="Ver Exemplos de Uso"
+                  @click="showHelpModal = true"
+                />
+              </template>
+            </div>
+          </div>
+
+          <div v-if="hasBoards" class="flex flex-wrap items-center gap-2">
             <select
               v-model="groupBy"
-              class="h-10 w-full rounded-xl border border-n-weak bg-n-surface-1 px-3 text-sm text-n-slate-12 outline-none transition focus:border-n-brand sm:min-w-[170px]"
+              class="h-10 rounded-xl border border-n-weak bg-n-surface-1 px-3 text-sm text-n-slate-12 outline-none transition focus:border-n-brand min-w-[170px]"
             >
               <option value="none">Nenhum</option>
               <option value="priority">Prioridade</option>
               <option value="assignee">Agente</option>
             </select>
-          </div>
 
-          <div class="min-w-0 w-full sm:w-auto">
             <select
               v-model="selectedInbox"
-              class="h-10 w-full rounded-xl border border-n-weak bg-n-surface-1 px-3 text-sm text-n-slate-12 outline-none transition focus:border-n-brand sm:min-w-[190px]"
+              class="h-10 rounded-xl border border-n-weak bg-n-surface-1 px-3 text-sm text-n-slate-12 outline-none transition focus:border-n-brand min-w-[190px]"
             >
               <option :value="null">{{ t('KANBAN.FILTERS.ALL_INBOXES') }}</option>
               <option v-for="inbox in inboxes" :key="inbox.id" :value="inbox.id">
                 {{ inbox.name }}
               </option>
             </select>
-          </div>
 
-          <div class="min-w-0 w-full sm:w-auto">
             <select
               v-model="selectedAssignee"
-              class="h-10 w-full rounded-xl border border-n-weak bg-n-surface-1 px-3 text-sm text-n-slate-12 outline-none transition focus:border-n-brand sm:min-w-[190px]"
+              class="h-10 rounded-xl border border-n-weak bg-n-surface-1 px-3 text-sm text-n-slate-12 outline-none transition focus:border-n-brand min-w-[190px]"
             >
               <option value="all">{{ t('KANBAN.FILTERS.ALL_AGENTS') }}</option>
               <option value="me">{{ t('KANBAN.FILTERS.MY_DEALS') }}</option>
               <option value="unassigned">{{ t('KANBAN.FILTERS.UNASSIGNED') }}</option>
             </select>
-          </div>
 
-          <div class="min-w-0 w-full sm:w-auto">
             <select
               v-model="statusFilter"
-              class="h-10 w-full rounded-xl border border-n-weak bg-n-surface-1 px-3 text-sm text-n-slate-12 outline-none transition focus:border-n-brand sm:min-w-[150px]"
+              class="h-10 rounded-xl border border-n-weak bg-n-surface-1 px-3 text-sm text-n-slate-12 outline-none transition focus:border-n-brand min-w-[150px]"
             >
               <option value="open">Abertos</option>
               <option value="resolved">Arquivados</option>
               <option value="all">Todos</option>
             </select>
-          </div>
 
-          <div class="flex w-full items-center justify-start sm:ml-auto sm:w-auto">
-            <DropdownContainer>
-              <template #trigger="{ toggle }">
-                <Button
-                  sm
-                  slate
-                  outline
-                  icon="i-lucide-bookmark"
-                  class="w-full sm:w-auto"
-                  label="Vistas salvas"
-                  @click="toggle"
-                />
-              </template>
-              <DropdownBody class="right-0 top-full z-50 mt-2 min-w-72" strong>
-                <DropdownSection v-if="savedViews.length">
-                  <div
-                    v-for="view in savedViews"
-                    :key="view.id"
-                    class="flex items-center gap-2 px-2 py-1"
-                  >
-                    <button
-                      class="flex min-w-0 flex-1 items-center gap-2 rounded-lg px-2 py-2 text-left text-sm text-n-slate-12 hover:bg-n-slate-2"
-                      @click="applyView(view)"
-                    >
-                      <i class="i-lucide-bookmark text-n-blue-11" />
-                      <span class="truncate">{{ view.name }}</span>
-                    </button>
-                    <button
-                      class="rounded-lg p-2 text-n-ruby-11 hover:bg-n-ruby-3"
-                      @click="deleteView(view.id)"
-                    >
-                      <i class="i-lucide-trash-2" />
-                    </button>
-                  </div>
-                </DropdownSection>
-                <DropdownSection v-else>
-                  <div class="px-3 py-2 text-sm text-n-slate-11">
-                    Nenhuma vista salva
-                  </div>
-                </DropdownSection>
-                <DropdownSection>
-                  <DropdownItem
-                    icon="i-lucide-plus"
-                    label="Salvar filtros atuais"
-                    :click="() => (showSaveViewModal = true)"
+            <div class="ml-auto">
+              <DropdownContainer>
+                <template #trigger="{ toggle }">
+                  <Button
+                    sm
+                    slate
+                    outline
+                    icon="i-lucide-bookmark"
+                    label="Vistas salvas"
+                    @click="toggle"
                   />
-                </DropdownSection>
-              </DropdownBody>
-            </DropdownContainer>
+                </template>
+                <DropdownBody class="right-0 top-full z-50 mt-2 min-w-72" strong>
+                  <DropdownSection v-if="savedViews.length">
+                    <div
+                      v-for="view in savedViews"
+                      :key="view.id"
+                      class="flex items-center gap-2 px-2 py-1"
+                    >
+                      <button
+                        class="flex min-w-0 flex-1 items-center gap-2 rounded-lg px-2 py-2 text-left text-sm text-n-slate-12 hover:bg-n-slate-2"
+                        @click="applyView(view)"
+                      >
+                        <i class="i-lucide-bookmark text-n-blue-11" />
+                        <span class="truncate">{{ view.name }}</span>
+                      </button>
+                      <button
+                        class="rounded-lg p-2 text-n-ruby-11 hover:bg-n-ruby-3"
+                        @click="deleteView(view.id)"
+                      >
+                        <i class="i-lucide-trash-2" />
+                      </button>
+                    </div>
+                  </DropdownSection>
+                  <DropdownSection v-else>
+                    <div class="px-3 py-2 text-sm text-n-slate-11">
+                      Nenhuma vista salva
+                    </div>
+                  </DropdownSection>
+                  <DropdownSection>
+                    <DropdownItem
+                      icon="i-lucide-plus"
+                      label="Salvar filtros atuais"
+                      :click="() => (showSaveViewModal = true)"
+                    />
+                  </DropdownSection>
+                </DropdownBody>
+              </DropdownContainer>
+            </div>
           </div>
         </div>
-      </div>
-    </header>
+      </header>
 
-    <transition name="fade">
-      <div v-if="showMetrics && filteredConversations.length" class="border-b border-n-weak bg-n-surface-1 px-4 py-3 md:px-6">
+      <transition name="fade">
+        <div v-if="showMetrics && filteredConversations.length" class="border-t border-n-weak px-4 py-3 md:px-6">
         <KanbanMetrics
           :conversations="filteredConversations"
           :stages="salesStages"
           :stage-attribute-key="customAttributeKey"
         />
-      </div>
-    </transition>
+        </div>
+      </transition>
+    </section>
 
     <Modal :show="showSaveViewModal" :on-close="() => (showSaveViewModal = false)">
       <div class="w-full max-w-md p-6">
@@ -850,14 +840,7 @@ onMounted(async () => {
       </div>
     </Modal>
 
-    <main
-      class="custom-scrollbar flex min-h-0 flex-1 w-full overflow-hidden bg-n-slate-2"
-      :class="
-        viewMode === 'board'
-          ? 'overflow-x-auto overflow-y-hidden'
-          : 'overflow-hidden'
-      "
-    >
+    <main class="flex min-h-0 flex-1 w-full items-stretch overflow-hidden bg-n-slate-2">
       <div
         v-if="isLoading && !allConversations.length"
         class="flex h-full items-center justify-center"
@@ -871,7 +854,7 @@ onMounted(async () => {
       </div>
 
       <!-- Visualização em Lista -->
-      <div v-else-if="salesStages.length > 0 && viewMode === 'list'" class="h-full min-h-0 w-full p-3 md:p-4">
+      <div v-else-if="salesStages.length > 0 && viewMode === 'list'" class="flex h-full min-h-0 w-full flex-1 basis-full overflow-hidden p-3 md:p-4">
         <KanbanListView
           :conversations="filteredConversations"
           :stages="salesStages"
@@ -885,7 +868,7 @@ onMounted(async () => {
       </div>
 
       <!-- Visualização em Calendário -->
-      <div v-else-if="salesStages.length > 0 && viewMode === 'calendar'" class="h-full min-h-0 w-full overflow-hidden p-3 md:p-4">
+      <div v-else-if="salesStages.length > 0 && viewMode === 'calendar'" class="flex h-full min-h-0 w-full flex-1 basis-full overflow-hidden p-3 md:p-4">
         <KanbanCalendar
           :items="filteredConversations"
           :stages="salesStages"
@@ -896,33 +879,34 @@ onMounted(async () => {
       <!-- Standard Board View -->
       <div
         v-else-if="salesStages.length > 0 && viewMode === 'board' && groupBy === 'none'"
-        class="min-h-0 items-start"
-        :class="boardLayoutClass"
-        :style="boardLayoutStyle"
+        class="kanban-board-scroll custom-scrollbar h-full min-h-0 w-full overflow-x-auto overflow-y-hidden px-3 pb-3 pt-2 md:px-4 md:pb-4"
       >
-        <div
-          v-for="stage in salesStages"
-          :key="stage.stage"
-          :class="boardColumnClass"
-        >
-          <KanbanColumn
-            :stage="stage.stage"
-            :title="stage.title"
-            :color="stage.color"
-            :conversations="conversationsByStage[stage.stage] || []"
-            :wip-limit="stage.wipLimit"
-            :visible-attributes="visibleAttributes"
-            @stage-change="handleStageChange"
-            @card-click="handleCardClick"
-            @card-contextmenu="handleCardContextmenu"
-          />
+        <div class="h-full min-h-0 items-start" :class="boardLayoutClass" :style="boardLayoutStyle">
+          <div
+            v-for="stage in salesStages"
+            :key="stage.stage"
+            :class="boardColumnClass"
+          >
+            <KanbanColumn
+              :stage="stage.stage"
+              :title="stage.title"
+              :color="stage.color"
+              :conversations="conversationsByStage[stage.stage] || []"
+              :wip-limit="stage.wipLimit"
+              :visible-attributes="visibleAttributes"
+              @add-item="openAddItemModal"
+              @stage-change="handleStageChange"
+              @card-click="handleCardClick"
+              @card-contextmenu="handleCardContextmenu"
+            />
+          </div>
         </div>
       </div>
 
       <!-- Swimlane Board View -->
       <div
         v-else-if="salesStages.length > 0 && viewMode === 'board' && groupBy !== 'none'"
-        class="custom-scrollbar flex h-full min-h-0 flex-col gap-6 overflow-x-auto overflow-y-auto bg-n-slate-2 p-3 pb-16 md:p-4"
+        class="kanban-board-scroll custom-scrollbar flex h-full min-h-0 flex-col gap-6 overflow-x-auto overflow-y-auto bg-n-slate-2 p-3 pb-4 pt-2 md:p-4"
       >
         <div v-for="group in swimlaneGroups" :key="group.id" class="flex flex-col gap-3">
           <div class="sticky left-0 flex w-fit items-center gap-2 rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2">
@@ -946,6 +930,7 @@ onMounted(async () => {
                  :wip-limit="null" 
                  :visible-attributes="visibleAttributes"
                  class="h-full min-h-[150px]"
+                 @add-item="openAddItemModal"
                  @stage-change="(payload) => handleStageChange({...payload, groupUpdate: { type: groupBy, value: group.value }})"
                  @card-click="handleCardClick"
                  @card-contextmenu="handleCardContextmenu"
@@ -1034,6 +1019,29 @@ onMounted(async () => {
   background: #94a3b8; /* slate-400 */
 }
 
+.kanban-board-scroll {
+  scrollbar-gutter: stable both-edges;
+}
+
+.kanban-board-scroll::-webkit-scrollbar {
+  height: 12px;
+}
+
+.kanban-board-scroll::-webkit-scrollbar-track {
+  background: #e2e8f0;
+  border-radius: 9999px;
+}
+
+.kanban-board-scroll::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 9999px;
+  border: 2px solid #e2e8f0;
+}
+
+.kanban-board-scroll::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
 /* Transição suave para métricas */
 .fade-enter-active,
 .fade-leave-active {
@@ -1047,9 +1055,4 @@ onMounted(async () => {
   transform: translateY(-5px);
 }
 
-/* Garante que o container ocupe a altura disponível */
-main {
-  display: flex;
-  flex-direction: column;
-}
 </style>
