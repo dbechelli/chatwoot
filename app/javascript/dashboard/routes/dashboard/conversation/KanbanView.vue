@@ -505,9 +505,9 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="flex h-full min-h-0 min-w-0 flex-col overflow-hidden bg-n-slate-2">
-    <section class="shrink-0 border-b border-n-weak bg-n-surface-1">
-      <header class="px-4 py-3 md:px-6">
+  <div class="flex h-full min-h-0 min-w-0 flex-col bg-n-slate-2 p-3 md:p-4">
+    <section class="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-n-weak bg-n-surface-1">
+      <header class="shrink-0 border-b border-n-weak px-4 py-3 md:px-6">
         <div class="flex flex-col gap-3">
           <div class="flex flex-wrap items-center justify-between gap-3">
             <div class="flex min-w-0 flex-wrap items-center gap-2 md:gap-3">
@@ -636,7 +636,7 @@ onMounted(async () => {
       </header>
 
       <transition name="fade">
-        <div v-if="showMetrics && filteredConversations.length" class="border-t border-n-weak px-4 py-3 md:px-6">
+        <div v-if="showMetrics && filteredConversations.length" class="shrink-0 border-b border-n-weak px-4 py-3 md:px-6">
         <KanbanMetrics
           :conversations="filteredConversations"
           :stages="salesStages"
@@ -644,9 +644,8 @@ onMounted(async () => {
         />
         </div>
       </transition>
-    </section>
 
-    <main class="flex min-h-0 flex-1 w-full items-stretch overflow-hidden bg-n-slate-2">
+    <main class="flex min-h-0 flex-1 w-full min-w-0 items-stretch overflow-hidden bg-n-slate-2">
       <div
         v-if="isLoading && !allConversations.length"
         class="flex h-full items-center justify-center"
@@ -660,7 +659,7 @@ onMounted(async () => {
       </div>
 
       <!-- Visualização em Lista -->
-      <div v-else-if="salesStages.length > 0 && viewMode === 'list'" class="flex h-full min-h-0 w-full flex-1 basis-full overflow-hidden p-3 md:p-4">
+      <div v-else-if="salesStages.length > 0 && viewMode === 'list'" class="flex h-full min-h-0 w-full min-w-0 flex-1 basis-full overflow-hidden">
         <KanbanListView
           :conversations="filteredConversations"
           :stages="salesStages"
@@ -674,7 +673,7 @@ onMounted(async () => {
       </div>
 
       <!-- Visualização em Calendário -->
-      <div v-else-if="salesStages.length > 0 && viewMode === 'calendar'" class="flex h-full min-h-0 w-full flex-1 basis-full overflow-hidden p-3 md:p-4">
+      <div v-else-if="salesStages.length > 0 && viewMode === 'calendar'" class="flex h-full min-h-0 w-full min-w-0 flex-1 basis-full overflow-hidden">
         <KanbanCalendar
           :items="filteredConversations"
           :stages="salesStages"
@@ -685,7 +684,7 @@ onMounted(async () => {
       <!-- Standard Board View -->
       <div
         v-else-if="salesStages.length > 0 && viewMode === 'board' && groupBy === 'none'"
-        class="kanban-board-scroll custom-scrollbar h-full min-h-0 w-full overflow-x-auto overflow-y-hidden px-3 pb-3 pt-2 md:px-4 md:pb-4"
+        class="kanban-board-scroll custom-scrollbar h-full min-h-0 w-full min-w-0 flex-1 overflow-x-auto overflow-y-hidden bg-n-slate-2 px-3 pb-3 pt-2 md:px-4 md:pb-4"
       >
         <div class="h-full min-h-0 items-start" :class="boardLayoutClass" :style="boardLayoutStyle">
           <div
@@ -712,7 +711,7 @@ onMounted(async () => {
       <!-- Swimlane Board View -->
       <div
         v-else-if="salesStages.length > 0 && viewMode === 'board' && groupBy !== 'none'"
-        class="kanban-board-scroll custom-scrollbar flex h-full min-h-0 flex-col gap-6 overflow-x-auto overflow-y-auto bg-n-slate-2 p-3 pb-4 pt-2 md:p-4"
+        class="kanban-board-scroll custom-scrollbar flex h-full min-h-0 w-full min-w-0 flex-1 flex-col gap-6 overflow-x-auto overflow-y-auto bg-n-slate-2 p-3 pb-4 pt-2 md:p-4"
       >
         <div v-for="group in swimlaneGroups" :key="group.id" class="flex flex-col gap-3">
           <div class="sticky left-0 flex w-fit items-center gap-2 rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2">
@@ -766,6 +765,7 @@ onMounted(async () => {
         </div>
       </div>
     </main>
+    </section>
 
     <KanbanBulkActions
       v-if="showBulkActions"

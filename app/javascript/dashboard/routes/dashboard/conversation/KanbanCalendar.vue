@@ -129,8 +129,8 @@ const handleItemClick = (item) => {
 </script>
 
 <template>
-  <div class="flex h-full w-full min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-n-weak bg-n-surface-1">
-    <div class="flex items-center justify-between border-b border-n-weak px-4 py-4 md:px-5">
+  <div class="flex h-full w-full min-w-0 flex-1 flex-col overflow-hidden bg-n-surface-1">
+    <div class="flex items-center justify-between border-b border-n-weak px-4 py-4 md:px-6">
       <div class="flex items-center gap-4">
         <h2 class="text-lg font-medium capitalize text-n-slate-12">{{ monthTitle }}</h2>
         <div class="inline-flex items-center gap-1 rounded-xl border border-n-weak bg-n-slate-2 p-1">
