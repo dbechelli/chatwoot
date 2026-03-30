@@ -10,8 +10,8 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="flex h-full min-h-0 flex-col bg-n-slate-2">
-    <section class="min-w-0 flex-1 overflow-hidden">
+  <div class="flex h-full w-full min-h-0 min-w-0">
+    <section class="flex h-full w-full min-w-0 flex-1 overflow-hidden bg-n-surface-1">
       <router-view />
     </section>
   </div>

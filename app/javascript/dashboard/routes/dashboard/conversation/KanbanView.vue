@@ -505,7 +505,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="flex h-full min-h-0 min-w-0 flex-col bg-n-slate-2 p-3 md:p-4">
+  <div class="flex h-full w-full min-h-0 min-w-0 flex-1 flex-col bg-n-slate-2 p-3 md:p-4">
     <section class="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-n-weak bg-n-surface-1">
       <header class="shrink-0 border-b border-n-weak px-4 py-3 md:px-6">
         <div class="flex flex-col gap-3">

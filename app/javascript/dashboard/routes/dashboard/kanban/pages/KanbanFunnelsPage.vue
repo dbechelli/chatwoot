@@ -52,7 +52,7 @@ const deleteBoard = async boardId => {
 </script>
 
 <template>
-  <div class="flex h-full flex-col overflow-y-auto bg-n-slate-2 px-4 py-5 md:px-6 md:py-6">
+  <div class="flex h-full w-full min-h-0 min-w-0 flex-1 flex-col overflow-y-auto bg-n-slate-2 px-4 py-5 md:px-6 md:py-6">
     <div class="mx-auto flex w-full max-w-6xl flex-col gap-4">
       <section class="flex flex-wrap items-center justify-between gap-3">
         <div class="space-y-1">
