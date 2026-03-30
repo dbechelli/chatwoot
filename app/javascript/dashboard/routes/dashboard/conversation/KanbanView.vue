@@ -519,49 +519,53 @@ const activeViewButtonClass = mode => {
   return viewMode.value === mode;
 };
 
-const usesResponsiveBoardGrid = computed(
-  () => viewMode.value === 'board' && salesStages.value.length > 0 && salesStages.value.length <= 6
-);
+const boardColumnMinWidth = computed(() => {
+  const stageCount = salesStages.value.length;
 
-const boardLayoutClass = computed(() => {
-  if (usesResponsiveBoardGrid.value) {
-    return 'grid h-full min-h-0 min-w-full items-stretch gap-4 p-4 md:gap-5 md:p-5';
+  if (stageCount <= 4) {
+    return '0px';
   }
 
-  return 'custom-scrollbar flex h-full min-h-0 min-w-max items-stretch gap-4 p-4 pb-6 md:gap-5 md:p-5';
+  if (stageCount <= 6) {
+    return '11rem';
+  }
+
+  if (stageCount <= 8) {
+    return '9.5rem';
+  }
+
+  return '14rem';
+});
+
+const boardLayoutClass = computed(() => {
+  return 'grid h-full min-h-0 min-w-full items-stretch gap-4 p-4 pb-6 md:gap-5 md:p-5';
 });
 
 const boardLayoutStyle = computed(() => {
-  if (!usesResponsiveBoardGrid.value) {
+  if (!salesStages.value.length) {
     return {};
   }
 
   return {
-    gridTemplateColumns: `repeat(${salesStages.value.length}, minmax(0, 1fr))`,
+    gridTemplateColumns: `repeat(${salesStages.value.length}, minmax(${boardColumnMinWidth.value}, 1fr))`,
   };
 });
 
 const boardColumnClass = computed(() => {
-  return usesResponsiveBoardGrid.value
-    ? 'flex h-full min-h-0 min-w-0 flex-col'
-    : 'flex h-full min-h-0 w-[17rem] flex-shrink-0 flex-col xl:w-[18rem]';
+  return 'flex h-full min-h-0 min-w-0 flex-col';
 });
 
 const swimlaneTrackClass = computed(() => {
-  if (usesResponsiveBoardGrid.value) {
-    return 'grid min-h-0 w-full items-stretch gap-4';
-  }
-
-  return 'custom-scrollbar flex min-w-max items-stretch gap-4 overflow-x-auto pb-4';
+  return 'grid min-h-0 min-w-full items-stretch gap-4';
 });
 
 const swimlaneTrackStyle = computed(() => {
-  if (!usesResponsiveBoardGrid.value) {
+  if (!salesStages.value.length) {
     return {};
   }
 
   return {
-    gridTemplateColumns: `repeat(${salesStages.value.length}, minmax(0, 1fr))`,
+    gridTemplateColumns: `repeat(${salesStages.value.length}, minmax(${boardColumnMinWidth.value}, 1fr))`,
   };
 });
 
@@ -598,7 +602,7 @@ onMounted(async () => {
   <div class="flex h-full min-h-0 min-w-0 flex-col bg-n-slate-2">
     <header class="z-20 border-b border-n-weak bg-n-surface-1">
       <div class="flex flex-col gap-4 px-4 py-4 md:px-6">
-        <div class="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+        <div class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
           <div class="flex min-w-0 items-start gap-3">
             <div
               class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-n-brand/10 text-n-blue-11"
@@ -650,7 +654,7 @@ onMounted(async () => {
             </div>
           </div>
 
-          <div class="flex flex-wrap items-center gap-2">
+          <div class="flex flex-wrap items-center gap-2 xl:justify-end">
             <template v-if="hasBoards">
               <router-link
                 v-if="canManageBoards && currentBoard"
@@ -895,9 +899,7 @@ onMounted(async () => {
       :class="
         viewMode === 'list'
           ? 'overflow-y-auto'
-          : usesResponsiveBoardGrid
-            ? 'overflow-y-hidden overflow-x-hidden'
-            : 'overflow-x-auto overflow-y-hidden'
+          : 'overflow-x-auto overflow-y-hidden'
       "
     >
       <div
