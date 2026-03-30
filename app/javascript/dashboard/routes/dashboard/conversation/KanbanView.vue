@@ -520,15 +520,15 @@ const activeViewButtonClass = mode => {
 };
 
 const usesResponsiveBoardGrid = computed(
-  () => viewMode.value === 'board' && salesStages.value.length > 0 && salesStages.value.length <= 4
+  () => viewMode.value === 'board' && salesStages.value.length > 0 && salesStages.value.length <= 6
 );
 
 const boardLayoutClass = computed(() => {
   if (usesResponsiveBoardGrid.value) {
-    return 'grid h-full min-h-0 min-w-full items-stretch gap-4 p-4 md:gap-6 md:p-6';
+    return 'grid h-full min-h-0 min-w-full items-stretch gap-4 p-4 md:gap-5 md:p-5';
   }
 
-  return 'custom-scrollbar flex h-full min-h-0 min-w-max items-stretch gap-4 p-4 pb-6 md:gap-6 md:p-6';
+  return 'custom-scrollbar flex h-full min-h-0 min-w-max items-stretch gap-4 p-4 pb-6 md:gap-5 md:p-5';
 });
 
 const boardLayoutStyle = computed(() => {
@@ -544,7 +544,7 @@ const boardLayoutStyle = computed(() => {
 const boardColumnClass = computed(() => {
   return usesResponsiveBoardGrid.value
     ? 'flex h-full min-h-0 min-w-0 flex-col'
-    : 'flex h-full min-h-0 w-[18rem] flex-shrink-0 flex-col xl:w-80';
+    : 'flex h-full min-h-0 w-[17rem] flex-shrink-0 flex-col xl:w-[18rem]';
 });
 
 const swimlaneTrackClass = computed(() => {
@@ -595,7 +595,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="flex h-full flex-col bg-n-slate-2">
+  <div class="flex h-full min-h-0 min-w-0 flex-col bg-n-slate-2">
     <header class="z-20 border-b border-n-weak bg-n-surface-1">
       <div class="flex flex-col gap-4 px-4 py-4 md:px-6">
         <div class="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
@@ -717,11 +717,11 @@ onMounted(async () => {
 
         <div
           v-if="hasBoards"
-          class="grid gap-3 rounded-2xl border border-n-weak bg-n-slate-2/60 p-3 lg:grid-cols-[repeat(4,minmax(0,1fr))_auto]"
+          class="grid gap-3 rounded-2xl border border-n-weak bg-n-slate-2/60 p-3 md:grid-cols-2 xl:grid-cols-5"
         >
           <div
             v-if="!route.params.boardId && kanbanConfig && kanbanConfig.boards && kanbanConfig.boards.length > 1"
-            class="space-y-1"
+            class="min-w-0 space-y-1"
           >
             <label class="text-xs font-medium uppercase tracking-wide text-n-slate-10">
               {{ t('KANBAN.BOARD') }}
@@ -740,7 +740,7 @@ onMounted(async () => {
             </select>
           </div>
 
-          <div class="space-y-1">
+          <div class="min-w-0 space-y-1">
             <label class="text-xs font-medium uppercase tracking-wide text-n-slate-10">
               Agrupamento
             </label>
@@ -754,7 +754,7 @@ onMounted(async () => {
             </select>
           </div>
 
-          <div class="space-y-1">
+          <div class="min-w-0 space-y-1">
             <label class="text-xs font-medium uppercase tracking-wide text-n-slate-10">
               {{ t('KANBAN.FILTERS.INBOX') }}
             </label>
@@ -769,7 +769,7 @@ onMounted(async () => {
             </select>
           </div>
 
-          <div class="space-y-1">
+          <div class="min-w-0 space-y-1">
             <label class="text-xs font-medium uppercase tracking-wide text-n-slate-10">
               {{ t('KANBAN.FILTERS.ASSIGNEE') }}
             </label>
@@ -783,7 +783,7 @@ onMounted(async () => {
             </select>
           </div>
 
-          <div class="space-y-1">
+          <div class="min-w-0 space-y-1">
             <label class="text-xs font-medium uppercase tracking-wide text-n-slate-10">
               Status
             </label>
@@ -797,7 +797,7 @@ onMounted(async () => {
             </select>
           </div>
 
-          <div class="flex items-end justify-end">
+          <div class="flex items-end justify-start md:col-span-2 xl:col-span-1 xl:justify-end">
             <DropdownContainer>
               <template #trigger="{ toggle }">
                 <Button
@@ -805,6 +805,7 @@ onMounted(async () => {
                   slate
                   outline
                   icon="i-lucide-bookmark"
+                  class="w-full xl:w-auto"
                   label="Vistas salvas"
                   @click="toggle"
                 />
