@@ -2,6 +2,7 @@ module Uazapi
   class Client
     DEFAULT_TIMEOUT = 5
     DEFAULT_MEDIA_TIMEOUT = 30
+    ESCAPED_NEWLINE_PATTERN = /\\r\\n|\\n|\\r/
 
     def initialize(base_url:, token:)
       @base_url = base_url.to_s.sub(%r{/+$}, '')
@@ -9,13 +10,13 @@ module Uazapi
     end
 
     def edit_message(message_id:, text:)
-      post('/message/edit', { id: message_id, text: text })
+      post('/message/edit', { id: message_id, text: normalize_text(text) })
     end
 
     def send_text_message(recipient_id:, text:, quoted_message_id: nil, track_id: nil, forward: nil)
       payload = {
         number: recipient_id,
-        text: text,
+        text: normalize_text(text),
         replyid: quoted_message_id,
         async: true,
         forward: forward,
@@ -32,7 +33,7 @@ module Uazapi
         number: recipient_id,
         type: media_type,
         file: file_url,
-        text: text,
+        text: normalize_text(text),
         docName: doc_name,
         mimetype: mime_type,
         replyid: reply_id,
@@ -95,7 +96,7 @@ module Uazapi
         delete: delete,
         shortCut: short_cut,
         type: type,
-        text: text,
+        text: normalize_text(text),
         file: file,
         docName: doc_name
       }
@@ -181,6 +182,12 @@ module Uazapi
       return collection if collection.present?
 
       response.values.find { |value| value.is_a?(Array) } || []
+    end
+
+    def normalize_text(text)
+      return text unless text.is_a?(String)
+
+      text.gsub(/\r\n?/, "\n").gsub(ESCAPED_NEWLINE_PATTERN, "\n")
     end
   end
 end

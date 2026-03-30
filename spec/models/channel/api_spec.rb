@@ -90,6 +90,36 @@ RSpec.describe Channel::Api do
       expect(channel_api.send_message(message)).to eq('uazapi-msg-1')
     end
 
+    it 'normalizes multiline text before sending it to UAZAPI' do
+      message = create(
+        :message,
+        inbox: channel_api.inbox,
+        account: channel_api.account,
+        conversation: conversation,
+        content: "Primeira linha\\nSegunda linha\r\nTerceira linha"
+      )
+
+      text_request = stub_request(:post, 'https://demo.uazapi.com/send/text')
+        .with(
+          headers: {
+            'Accept' => 'application/json',
+            'Content-Type' => 'application/json',
+            'Token' => 'secret-token'
+          },
+          body: {
+            number: '5511999999999',
+            text: "Primeira linha\nSegunda linha\nTerceira linha",
+            async: true,
+            track_source: 'chatwoot',
+            track_id: message.id.to_s
+          }
+        )
+        .to_return(status: 200, body: { messageId: 'uazapi-msg-multiline' }.to_json, headers: { 'Content-Type' => 'application/json' })
+
+      expect(channel_api.send_message(message)).to eq('uazapi-msg-multiline')
+      expect(text_request).to have_been_requested
+    end
+
     it 'calls the UAZAPI send media endpoint for image attachments' do
       message = create(:message, inbox: channel_api.inbox, account: channel_api.account, conversation: conversation, content: 'Veja o anexo')
       attachment = message.attachments.build(account_id: message.account_id, file_type: :image)
