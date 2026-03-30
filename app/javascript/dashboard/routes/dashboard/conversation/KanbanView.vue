@@ -35,7 +35,7 @@ const selectedInbox = ref(null);
 const selectedAssignee = ref('all');
 const statusFilter = ref(wootConstants.STATUS_TYPE.OPEN);
 const groupBy = ref('none'); // 'none', 'priority', 'assignee'
-const showMetrics = ref(true);
+const showMetrics = ref(false);
 const viewMode = ref('board'); // 'board' or 'list'
 const selectedItems = ref([]); // Para ações em massa
 const showBulkActions = ref(false);
@@ -383,10 +383,6 @@ const toggleMetrics = () => {
   showMetrics.value = !showMetrics.value;
 };
 
-const toggleViewMode = () => {
-  viewMode.value = viewMode.value === 'board' ? 'list' : 'board';
-};
-
 const handleBulkUpdate = async (bulkData) => {
   try {
     const { action, stage, assignee, priority } = bulkData;
@@ -538,7 +534,7 @@ const boardColumnMinWidth = computed(() => {
 });
 
 const boardLayoutClass = computed(() => {
-  return 'grid h-full min-h-0 min-w-full items-stretch gap-4 p-4 pb-6 md:gap-5 md:p-5';
+  return 'grid h-full min-h-0 min-w-full items-stretch gap-3 p-3 pb-5 md:gap-4 md:p-4';
 });
 
 const boardLayoutStyle = computed(() => {
@@ -556,7 +552,7 @@ const boardColumnClass = computed(() => {
 });
 
 const swimlaneTrackClass = computed(() => {
-  return 'grid min-h-0 min-w-full items-stretch gap-4';
+  return 'grid min-h-0 min-w-full items-stretch gap-3 md:gap-4';
 });
 
 const swimlaneTrackStyle = computed(() => {
@@ -601,25 +597,25 @@ onMounted(async () => {
 <template>
   <div class="flex h-full min-h-0 min-w-0 flex-col bg-n-slate-2">
     <header class="z-20 border-b border-n-weak bg-n-surface-1">
-      <div class="flex flex-col gap-4 px-4 py-4 md:px-6">
-        <div class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-start">
+      <div class="flex flex-col gap-3 px-4 py-3 md:px-6">
+        <div class="flex flex-col gap-3 xl:flex-row xl:items-start xl:justify-between">
           <div class="flex min-w-0 items-start gap-3">
             <div
               class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-n-brand/10 text-n-blue-11"
             >
               <i class="i-lucide-kanban-square text-xl" />
             </div>
-            <div class="min-w-0 space-y-3">
+            <div class="min-w-0 space-y-2">
               <div class="space-y-1">
-                <h1 class="truncate text-xl font-medium text-n-slate-12">
+                <h1 class="truncate text-lg font-medium text-n-slate-12 md:text-xl">
                   {{ currentBoard?.name || t('KANBAN.TITLE') }}
                 </h1>
-                <p class="text-sm text-n-slate-11">
+                <p class="text-sm text-n-slate-11 line-clamp-2">
                   {{ currentBoard?.description || t('KANBAN.WORKSPACE.DEFAULT_DESCRIPTION') }}
                 </p>
               </div>
 
-              <div class="inline-flex items-center gap-1 rounded-xl border border-n-weak bg-n-slate-2 p-1">
+              <div class="inline-flex w-full max-w-full items-center gap-1 rounded-xl border border-n-weak bg-n-slate-2 p-1 sm:w-auto">
                 <Button
                   sm
                   :blue="activeViewButtonClass('board')"
@@ -721,11 +717,11 @@ onMounted(async () => {
 
         <div
           v-if="hasBoards"
-          class="grid gap-3 rounded-2xl border border-n-weak bg-n-slate-2/60 p-3 md:grid-cols-2 xl:grid-cols-5"
+          class="flex flex-wrap items-end gap-2 rounded-2xl border border-n-weak bg-n-slate-2/60 p-3"
         >
           <div
             v-if="!route.params.boardId && kanbanConfig && kanbanConfig.boards && kanbanConfig.boards.length > 1"
-            class="min-w-0 space-y-1"
+            class="min-w-0 flex-1 basis-[220px] space-y-1"
           >
             <label class="text-xs font-medium uppercase tracking-wide text-n-slate-10">
               {{ t('KANBAN.BOARD') }}
@@ -744,7 +740,7 @@ onMounted(async () => {
             </select>
           </div>
 
-          <div class="min-w-0 space-y-1">
+          <div class="min-w-0 flex-1 basis-[180px] space-y-1">
             <label class="text-xs font-medium uppercase tracking-wide text-n-slate-10">
               Agrupamento
             </label>
@@ -758,7 +754,7 @@ onMounted(async () => {
             </select>
           </div>
 
-          <div class="min-w-0 space-y-1">
+          <div class="min-w-0 flex-1 basis-[220px] space-y-1">
             <label class="text-xs font-medium uppercase tracking-wide text-n-slate-10">
               {{ t('KANBAN.FILTERS.INBOX') }}
             </label>
@@ -773,7 +769,7 @@ onMounted(async () => {
             </select>
           </div>
 
-          <div class="min-w-0 space-y-1">
+          <div class="min-w-0 flex-1 basis-[220px] space-y-1">
             <label class="text-xs font-medium uppercase tracking-wide text-n-slate-10">
               {{ t('KANBAN.FILTERS.ASSIGNEE') }}
             </label>
@@ -787,7 +783,7 @@ onMounted(async () => {
             </select>
           </div>
 
-          <div class="min-w-0 space-y-1">
+          <div class="min-w-0 w-full sm:w-[180px] space-y-1">
             <label class="text-xs font-medium uppercase tracking-wide text-n-slate-10">
               Status
             </label>
@@ -801,7 +797,7 @@ onMounted(async () => {
             </select>
           </div>
 
-          <div class="flex items-end justify-start md:col-span-2 xl:col-span-1 xl:justify-end">
+          <div class="flex w-full items-end justify-start sm:w-auto sm:justify-end sm:ml-auto">
             <DropdownContainer>
               <template #trigger="{ toggle }">
                 <Button
@@ -809,7 +805,7 @@ onMounted(async () => {
                   slate
                   outline
                   icon="i-lucide-bookmark"
-                  class="w-full xl:w-auto"
+                  class="w-full sm:w-auto"
                   label="Vistas salvas"
                   @click="toggle"
                 />
@@ -856,7 +852,7 @@ onMounted(async () => {
     </header>
 
     <transition name="fade">
-      <div v-if="showMetrics && filteredConversations.length" class="border-b border-n-weak bg-n-surface-1 px-4 py-4 md:px-6">
+      <div v-if="showMetrics && filteredConversations.length" class="border-b border-n-weak bg-n-surface-1 px-4 py-3 md:px-6">
         <KanbanMetrics
           :conversations="filteredConversations"
           :stages="salesStages"
@@ -897,9 +893,9 @@ onMounted(async () => {
     <main
       class="custom-scrollbar flex min-h-0 flex-1 w-full overflow-hidden bg-n-slate-2"
       :class="
-        viewMode === 'list'
-          ? 'overflow-y-auto'
-          : 'overflow-x-auto overflow-y-hidden'
+        viewMode === 'board'
+          ? 'overflow-x-auto overflow-y-hidden'
+          : 'overflow-hidden'
       "
     >
       <div
@@ -915,7 +911,7 @@ onMounted(async () => {
       </div>
 
       <!-- Visualização em Lista -->
-      <div v-else-if="salesStages.length > 0 && viewMode === 'list'" class="h-full">
+      <div v-else-if="salesStages.length > 0 && viewMode === 'list'" class="h-full min-h-0 w-full p-3 md:p-4">
         <KanbanListView
           :conversations="filteredConversations"
           :stages="salesStages"
@@ -929,7 +925,7 @@ onMounted(async () => {
       </div>
 
       <!-- Visualização em Calendário -->
-      <div v-else-if="salesStages.length > 0 && viewMode === 'calendar'" class="h-full overflow-hidden p-4 md:p-6">
+      <div v-else-if="salesStages.length > 0 && viewMode === 'calendar'" class="h-full min-h-0 w-full overflow-hidden p-3 md:p-4">
         <KanbanCalendar
           :items="filteredConversations"
           :stages="salesStages"
@@ -940,6 +936,7 @@ onMounted(async () => {
       <!-- Standard Board View -->
       <div
         v-else-if="salesStages.length > 0 && viewMode === 'board' && groupBy === 'none'"
+        class="min-h-0"
         :class="boardLayoutClass"
         :style="boardLayoutStyle"
       >
@@ -965,7 +962,7 @@ onMounted(async () => {
       <!-- Swimlane Board View -->
       <div
         v-else-if="salesStages.length > 0 && viewMode === 'board' && groupBy !== 'none'"
-        class="custom-scrollbar flex h-full min-h-0 flex-col gap-8 overflow-x-hidden overflow-y-auto bg-n-slate-2 p-4 pb-20 md:p-6"
+        class="custom-scrollbar flex h-full min-h-0 flex-col gap-6 overflow-x-hidden overflow-y-auto bg-n-slate-2 p-3 pb-16 md:p-4"
       >
         <div v-for="group in swimlaneGroups" :key="group.id" class="flex flex-col gap-3">
           <div class="sticky left-0 flex w-fit items-center gap-2 rounded-xl border border-n-weak bg-n-surface-1 px-3 py-2">

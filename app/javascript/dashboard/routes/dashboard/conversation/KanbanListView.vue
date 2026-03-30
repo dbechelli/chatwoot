@@ -1,7 +1,6 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useRouter } from 'vue-router';
 import { formatDistanceToNow } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
@@ -16,7 +15,6 @@ const props = defineProps({
 const emit = defineEmits(['update:selectedItems', 'stageChange', 'openItem', 'contextmenu']);
 
 const { t } = useI18n();
-const router = useRouter();
 
 const sortBy = ref('last_activity');
 const sortOrder = ref('desc');
@@ -86,6 +84,26 @@ const getStageInfo = (conversation) => {
   return props.stages.find(s => s.stage === stageId) || {};
 };
 
+const getConversationTitle = conversation => {
+  return conversation.custom_attributes?.kanban_title || conversation.meta?.sender?.name || 'Sem titulo';
+};
+
+const getConversationDescription = conversation => {
+  return conversation.custom_attributes?.kanban_description || '';
+};
+
+const getAssigneeName = conversation => {
+  return conversation.meta?.assignee?.name || 'Nao atribuido';
+};
+
+const getPriorityLabel = priority => {
+  if (!priority) {
+    return null;
+  }
+
+  return t(`CONVERSATION.PRIORITY.OPTIONS.${priority.toUpperCase()}`);
+};
+
 const formatCurrency = (value) => {
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
@@ -123,12 +141,19 @@ const setSortBy = (field) => {
     sortOrder.value = 'desc';
   }
 };
+
+const sortOptions = [
+  { value: 'last_activity', label: 'Atualizacao' },
+  { value: 'title', label: 'Tarefa' },
+  { value: 'priority', label: 'Prioridade' },
+  { value: 'value', label: 'Valor' },
+];
 </script>
 
 <template>
-  <div class="flex h-full flex-col overflow-hidden rounded-2xl border border-n-weak bg-n-surface-1">
-    <div class="flex items-center justify-between border-b border-n-weak px-4 py-4">
-      <div class="flex items-center gap-3">
+  <div class="flex h-full min-h-0 flex-col rounded-2xl border border-n-weak bg-n-surface-1">
+    <div class="flex flex-wrap items-center justify-between gap-3 border-b border-n-weak px-4 py-3 md:px-5">
+      <div class="flex flex-wrap items-center gap-3">
         <label class="flex cursor-pointer items-center gap-2">
           <input
             v-model="selectAll"
@@ -140,148 +165,138 @@ const setSortBy = (field) => {
             {{ localSelectedItems.length > 0 ? `${localSelectedItems.length} selecionado(s)` : 'Selecionar todos' }}
           </span>
         </label>
+        <span class="rounded-lg bg-n-slate-2 px-2 py-1 text-sm font-medium text-n-slate-11">
+          {{ sortedConversations.length }} tarefas
+        </span>
       </div>
-      
-      <div class="flex items-center gap-2">
-        <span class="rounded-lg bg-n-slate-2 px-2 py-1 text-sm font-medium text-n-slate-11">{{ sortedConversations.length }} tarefas</span>
+
+      <div class="flex flex-wrap items-center gap-2">
+        <label class="text-xs font-medium uppercase tracking-wide text-n-slate-10">
+          Ordenar
+        </label>
+        <select
+          v-model="sortBy"
+          class="h-9 rounded-xl border border-n-weak bg-n-surface-1 px-3 text-sm text-n-slate-12 outline-none transition focus:border-n-brand"
+        >
+          <option v-for="option in sortOptions" :key="option.value" :value="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+        <button
+          class="inline-flex h-9 items-center gap-2 rounded-xl border border-n-weak px-3 text-sm font-medium text-n-slate-11 transition hover:bg-n-slate-2"
+          type="button"
+          @click="sortOrder = sortOrder === 'asc' ? 'desc' : 'asc'"
+        >
+          <i :class="sortOrder === 'asc' ? 'i-lucide-arrow-up' : 'i-lucide-arrow-down'" class="text-sm" />
+          {{ sortOrder === 'asc' ? 'Crescente' : 'Decrescente' }}
+        </button>
       </div>
     </div>
 
-    <div class="flex-1 overflow-auto">
-      <table class="w-full">
-        <thead class="sticky top-0 z-10 border-b border-n-weak bg-n-slate-2/90 backdrop-blur">
-          <tr>
-            <th class="w-12 p-3"></th>
-            <th 
-              class="cursor-pointer p-3 text-left text-xs font-medium uppercase tracking-wide text-n-slate-10 transition-colors hover:bg-n-slate-3"
-              @click="setSortBy('title')"
-            >
-              <div class="flex items-center gap-2">
-                Tarefa
-                <i v-if="sortBy === 'title'" :class="sortOrder === 'asc' ? 'i-lucide-arrow-up' : 'i-lucide-arrow-down'" class="text-sm" />
-              </div>
-            </th>
-            <th class="w-40 p-3 text-left text-xs font-medium uppercase tracking-wide text-n-slate-10">
-              Estágio
-            </th>
-            <th 
-              class="w-32 cursor-pointer p-3 text-left text-xs font-medium uppercase tracking-wide text-n-slate-10 transition-colors hover:bg-n-slate-3"
-              @click="setSortBy('priority')"
-            >
-              <div class="flex items-center gap-2">
-                Prioridade
-                <i v-if="sortBy === 'priority'" :class="sortOrder === 'asc' ? 'i-lucide-arrow-up' : 'i-lucide-arrow-down'" class="text-sm" />
-              </div>
-            </th>
-            <th class="w-32 p-3 text-left text-xs font-medium uppercase tracking-wide text-n-slate-10">
-              Agente
-            </th>
-            <th 
-              class="w-32 cursor-pointer p-3 text-right text-xs font-medium uppercase tracking-wide text-n-slate-10 transition-colors hover:bg-n-slate-3"
-              @click="setSortBy('value')"
-            >
-              <div class="flex items-center justify-end gap-2">
-                Valor
-                <i v-if="sortBy === 'value'" :class="sortOrder === 'asc' ? 'i-lucide-arrow-up' : 'i-lucide-arrow-down'" class="text-sm" />
-              </div>
-            </th>
-            <th 
-              class="w-40 cursor-pointer p-3 text-left text-xs font-medium uppercase tracking-wide text-n-slate-10 transition-colors hover:bg-n-slate-3"
-              @click="setSortBy('last_activity')"
-            >
-              <div class="flex items-center gap-2">
-                Atualização
-                <i v-if="sortBy === 'last_activity'" :class="sortOrder === 'asc' ? 'i-lucide-arrow-up' : 'i-lucide-arrow-down'" class="text-sm" />
-              </div>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            v-for="conversation in sortedConversations"
-            :key="conversation.id"
-            class="cursor-pointer border-b border-n-weak/70 transition-colors hover:bg-n-slate-2/60"
-            :class="{ 'bg-n-brand/5': isSelected(conversation.id) }"
-            @click="handleRowClick(conversation)"
-            @contextmenu.prevent="$emit('contextmenu', { event: $event, conversation })"
-          >
-            <td class="p-3">
+    <div class="custom-scrollbar flex-1 overflow-y-auto overflow-x-hidden p-3 md:p-4">
+      <div
+        v-if="sortedConversations.length"
+        class="grid grid-cols-1 gap-3 xl:grid-cols-2"
+      >
+        <article
+          v-for="conversation in sortedConversations"
+          :key="conversation.id"
+          class="cursor-pointer rounded-2xl border border-n-weak bg-n-surface-1 p-4 shadow-sm transition hover:border-n-brand/30 hover:bg-n-slate-2/40"
+          :class="{ 'border-n-brand bg-n-brand/5': isSelected(conversation.id) }"
+          @click="handleRowClick(conversation)"
+          @contextmenu.prevent="$emit('contextmenu', { event: $event, conversation })"
+        >
+          <div class="flex flex-wrap items-start justify-between gap-3">
+            <div class="flex min-w-0 items-start gap-3">
               <input
                 :checked="isSelected(conversation.id)"
                 type="checkbox"
-                class="h-4 w-4 rounded border-n-strong text-n-brand focus:ring-n-brand"
+                class="mt-1 h-4 w-4 rounded border-n-strong text-n-brand focus:ring-n-brand"
                 @click.stop="toggleItem(conversation.id)"
               />
-            </td>
-            <td class="p-3">
-              <div class="flex flex-col gap-1">
-                <div class="flex items-center gap-2">
-                  <span class="text-sm font-medium text-n-slate-12">
-                    {{ conversation.custom_attributes?.kanban_title || conversation.meta?.sender?.name || 'Sem título' }}
-                  </span>
-                  <span v-if="conversation.priority === 'urgent'" class="text-n-ruby-11">
+
+              <div class="min-w-0 space-y-2">
+                <div class="flex min-w-0 items-center gap-2">
+                  <h3 class="truncate text-sm font-medium text-n-slate-12 md:text-base">
+                    {{ getConversationTitle(conversation) }}
+                  </h3>
+                  <span v-if="conversation.priority === 'urgent'" class="shrink-0 text-n-ruby-11">
                     <i class="i-lucide-alert-circle text-sm" />
                   </span>
                 </div>
-                <p v-if="conversation.custom_attributes?.kanban_description" class="line-clamp-1 text-xs text-n-slate-11">
-                  {{ conversation.custom_attributes.kanban_description }}
+
+                <p
+                  v-if="getConversationDescription(conversation)"
+                  class="line-clamp-2 text-sm text-n-slate-11"
+                >
+                  {{ getConversationDescription(conversation) }}
                 </p>
+
+                <div class="flex flex-wrap items-center gap-2">
+                  <div
+                    class="inline-flex max-w-full items-center gap-1.5 rounded-xl border px-2.5 py-1 text-xs font-medium"
+                    :style="{
+                      backgroundColor: `${getStageInfo(conversation).color}20`,
+                      color: getStageInfo(conversation).color,
+                      borderColor: `${getStageInfo(conversation).color}40`
+                    }"
+                  >
+                    <span
+                      class="h-2 w-2 rounded-full"
+                      :style="{ backgroundColor: getStageInfo(conversation).color }"
+                    />
+                    <span class="truncate">
+                      {{ getStageInfo(conversation).title || 'Sem estagio' }}
+                    </span>
+                  </div>
+
+                  <span
+                    v-if="conversation.priority"
+                    class="inline-flex rounded-lg border px-2 py-1 text-xs font-medium"
+                    :class="priorityColors[conversation.priority]"
+                  >
+                    {{ getPriorityLabel(conversation.priority) }}
+                  </span>
+                </div>
               </div>
-            </td>
-            <td class="p-3">
-              <div 
-                class="inline-flex items-center gap-1.5 rounded-xl border px-2.5 py-1 text-xs font-medium"
-                :style="{ 
-                  backgroundColor: `${getStageInfo(conversation).color}20`,
-                  color: getStageInfo(conversation).color,
-                  borderColor: `${getStageInfo(conversation).color}40`
-                }"
-              >
-                <span
-                  class="h-2 w-2 rounded-full"
-                  :style="{ backgroundColor: getStageInfo(conversation).color }"
-                />
-                {{ getStageInfo(conversation).title || 'Sem estágio' }}
-              </div>
-            </td>
-            <td class="p-3">
-              <span 
-                v-if="conversation.priority"
-                class="inline-flex rounded-lg border px-2 py-1 text-xs font-medium"
-                :class="priorityColors[conversation.priority]"
-              >
-                {{ t(`CONVERSATION.PRIORITY.OPTIONS.${conversation.priority.toUpperCase()}`) }}
-              </span>
-            </td>
-            <td class="p-3">
-              <div v-if="conversation.meta?.assignee" class="flex items-center gap-2">
-                <img
-                  v-if="conversation.meta.assignee.thumbnail"
-                  :src="conversation.meta.assignee.thumbnail"
-                  :alt="conversation.meta.assignee.name"
-                  class="h-6 w-6 rounded-full border border-n-weak object-cover"
-                />
-                <span class="text-sm text-n-slate-12">{{ conversation.meta.assignee.name }}</span>
-              </div>
-              <span v-else class="text-xs text-n-slate-10">Não atribuído</span>
-            </td>
-            <td class="p-3 text-right">
-              <span 
+            </div>
+
+            <div class="flex flex-col items-start gap-1 text-left md:items-end md:text-right">
+              <span
                 v-if="conversation.custom_attributes?.deal_value"
-                class="text-sm font-medium text-n-teal-11"
+                class="text-sm font-semibold text-n-teal-11"
               >
                 {{ formatCurrency(conversation.custom_attributes.deal_value) }}
               </span>
-              <span v-else class="text-xs text-n-slate-9">-</span>
-            </td>
-            <td class="p-3">
-              <span class="text-xs text-n-slate-11">
+              <span class="text-xs text-n-slate-10">
                 {{ formatTime(conversation.last_activity_at) }}
               </span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+            </div>
+          </div>
+
+          <div class="mt-4 grid grid-cols-1 gap-3 border-t border-n-weak pt-3 md:grid-cols-2">
+            <div class="flex items-center gap-2 min-w-0">
+              <img
+                v-if="conversation.meta?.assignee?.thumbnail"
+                :src="conversation.meta.assignee.thumbnail"
+                :alt="conversation.meta.assignee.name"
+                class="h-7 w-7 rounded-full border border-n-weak object-cover"
+              />
+              <div class="min-w-0">
+                <p class="text-xs uppercase tracking-wide text-n-slate-9">Agente</p>
+                <p class="truncate text-sm text-n-slate-12">{{ getAssigneeName(conversation) }}</p>
+              </div>
+            </div>
+
+            <div class="min-w-0">
+              <p class="text-xs uppercase tracking-wide text-n-slate-9">Contato</p>
+              <p class="truncate text-sm text-n-slate-12">
+                {{ conversation.meta?.sender?.name || 'Sem contato' }}
+              </p>
+            </div>
+          </div>
+        </article>
+      </div>
 
       <div
         v-if="sortedConversations.length === 0 && !isLoading"

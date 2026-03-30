@@ -625,12 +625,6 @@ const menuItems = computed(() => {
           to: accountScopedRoute('auditlogs_list'),
         },
         {
-          name: 'Settings Kanban',
-          label: t('SIDEBAR.KANBAN_SETTINGS'),
-          icon: 'i-lucide-kanban-square',
-           to: accountScopedRoute('kanban_funnels'),
-        },
-        {
           name: 'Settings Billing',
           label: t('SIDEBAR.BILLING'),
           icon: 'i-lucide-credit-card',
