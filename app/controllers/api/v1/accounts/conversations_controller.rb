@@ -218,6 +218,7 @@ class Api::V1::Accounts::ConversationsController < Api::V1::Accounts::BaseContro
            .includes(:contact)
            .distinct
            .order(last_activity_at: :desc)
+  end
 
   def presence_subscribe_params
     params.permit(conversation_ids: [])
