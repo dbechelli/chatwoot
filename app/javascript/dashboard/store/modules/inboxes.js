@@ -220,9 +220,8 @@ export const actions = {
       sendAnalyticsEvent(channel.type);
       return response.data;
     } catch (error) {
-      const errorMessage = error?.response?.data?.message;
       commit(types.default.SET_INBOXES_UI_FLAG, { isCreating: false });
-      throw new Error(errorMessage);
+      return throwErrorMessage(error);
     }
   },
   createWebsiteChannel: async ({ commit }, params) => {
@@ -297,6 +296,24 @@ export const actions = {
       throwErrorMessage(error);
     }
   },
+  convertProvider: async (
+    { commit },
+    { inboxId, provider, providerConfig }
+  ) => {
+    commit(types.default.SET_INBOXES_UI_FLAG, { isUpdating: true });
+    try {
+      const response = await InboxesAPI.convertProvider(inboxId, {
+        provider,
+        providerConfig,
+      });
+      commit(types.default.EDIT_INBOXES, response.data);
+      commit(types.default.SET_INBOXES_UI_FLAG, { isUpdating: false });
+      return response.data;
+    } catch (error) {
+      commit(types.default.SET_INBOXES_UI_FLAG, { isUpdating: false });
+      return throwErrorMessage(error);
+    }
+  },
   updateInboxIMAP: async ({ commit }, { id, ...inboxParams }) => {
     commit(types.default.SET_INBOXES_UI_FLAG, { isUpdatingIMAP: true });
     try {
@@ -358,6 +375,31 @@ export const actions = {
   },
   getCSATTemplateStatus: async (_, { inboxId }) => {
     const response = await InboxesAPI.getCSATTemplateStatus(inboxId);
+    return response.data;
+  },
+  analyzeCSATTemplateUtility: async (_, { inboxId, template }) => {
+    const response = await InboxesAPI.analyzeCSATTemplateUtility(
+      inboxId,
+      template
+    );
+    return response.data;
+  },
+  resetSecret: async ({ commit }, inboxId) => {
+    try {
+      const response = await InboxesAPI.resetSecret(inboxId);
+      commit(types.default.EDIT_INBOXES, response.data);
+      return response.data;
+    } catch (error) {
+      throwErrorMessage(error);
+      return null;
+    }
+  },
+  linkCSATTemplate: async (_, { inboxId, template }) => {
+    const response = await InboxesAPI.linkCSATTemplate(inboxId, template);
+    return response.data;
+  },
+  getAvailableCSATTemplates: async (_, { inboxId }) => {
+    const response = await InboxesAPI.getAvailableCSATTemplates(inboxId);
     return response.data;
   },
   setupChannelProvider: async (_, inboxId) => {

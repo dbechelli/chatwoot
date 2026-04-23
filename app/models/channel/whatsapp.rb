@@ -1,3 +1,4 @@
+# rubocop:disable Layout/LineLength
 # == Schema Information
 #
 # Table name: channel_whatsapp
@@ -16,10 +17,11 @@
 # Indexes
 #
 #  index_channel_whatsapp_on_phone_number      (phone_number) UNIQUE
-#  index_channel_whatsapp_provider_connection  (provider_connection) WHERE ((provider)::text = ANY ((ARRAY['baileys'::character varying, 'zapi'::character varying])::text[])) USING gin # rubocop:disable Layout/LineLength
+#  index_channel_whatsapp_provider_connection  (provider_connection) WHERE ((provider)::text = ANY (ARRAY[('baileys'::character varying)::text, ('zapi'::character varying)::text])) USING gin
 #
+# rubocop:enable Layout/LineLength
 
-class Channel::Whatsapp < ApplicationRecord
+class Channel::Whatsapp < ApplicationRecord # rubocop:disable Metrics/ClassLength
   include Channelable
   include Reauthorizable
 
@@ -38,8 +40,8 @@ class Channel::Whatsapp < ApplicationRecord
 
   after_create :sync_templates
   before_destroy :teardown_webhooks
-
   before_destroy :disconnect_channel_provider, if: -> { provider_service.respond_to?(:disconnect_channel_provider) }
+  after_commit :setup_webhooks, on: :create, if: :should_auto_setup_webhooks?
 
   def name
     'Whatsapp'
@@ -126,6 +128,91 @@ class Channel::Whatsapp < ApplicationRecord
     Rails.logger.error "Failed to disconnect channel provider: #{e.message}"
   end
 
+  # rubocop:disable Metrics/MethodLength, Metrics/AbcSize, Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity, Metrics/BlockLength
+  def convert_provider!(new_provider:, new_provider_config:)
+    # Serialize concurrent conversions of the same inbox. Without the lock,
+    # two admin requests could both pass pre-validation, race the disconnect
+    # and save, and leave webhooks/templates mismatched with the persisted
+    # provider. `with_lock` issues SELECT FOR UPDATE and wraps the block in
+    # a transaction; the loser waits until the winner commits.
+    with_lock do
+      previous_provider = provider
+      previous_provider_config = provider_config.deep_dup
+      normalized_new_config = new_provider_config || {}
+
+      if new_provider == previous_provider
+        errors.add(:provider, 'must be different from the current provider')
+        raise ActiveRecord::RecordInvalid, self
+      end
+
+      # Pre-validate the new config without persisting, so we never terminate
+      # the current provider session for a known-bad target config.
+      assign_attributes(provider: new_provider, provider_config: normalized_new_config)
+      unless valid?
+        assign_attributes(provider: previous_provider, provider_config: previous_provider_config)
+        raise ActiveRecord::RecordInvalid, self
+      end
+      # Snapshot provider_config AFTER valid? so we keep any fields populated
+      # by before_validation callbacks (e.g. ensure_webhook_verify_token). The
+      # final persist uses save!(validate: false), so we must not rely on a
+      # second validation pass to replay those callbacks.
+      validated_new_config = provider_config.deep_dup
+
+      # Validation passed. Restore the old state briefly so the disconnect
+      # call talks to the correct (old) endpoint, then reapply and persist
+      # the new state. We call the service directly so a failed disconnect
+      # propagates and aborts the conversion instead of silently leaving the
+      # old session alive while the inbox points at the new provider.
+      assign_attributes(provider: previous_provider, provider_config: previous_provider_config)
+      # When converting away from whatsapp_cloud, mirror the destroy-time
+      # cleanup so the Meta webhook subscription is torn down (embedded_signup
+      # source); manual-setup channels follow the same no-op behavior as on
+      # destruction. A teardown failure on a best-effort cleanup should not
+      # abort the swap.
+      if previous_provider == 'whatsapp_cloud'
+        begin
+          teardown_webhooks
+        rescue StandardError => e
+          Rails.logger.error "[WHATSAPP] Pre-conversion webhook teardown failed: #{e.message}"
+        ensure
+          # Reset the destroy-time guard so a later destroy! or subsequent
+          # conversion on the same instance doesn't skip webhook removal.
+          @webhook_teardown_initiated = false
+        end
+      end
+      provider_service.disconnect_channel_provider if provider_service.respond_to?(:disconnect_channel_provider)
+
+      assign_attributes(
+        provider: new_provider,
+        provider_config: validated_new_config,
+        provider_connection: {},
+        message_templates: {},
+        message_templates_last_updated: nil
+      )
+      # Skip revalidation: the pre-flight valid? above is authoritative. A
+      # second validate_provider_config? call here would re-hit the external
+      # API and a transient failure could roll back the transaction after we
+      # already disconnected the old session.
+      save!(validate: false)
+
+      setup_webhooks if should_auto_setup_webhooks?
+
+      begin
+        sync_templates
+      rescue StandardError => e
+        # Some provider sync_templates implementations stamp
+        # `message_templates_last_updated` before the remote fetch. If the
+        # fetch blows up, reset both columns so the inbox doesn't look
+        # synced with zero templates and the scheduler will retry.
+        update_columns(message_templates: {}, message_templates_last_updated: nil) # rubocop:disable Rails/SkipsModelValidations
+        Rails.logger.error "[WHATSAPP] Post-conversion template sync failed: #{e.message}"
+      end
+    end
+
+    self
+  end
+  # rubocop:enable Metrics/MethodLength, Metrics/AbcSize, Metrics/CyclomaticComplexity, Metrics/PerceivedComplexity, Metrics/BlockLength
+
   def received_messages(messages, conversation)
     return unless provider_service.respond_to?(:received_messages)
 
@@ -159,12 +246,36 @@ class Channel::Whatsapp < ApplicationRecord
     provider_service.edit_message(recipient_id, message, new_content)
   end
 
+  def sync_group(conversation, soft: false)
+    return unless provider_service.respond_to?(:sync_group)
+
+    provider_service.sync_group(conversation, soft: soft)
+  end
+
+  def allow_group_creation?
+    provider_service.respond_to?(:allow_group_creation?) && provider_service.allow_group_creation?
+  end
+
   delegate :setup_channel_provider, to: :provider_service
+  delegate :presence_subscribe, to: :provider_service
   delegate :send_message, to: :provider_service
   delegate :send_template, to: :provider_service
   delegate :sync_templates, to: :provider_service
   delegate :media_url, to: :provider_service
   delegate :api_headers, to: :provider_service
+  delegate :create_group, to: :provider_service
+  delegate :update_group_subject, to: :provider_service
+  delegate :update_group_description, to: :provider_service
+  delegate :update_group_picture, to: :provider_service
+  delegate :update_group_participants, to: :provider_service
+  delegate :group_invite_code, to: :provider_service
+  delegate :revoke_group_invite, to: :provider_service
+  delegate :group_join_requests, to: :provider_service
+  delegate :handle_group_join_requests, to: :provider_service
+  delegate :group_leave, to: :provider_service
+  delegate :group_setting_update, to: :provider_service
+  delegate :group_join_approval_mode, to: :provider_service
+  delegate :group_member_add_mode, to: :provider_service
 
   def setup_webhooks
     perform_webhook_setup
@@ -197,5 +308,11 @@ class Channel::Whatsapp < ApplicationRecord
 
     @webhook_teardown_initiated = true
     Whatsapp::WebhookTeardownService.new(self).perform
+  end
+
+  def should_auto_setup_webhooks?
+    # Only auto-setup webhooks for whatsapp_cloud provider with manual setup
+    # Embedded signup calls setup_webhooks explicitly in EmbeddedSignupService
+    provider == 'whatsapp_cloud' && provider_config['source'] != 'embedded_signup'
   end
 end

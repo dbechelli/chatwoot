@@ -1,7 +1,8 @@
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
+import { useI18n } from 'vue-i18n';
 import { getLastMessage } from 'dashboard/helper/conversationHelper';
 import { frontendURL, conversationUrl } from 'dashboard/helper/URLHelper';
 import Avatar from 'next/avatar/Avatar.vue';
@@ -10,7 +11,7 @@ import InboxName from '../InboxName.vue';
 import ConversationContextMenu from './contextMenu/Index.vue';
 import TimeAgo from 'dashboard/components/ui/TimeAgo.vue';
 import CardLabels from './conversationCardComponents/CardLabels.vue';
-import PriorityMark from './PriorityMark.vue';
+import CardPriorityIcon from 'dashboard/components-next/Conversation/ConversationCard/CardPriorityIcon.vue';
 import SLACardLabel from './components/SLACardLabel.vue';
 import ContextMenu from 'dashboard/components/ui/ContextMenu.vue';
 import VoiceCallStatus from './VoiceCallStatus.vue';
@@ -34,6 +35,7 @@ const emit = defineEmits([
   'contextMenuToggle',
   'assignAgent',
   'assignLabel',
+  'removeLabel',
   'assignTeam',
   'markAsUnread',
   'markAsRead',
@@ -49,15 +51,27 @@ const store = useStore();
 
 const hovered = ref(false);
 const showContextMenu = ref(false);
-const contextMenu = ref({
-  x: null,
-  y: null,
-});
+const contextMenu = ref({ x: null, y: null });
+
+// Reset UI state when conversation changes at same index (no :key, instance reused on reorder)
+// This prevents context menu/hover state from leaking to a different conversation
+// Emit contextMenuToggle(false) to sync parent state if menu was open during recycling
+const resetState = () => {
+  if (showContextMenu.value) {
+    emit('contextMenuToggle', false);
+  }
+  hovered.value = false;
+  showContextMenu.value = false;
+  contextMenu.value = { x: null, y: null };
+};
+
+watch(() => props.chat.id, resetState);
 
 const currentChat = useMapGetter('getSelectedChat');
 const inboxesList = useMapGetter('inboxes/getInboxes');
 const activeInbox = useMapGetter('getSelectedInbox');
 const accountId = useMapGetter('getCurrentAccountId');
+const globalConfig = useMapGetter('globalConfig/get');
 
 const chatMetadata = computed(() => props.chat.meta || {});
 
@@ -77,11 +91,42 @@ const isActiveChat = computed(() => {
 
 const unreadCount = computed(() => props.chat.unread_count);
 
-const hasUnread = computed(() => unreadCount.value > 0);
+const isGroupsDisabled = computed(() => {
+  return (
+    props.chat.group_type === 'group' &&
+    !globalConfig.value.baileysWhatsappGroupsEnabled
+  );
+});
+
+const hasGroupActivity = computed(() => {
+  if (!isGroupsDisabled.value) return false;
+  const lastActivity = props.chat.last_activity_at;
+  const agentSeen = props.chat.agent_last_seen_at;
+  return lastActivity > 0 && (!agentSeen || lastActivity > agentSeen);
+});
+
+const hasUnread = computed(
+  () => unreadCount.value > 0 || hasGroupActivity.value
+);
 
 const isInboxNameVisible = computed(() => !activeInbox.value);
 
 const lastMessageInChat = computed(() => getLastMessage(props.chat));
+
+const { t } = useI18n();
+const typingUsersList = computed(() => {
+  const users = store.getters['conversationTypingStatus/getUserList'](
+    props.chat.id
+  );
+  return users.filter(u => u.type === 'contact');
+});
+const isAnyoneTyping = computed(() => typingUsersList.value.length > 0);
+const typingPreviewText = computed(() => {
+  if (!isAnyoneTyping.value) return '';
+  return typingUsersList.value.some(u => u.recording)
+    ? t('CHAT_LIST.RECORDING')
+    : t('CHAT_LIST.TYPING');
+});
 
 const voiceCallData = computed(() => ({
   status: props.chat.additional_attributes?.call_status,
@@ -116,11 +161,17 @@ const showLabelsSection = computed(() => {
   return props.chat.labels?.length > 0 || hasSlaPolicyId.value;
 });
 
+const messagePreviewPaddingClass = computed(() => {
+  return [
+    !props.compact && hasUnread.value ? 'ltr:pr-4 rtl:pl-4' : '',
+    props.compact && hasUnread.value ? 'ltr:pr-6 rtl:pl-6' : '',
+  ];
+});
+
 const messagePreviewClass = computed(() => {
   return [
     hasUnread.value ? 'font-medium text-n-slate-12' : 'text-n-slate-11',
-    !props.compact && hasUnread.value ? 'ltr:pr-4 rtl:pl-4' : '',
-    props.compact && hasUnread.value ? 'ltr:pr-6 rtl:pl-6' : '',
+    ...messagePreviewPaddingClass.value,
   ];
 });
 
@@ -203,7 +254,10 @@ const onAssignAgent = agent => {
 
 const onAssignLabel = label => {
   emit('assignLabel', [label.title], [props.chat.id]);
-  closeContextMenu();
+};
+
+const onRemoveLabel = label => {
+  emit('removeLabel', [label.title], [props.chat.id]);
 };
 
 const onAssignTeam = team => {
@@ -236,9 +290,8 @@ const deleteConversation = () => {
   <div
     class="relative flex items-start flex-grow-0 flex-shrink-0 w-auto max-w-full py-0 border-t-0 border-b-0 border-l-0 border-r-0 border-transparent border-solid cursor-pointer conversation hover:bg-n-alpha-1 dark:hover:bg-n-alpha-3 group"
     :class="{
-      'active animate-card-select bg-n-alpha-1 dark:bg-n-alpha-3 border-n-weak':
-        isActiveChat,
-      'bg-n-slate-2 dark:bg-n-slate-3': selected,
+      'active animate-card-select bg-n-background border-n-weak': isActiveChat,
+      'bg-n-slate-2': selected,
       'px-0': compact,
       'px-3': !compact,
     }"
@@ -291,7 +344,7 @@ const deleteConversation = () => {
       >
         <InboxName v-if="showInboxName" :inbox="inbox" class="flex-1 min-w-0" />
         <div
-          class="flex items-center gap-2 flex-shrink-0"
+          class="flex items-baseline gap-2 flex-shrink-0"
           :class="{
             'flex-1 justify-between': !showInboxName,
           }"
@@ -303,7 +356,10 @@ const deleteConversation = () => {
             <fluent-icon icon="person" size="12" class="text-n-slate-11" />
             {{ assignee.name }}
           </span>
-          <PriorityMark :priority="chat.priority" class="flex-shrink-0" />
+          <CardPriorityIcon
+            :priority="chat.priority"
+            class="flex-shrink-0 !size-3.5"
+          />
         </div>
       </div>
       <h4
@@ -319,6 +375,14 @@ const deleteConversation = () => {
         :direction="voiceCallData.direction"
         :message-preview-class="messagePreviewClass"
       />
+      <p
+        v-else-if="isAnyoneTyping"
+        key="typing-preview"
+        class="text-green-500 text-sm font-medium my-0 mx-2 leading-6 h-6 flex-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap"
+        :class="messagePreviewPaddingClass"
+      >
+        {{ typingPreviewText }}
+      </p>
       <MessagePreview
         v-else-if="lastMessageInChat"
         key="message-preview"
@@ -349,14 +413,19 @@ const deleteConversation = () => {
           <TimeAgo
             :last-activity-timestamp="chat.timestamp"
             :created-at-timestamp="chat.created_at"
+            :conversation-id="chat.id"
           />
         </span>
         <span
+          v-if="hasUnread && unreadCount > 0"
           class="shadow-lg rounded-full text-xxs font-semibold h-4 leading-4 ltr:ml-auto rtl:mr-auto mt-1 min-w-[1rem] px-1 py-0 text-center text-white bg-n-teal-9"
-          :class="hasUnread ? 'block' : 'hidden'"
         >
           {{ unreadCount > 9 ? '9+' : unreadCount }}
         </span>
+        <span
+          v-else-if="hasUnread"
+          class="shadow-lg rounded-full ltr:ml-auto rtl:mr-auto mt-1 size-2 bg-n-teal-9"
+        />
       </div>
       <CardLabels
         v-if="showLabelsSection"
@@ -380,11 +449,13 @@ const deleteConversation = () => {
         :priority="chat.priority"
         :chat-id="chat.id"
         :has-unread-messages="hasUnread"
+        :conversation-labels="chat.labels"
         :conversation-url="conversationPath"
         :allowed-options="allowedContextMenuOptions"
         @update-conversation="onUpdateConversation"
         @assign-agent="onAssignAgent"
         @assign-label="onAssignLabel"
+        @remove-label="onRemoveLabel"
         @assign-team="onAssignTeam"
         @mark-as-unread="markAsUnread"
         @mark-as-read="markAsRead"

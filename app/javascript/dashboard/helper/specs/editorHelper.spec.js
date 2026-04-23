@@ -15,6 +15,7 @@ import {
   getMenuAnchor,
   calculateMenuPosition,
   stripUnsupportedFormatting,
+  stripInlineBase64Images,
 } from '../editorHelper';
 import { FORMATTING } from 'dashboard/constants/editor';
 import { EditorState } from '@chatwoot/prosemirror-schema';
@@ -429,6 +430,36 @@ describe('extractTextFromMarkdown', () => {
   });
 });
 
+describe('stripInlineBase64Images', () => {
+  it('removes markdown data:image base64 images and sets hasInlineImages', () => {
+    const content =
+      'Hello\n![x](data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAE)\nWorld';
+    const { sanitizedContent, hasInlineImages } =
+      stripInlineBase64Images(content);
+
+    expect(hasInlineImages).toBe(true);
+    expect(sanitizedContent).not.toContain('data:image/png;base64');
+    expect(sanitizedContent).toContain('Hello');
+    expect(sanitizedContent).toContain('World');
+  });
+
+  it('leaves hosted image markdown unchanged', () => {
+    const content = '![](https://example.com/logo.png)';
+    const { sanitizedContent, hasInlineImages } =
+      stripInlineBase64Images(content);
+
+    expect(hasInlineImages).toBe(false);
+    expect(sanitizedContent).toBe(content);
+  });
+
+  it('returns empty hasInlineImages for empty input', () => {
+    expect(stripInlineBase64Images('')).toEqual({
+      sanitizedContent: '',
+      hasInlineImages: false,
+    });
+  });
+});
+
 describe('insertAtCursor', () => {
   it('should return undefined if editorView is not provided', () => {
     const result = insertAtCursor(undefined, schema.text('Hello'), 0);
@@ -801,62 +832,6 @@ describe('getContentNode', () => {
 });
 
 describe('getFormattingForEditor', () => {
-  describe('channel-specific formatting', () => {
-    it('returns full formatting for Email channel', () => {
-      const result = getFormattingForEditor('Channel::Email');
-
-      expect(result).toEqual(FORMATTING['Channel::Email']);
-    });
-
-    it('returns full formatting for WebWidget channel', () => {
-      const result = getFormattingForEditor('Channel::WebWidget');
-
-      expect(result).toEqual(FORMATTING['Channel::WebWidget']);
-    });
-
-    it('returns limited formatting for WhatsApp channel', () => {
-      const result = getFormattingForEditor('Channel::Whatsapp');
-
-      expect(result).toEqual(FORMATTING['Channel::Whatsapp']);
-    });
-
-    it('returns no formatting for API channel', () => {
-      const result = getFormattingForEditor('Channel::Api');
-
-      expect(result).toEqual(FORMATTING['Channel::Api']);
-    });
-
-    it('returns limited formatting for FacebookPage channel', () => {
-      const result = getFormattingForEditor('Channel::FacebookPage');
-
-      expect(result).toEqual(FORMATTING['Channel::FacebookPage']);
-    });
-
-    it('returns no formatting for TwitterProfile channel', () => {
-      const result = getFormattingForEditor('Channel::TwitterProfile');
-
-      expect(result).toEqual(FORMATTING['Channel::TwitterProfile']);
-    });
-
-    it('returns no formatting for SMS channel', () => {
-      const result = getFormattingForEditor('Channel::Sms');
-
-      expect(result).toEqual(FORMATTING['Channel::Sms']);
-    });
-
-    it('returns limited formatting for Telegram channel', () => {
-      const result = getFormattingForEditor('Channel::Telegram');
-
-      expect(result).toEqual(FORMATTING['Channel::Telegram']);
-    });
-
-    it('returns formatting for Instagram channel', () => {
-      const result = getFormattingForEditor('Channel::Instagram');
-
-      expect(result).toEqual(FORMATTING['Channel::Instagram']);
-    });
-  });
-
   describe('context-specific formatting', () => {
     it('returns default formatting for Context::Default', () => {
       const result = getFormattingForEditor('Context::Default');

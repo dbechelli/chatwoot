@@ -14,6 +14,7 @@ const state = {
   listLoadingStatus: true,
   chatStatusFilter: wootConstants.STATUS_TYPE.OPEN,
   chatSortFilter: wootConstants.SORT_BY_TYPE.LATEST,
+  chatGroupTypeFilter: '',
   currentInbox: null,
   selectedChatId: null,
   appliedFilters: [],
@@ -63,14 +64,18 @@ export const mutations = {
     _state.allConversations = [];
     _state.selectedChatId = null;
   },
-  [types.SET_ALL_MESSAGES_LOADED](_state) {
-    const [chat] = getSelectedChatConversation(_state);
-    chat.allMessagesLoaded = true;
+  [types.SET_ALL_MESSAGES_LOADED](_state, conversationId) {
+    const chat = getConversationById(_state)(conversationId);
+    if (chat) {
+      chat.allMessagesLoaded = true;
+    }
   },
 
-  [types.CLEAR_ALL_MESSAGES_LOADED](_state) {
-    const [chat] = getSelectedChatConversation(_state);
-    chat.allMessagesLoaded = false;
+  [types.CLEAR_ALL_MESSAGES_LOADED](_state, conversationId) {
+    const chat = getConversationById(_state)(conversationId);
+    if (chat) {
+      chat.allMessagesLoaded = false;
+    }
   },
   [types.CLEAR_CURRENT_CHAT_WINDOW](_state) {
     _state.selectedChatId = null;
@@ -91,15 +96,24 @@ export const mutations = {
     chat.messages = data;
   },
 
+  [types.SET_CHAT_DATA_FETCHED](_state, conversationId) {
+    const chat = getConversationById(_state)(conversationId);
+    if (chat) {
+      chat.dataFetched = true;
+    }
+  },
+
   [types.SET_CURRENT_CHAT_WINDOW](_state, activeChat) {
     if (activeChat) {
       _state.selectedChatId = activeChat.id;
     }
   },
 
-  [types.ASSIGN_AGENT](_state, assignee) {
-    const [chat] = getSelectedChatConversation(_state);
-    chat.meta.assignee = assignee;
+  [types.ASSIGN_AGENT](_state, { conversationId, assignee }) {
+    const chat = getConversationById(_state)(conversationId);
+    if (chat) {
+      chat.meta.assignee = assignee;
+    }
   },
 
   [types.ASSIGN_TEAM](_state, { team, conversationId }) {
@@ -121,9 +135,19 @@ export const mutations = {
     chat.priority = priority;
   },
 
-  [types.UPDATE_CONVERSATION_CUSTOM_ATTRIBUTES](_state, custom_attributes) {
-    const [chat] = getSelectedChatConversation(_state);
-    chat.custom_attributes = custom_attributes;
+  [types.UPDATE_CONVERSATION_CUSTOM_ATTRIBUTES](
+    _state,
+    { conversationId, customAttributes }
+  ) {
+    const conversation = _state.allConversations.find(
+      c => c.id === conversationId
+    );
+    if (conversation) {
+      conversation.custom_attributes = {
+        ...conversation.custom_attributes,
+        ...customAttributes,
+      };
+    }
   },
 
   [types.CHANGE_CONVERSATION_STATUS](
@@ -205,7 +229,10 @@ export const mutations = {
   },
 
   [types.ADD_CONVERSATION](_state, conversation) {
-    _state.allConversations.push(conversation);
+    const exists = _state.allConversations.some(c => c.id === conversation.id);
+    if (!exists) {
+      _state.allConversations.push(conversation);
+    }
   },
 
   [types.DELETE_CONVERSATION](_state, conversationId) {
@@ -232,7 +259,11 @@ export const mutations = {
         emitter.emit(BUS_EVENTS.SCROLL_TO_MESSAGE);
       }
     } else {
-      _state.allConversations.push(conversation);
+      const { conversationType } = _state.conversationFilters || {};
+      const { MENTION, PARTICIPATING } = wootConstants.CONVERSATION_TYPE;
+      if (![MENTION, PARTICIPATING].includes(conversationType)) {
+        _state.allConversations.push(conversation);
+      }
     }
   },
 
@@ -262,10 +293,16 @@ export const mutations = {
     _state.chatSortFilter = data;
   },
 
+  [types.CHANGE_CHAT_GROUP_TYPE_FILTER](_state, data) {
+    _state.chatGroupTypeFilter = data;
+  },
+
   // Update assignee on action cable message
   [types.UPDATE_ASSIGNEE](_state, payload) {
-    const [chat] = _state.allConversations.filter(c => c.id === payload.id);
-    chat.meta.assignee = payload.assignee;
+    const chat = getConversationById(_state)(payload.id);
+    if (chat) {
+      chat.meta.assignee = payload.assignee;
+    }
   },
 
   [types.UPDATE_CONVERSATION_CONTACT](_state, { conversationId, ...payload }) {

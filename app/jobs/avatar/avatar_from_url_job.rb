@@ -27,7 +27,11 @@ class Avatar::AvatarFromUrlJob < ApplicationJob
       content_type: avatar_file.content_type
     )
 
-  rescue Down::NotFound, Down::Error => e
+    dispatch_contact_update(avatarable)
+
+  rescue Down::NotFound
+    Rails.logger.info "AvatarFromUrlJob: avatar not found at #{avatar_url}"
+  rescue Down::Error => e
     Rails.logger.error "AvatarFromUrlJob error for #{avatar_url}: #{e.class} - #{e.message}"
   ensure
     update_avatar_sync_attributes(avatarable, avatar_url)
@@ -80,5 +84,15 @@ class Avatar::AvatarFromUrlJob < ApplicationJob
     return false if file.original_filename.blank?
 
     true
+  end
+
+  def dispatch_contact_update(avatarable)
+    return unless avatarable.is_a?(Contact)
+
+    Rails.configuration.dispatcher.dispatch(
+      Events::Types::CONTACT_UPDATED,
+      Time.zone.now,
+      contact: avatarable
+    )
   end
 end

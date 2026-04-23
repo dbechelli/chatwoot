@@ -15,23 +15,25 @@
 #  index_installation_configs_on_name_and_created_at  (name,created_at) UNIQUE
 #
 class InstallationConfig < ApplicationRecord
-  # The serialized_value column is jsonb but contains YAML strings (legacy data).
-  # We need a custom coder that handles both YAML strings and native JSON objects.
+  # The serialized_value column is jsonb but production data is mixed: older rows
+  # were written as YAML strings by upstream's serialize :coder => YAML chain,
+  # and some rows were written as native jsonb hashes. The stock YAML coder
+  # raises TypeError on native-hash rows. This coder reads either shape and
+  # always writes YAML strings so data converges on a single format over time.
   class SerializedValueCoder # rubocop:disable Style/OneClassPerFile
     def self.dump(value)
-      return value.with_indifferent_access if value.is_a?(Hash)
-
-      { value: value }.with_indifferent_access
+      hash = value.is_a?(Hash) ? value : { value: value }
+      YAML.dump(hash.with_indifferent_access)
     end
 
     def self.load(value)
       return {}.with_indifferent_access if value.blank?
 
-      # Handle YAML strings stored in jsonb column (legacy data)
-      if value.is_a?(String)
+      case value
+      when String
         YAML.safe_load(value, permitted_classes: [ActiveSupport::HashWithIndifferentAccess, Symbol])
             .with_indifferent_access
-      elsif value.is_a?(Hash)
+      when Hash
         value.with_indifferent_access
       else
         {}.with_indifferent_access
@@ -53,10 +55,6 @@ class InstallationConfig < ApplicationRecord
   after_commit :clear_cache
 
   def value
-    # This is an extra hack again cause of the YAML serialization, in case of new object initialization in super admin
-    # It was throwing error as the default value of column '{}' was failing in deserialization.
-    return {}.with_indifferent_access if new_record? && @attributes['serialized_value']&.value_before_type_cast == '{}'
-
     serialized_value[:value]
   end
 

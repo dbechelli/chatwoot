@@ -1,6 +1,7 @@
 class Api::V1::Accounts::InboxCsatTemplatesController < Api::V1::Accounts::BaseController
   before_action :fetch_inbox
   before_action :validate_whatsapp_channel
+  before_action :validate_captain_enabled, only: [:analyze]
 
   def show
     service = CsatTemplateManagementService.new(@inbox)
@@ -24,6 +25,43 @@ class Api::V1::Accounts::InboxCsatTemplatesController < Api::V1::Accounts::BaseC
     render json: { error: 'Template parameters are required' }, status: :unprocessable_entity
   end
 
+  def analyze
+    template_params = extract_template_params
+    return render_missing_message_error if template_params[:message].blank?
+
+    result = CsatTemplateUtilityAnalysisService.new(
+      account: Current.account,
+      inbox: @inbox,
+      message: template_params[:message],
+      button_text: template_params[:button_text],
+      language: template_params[:language]
+    ).perform
+
+    render json: result
+  rescue ActionController::ParameterMissing
+    render json: { error: 'Template parameters are required' }, status: :unprocessable_entity
+  end
+
+  def link
+    link_params = params.require(:template).permit(:name, :language, body_variables: {})
+    return render json: { error: 'Template name is required' }, status: :unprocessable_entity if link_params[:name].blank?
+
+    service = CsatTemplateManagementService.new(@inbox)
+    result = service.link_existing_template(
+      link_params[:name], link_params[:language], body_variables: link_params[:body_variables].to_h
+    )
+
+    render_link_result(result)
+  rescue ActionController::ParameterMissing
+    render json: { error: 'Template parameters are required' }, status: :unprocessable_entity
+  end
+
+  def available_templates
+    service = CsatTemplateManagementService.new(@inbox)
+    templates = service.available_templates
+    render json: { templates: templates }
+  end
+
   private
 
   def fetch_inbox
@@ -44,6 +82,28 @@ class Api::V1::Accounts::InboxCsatTemplatesController < Api::V1::Accounts::BaseC
 
   def render_missing_message_error
     render json: { error: 'Message is required' }, status: :unprocessable_entity
+  end
+
+  def validate_captain_enabled
+    return if Current.account.feature_enabled?('captain_integration')
+
+    render json: { error: 'Captain is required for template analysis' }, status: :forbidden
+  end
+
+  def render_link_result(result)
+    if result[:success]
+      render json: {
+        template: {
+          name: result[:template_name], template_id: result[:template_id],
+          status: result[:status], language: result[:language], source: result[:source],
+          linked_at: result[:linked_at]
+        }
+      }, status: :ok
+    elsif result[:error]
+      render json: { error: result[:error] }, status: :unprocessable_entity
+    else
+      render json: { error: result[:service_error] || 'An unexpected error occurred' }, status: :internal_server_error
+    end
   end
 
   def render_template_creation_result(result)

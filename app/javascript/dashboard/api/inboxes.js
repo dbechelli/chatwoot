@@ -43,12 +43,41 @@ class Inboxes extends CacheEnabledApiClient {
     return axios.get(`${this.url}/${inboxId}/csat_template`);
   }
 
+  analyzeCSATTemplateUtility(inboxId, template) {
+    return axios.post(`${this.url}/${inboxId}/csat_template/analyze`, {
+      template,
+    });
+  }
+
+  resetSecret(inboxId) {
+    return axios.post(`${this.url}/${inboxId}/reset_secret`);
+  }
+
+  linkCSATTemplate(inboxId, template) {
+    return axios.post(`${this.url}/${inboxId}/csat_template/link`, {
+      template,
+    });
+  }
+
+  getAvailableCSATTemplates(inboxId) {
+    return axios.get(
+      `${this.url}/${inboxId}/csat_template/available_templates`
+    );
+  }
+
   setupChannelProvider(inboxId) {
     return axios.post(`${this.url}/${inboxId}/setup_channel_provider`);
   }
 
   disconnectChannelProvider(inboxId) {
     return axios.post(`${this.url}/${inboxId}/disconnect_channel_provider`);
+  }
+
+  convertProvider(inboxId, { provider, providerConfig }) {
+    return axios.post(`${this.url}/${inboxId}/convert_provider`, {
+      provider,
+      provider_config: providerConfig,
+    });
   }
 }
 

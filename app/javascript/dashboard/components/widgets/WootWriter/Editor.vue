@@ -14,20 +14,28 @@ import {
 import CannedResponse from '../conversation/CannedResponse.vue';
 import KeyboardEmojiSelector from './keyboardEmojiSelector.vue';
 import TagAgents from '../conversation/TagAgents.vue';
+import TagGroupMembers from '../conversation/TagGroupMembers.vue';
 import VariableList from '../conversation/VariableList.vue';
 import TagTools from '../conversation/TagTools.vue';
+import TagConversations from '../conversation/TagConversations.vue';
+import CopilotMenuBar from './CopilotMenuBar.vue';
 
 import { useEmitter } from 'dashboard/composables/emitter';
 import { useI18n } from 'vue-i18n';
+import { useCaptain } from 'dashboard/composables/useCaptain';
 import { useKeyboardEvents } from 'dashboard/composables/useKeyboardEvents';
 import { useTrack } from 'dashboard/composables';
 import { useUISettings } from 'dashboard/composables/useUISettings';
 import { useAlert } from 'dashboard/composables';
 import { useMapGetter } from 'dashboard/composables/store';
 import { useMessageFormatter } from 'shared/composables/useMessageFormatter';
+import { vOnClickOutside } from '@vueuse/components';
 
 import { BUS_EVENTS } from 'shared/constants/busEvents';
-import { CONVERSATION_EVENTS } from 'dashboard/helper/AnalyticsHelper/events';
+import {
+  CONVERSATION_EVENTS,
+  CAPTAIN_EVENTS,
+} from 'dashboard/helper/AnalyticsHelper/events';
 import { MESSAGE_EDITOR_IMAGE_RESIZES } from 'dashboard/constants/editor';
 
 import {
@@ -82,10 +90,20 @@ const props = defineProps({
   // allowSignature is a kill switch, ensuring no signature methods
   // are triggered except when this flag is true
   allowSignature: { type: Boolean, default: false },
+  // Per-inbox overrides; when empty, falls back to currentUser.ui_settings
+  signaturePositionOverride: { type: String, default: '' },
+  signatureSeparatorOverride: { type: String, default: '' },
   channelType: { type: String, default: '' },
+  conversationId: { type: Number, default: null },
   medium: { type: String, default: '' },
   showImageResizeToolbar: { type: Boolean, default: false }, // A kill switch to show or hide the image toolbar
   focusOnMount: { type: Boolean, default: true },
+  enableCopilot: { type: Boolean, default: true },
+  isGroupConversation: { type: Boolean, default: false },
+  groupContactId: { type: [Number, String], default: null },
+  inboxPhoneNumber: { type: String, default: null },
+  enableMentionDropdown: { type: Boolean, default: false },
+  enableConversationMention: { type: Boolean, default: false },
 });
 
 const emit = defineEmits([
@@ -100,13 +118,20 @@ const emit = defineEmits([
   'focus',
   'input',
   'update:modelValue',
+  'executeCopilotAction',
+  'toggleConversationMention',
 ]);
 
 const { t } = useI18n();
+const { captainTasksEnabled: rawCaptainTasksEnabled } = useCaptain();
+const captainTasksEnabled = computed(
+  () => props.enableCopilot && rawCaptainTasksEnabled.value
+);
 
 const TYPING_INDICATOR_IDLE_TIME = 4000;
 const MAXIMUM_FILE_UPLOAD_SIZE = 4; // in MB
 const DEFAULT_FORMATTING = 'Context::Default';
+const PRIVATE_NOTE_FORMATTING = 'Context::PrivateNote';
 
 const effectiveChannelType = computed(() =>
   getEffectiveChannelType(props.channelType, props.medium)
@@ -116,17 +141,24 @@ const editorSchema = computed(() => {
   if (!props.channelType) return messageSchema;
 
   const formatType = props.isPrivate
-    ? DEFAULT_FORMATTING
+    ? PRIVATE_NOTE_FORMATTING
     : effectiveChannelType.value;
-  const formatting = getFormattingForEditor(formatType);
+  const formatting = getFormattingForEditor(
+    formatType,
+    captainTasksEnabled.value
+  );
   return buildMessageSchema(formatting.marks, formatting.nodes);
 });
 
 const editorMenuOptions = computed(() => {
   const formatType = props.isPrivate
-    ? DEFAULT_FORMATTING
+    ? PRIVATE_NOTE_FORMATTING
     : effectiveChannelType.value || DEFAULT_FORMATTING;
-  const formatting = getFormattingForEditor(formatType);
+  const formatting = getFormattingForEditor(
+    formatType,
+    captainTasksEnabled.value
+  );
+
   return formatting.menu;
 });
 
@@ -176,6 +208,8 @@ const toolSearchKey = ref('');
 const cannedSearchTerm = ref('');
 const variableSearchTerm = ref('');
 const emojiSearchTerm = ref('');
+const showConversationMenu = ref(false);
+const conversationSearchKey = ref('');
 const range = ref(null);
 const isImageNodeSelected = ref(false);
 const toolbarPosition = ref({ top: 0, left: 0 });
@@ -188,6 +222,26 @@ const sizes = MESSAGE_EDITOR_IMAGE_RESIZES;
 const editorRoot = useTemplateRef('editorRoot');
 const imageUpload = useTemplateRef('imageUpload');
 const editor = useTemplateRef('editor');
+
+const isEditorMenuPopover = computed(
+  () =>
+    editorRoot.value?.classList.contains('popover-prosemirror-menu') ?? false
+);
+
+const handleCopilotAction = actionKey => {
+  if (actionKey === 'improve_selection' && editorView?.state) {
+    const { from, to } = editorView.state.selection;
+    const selectedText = editorView.state.doc.textBetween(from, to).trim();
+
+    if (from !== to && selectedText) {
+      emit('executeCopilotAction', 'improve', selectedText);
+    }
+  } else {
+    emit('executeCopilotAction', actionKey, props.modelValue);
+  }
+
+  showSelectionMenu.value = false;
+};
 
 const contentFromEditor = () => {
   return MessageMarkdownSerializer.serialize(editorView.state.doc);
@@ -254,7 +308,10 @@ const plugins = computed(() => {
       trigger: '@',
       showMenu: showUserMentions,
       searchTerm: mentionSearchKey,
-      isAllowed: () => props.isPrivate || !props.enableCaptainTools,
+      isAllowed: () =>
+        props.isPrivate ||
+        props.isGroupConversation ||
+        !props.enableCaptainTools,
     }),
     createSuggestionPlugin({
       trigger: '/',
@@ -274,6 +331,13 @@ const plugins = computed(() => {
       showMenu: showEmojiMenu,
       searchTerm: emojiSearchTerm,
     }),
+    createSuggestionPlugin({
+      trigger: '#',
+      minChars: 0,
+      showMenu: showConversationMenu,
+      searchTerm: conversationSearchKey,
+      isAllowed: () => props.enableConversationMention,
+    }),
   ];
 });
 
@@ -287,11 +351,19 @@ const sendWithSignature = computed(() => {
 });
 
 const signaturePosition = computed(() => {
-  return currentUser.value?.ui_settings?.signature_position || 'top';
+  return (
+    props.signaturePositionOverride ||
+    currentUser.value?.ui_settings?.signature_position ||
+    'top'
+  );
 });
 
 const signatureSeparator = computed(() => {
-  return currentUser.value?.ui_settings?.signature_separator || 'blank';
+  return (
+    props.signatureSeparatorOverride ||
+    currentUser.value?.ui_settings?.signature_separator ||
+    'blank'
+  );
 });
 
 const shouldShowSignaturePreview = computed(() => {
@@ -304,7 +376,13 @@ const formattedSignature = computed(() => {
 });
 
 watch(showUserMentions, updatedValue => {
-  emit('toggleUserMention', props.isPrivate && updatedValue);
+  emit(
+    'toggleUserMention',
+    (props.isPrivate ||
+      props.isGroupConversation ||
+      props.enableMentionDropdown) &&
+      updatedValue
+  );
 });
 watch(showCannedMenu, updatedValue => {
   emit('toggleCannedMenu', !props.isPrivate && updatedValue);
@@ -314,6 +392,13 @@ watch(showVariables, updatedValue => {
 });
 watch(showToolsMenu, updatedValue => {
   emit('toggleToolsMenu', props.enableCaptainTools && updatedValue);
+});
+
+watch(showConversationMenu, updatedValue => {
+  emit(
+    'toggleConversationMention',
+    props.enableConversationMention && updatedValue
+  );
 });
 
 function focusEditorInputField(pos = 'end') {
@@ -378,13 +463,30 @@ function openFileBrowser() {
   imageUpload.value.click();
 }
 
+function handleCopilotClick() {
+  const isOpening = !showSelectionMenu.value;
+  if (isOpening) {
+    useTrack(CAPTAIN_EVENTS.EDITOR_AI_MENU_OPENED, {
+      conversationId: props.conversationId,
+      entryPoint: 'inline',
+    });
+  }
+  showSelectionMenu.value = isOpening;
+}
+
+function handleClickOutside(event) {
+  // Check if the clicked element or its parents have the ignored class
+  if (event.target.closest('.ProseMirror-copilot')) return;
+  showSelectionMenu.value = false;
+}
+
 function reloadState(content = props.modelValue) {
   const unrefContent = unref(content);
   state = createState(
     unrefContent,
     props.placeholder,
     plugins.value,
-    { onImageUpload: openFileBrowser },
+    { onImageUpload: openFileBrowser, onCopilotClick: handleCopilotClick },
     editorMenuOptions.value
   );
 
@@ -405,6 +507,7 @@ function setToolbarPosition() {
 function setMenubarPosition({ selection } = {}) {
   const wrapper = editorRoot.value;
   if (!selection || !wrapper) return;
+  if (!isEditorMenuPopover.value) return;
 
   const rect = wrapper.getBoundingClientRect();
   const isRtl = getComputedStyle(wrapper).direction === 'rtl';
@@ -565,7 +668,12 @@ function insertContentIntoEditor(content, defaultFrom = 0) {
   const from = defaultFrom || editorView.state.selection.from || 0;
   // Use the editor's current schema to ensure compatibility with buildMessageSchema
   const currentSchema = editorView.state.schema;
-  let node = new MessageMarkdownTransformer(currentSchema).parse(content);
+  // Strip unsupported formatting before parsing to ensure content can be inserted
+  // into channels that don't support certain markdown features (e.g., API channels)
+  const sanitizedContent = stripUnsupportedFormatting(content, currentSchema);
+  let node = new MessageMarkdownTransformer(currentSchema).parse(
+    sanitizedContent
+  );
 
   insertNodeIntoEditor(node, from, undefined);
 }
@@ -724,7 +832,7 @@ onMounted(() => {
     props.modelValue,
     props.placeholder,
     plugins.value,
-    { onImageUpload: openFileBrowser },
+    { onImageUpload: openFileBrowser, onCopilotClick: handleCopilotClick },
     editorMenuOptions.value
   );
 
@@ -740,13 +848,43 @@ onMounted(() => {
 // Components using this
 // 1. SearchPopover.vue
 useEmitter(BUS_EVENTS.INSERT_INTO_RICH_EDITOR, insertContentIntoEditor);
+
+function insertMentionTrigger(char) {
+  if (!editorView) return;
+  focusEditorInputField('end');
+  const editorState = editorView.state;
+  const { from, to } = editorState.selection;
+  const textBefore =
+    from > 0
+      ? editorState.doc.textBetween(Math.max(0, from - 1), from, '\0', '\0')
+      : '';
+  const prefix = textBefore && !/\s/.test(textBefore) ? ' ' : '';
+  const tr = editorState.tr.insertText(`${prefix}${char}`, from, to);
+  editorView.dispatch(tr);
+}
+
+defineExpose({ focusEditorInputField, insertMentionTrigger });
 </script>
 
 <template>
-  <div ref="editorRoot" class="relative w-full">
-    <TagAgents
-      v-if="showUserMentions && isPrivate"
+  <div
+    ref="editorRoot"
+    class="relative w-full"
+    :class="{
+      'opacity-50 cursor-not-allowed pointer-events-none': disabled,
+    }"
+  >
+    <TagGroupMembers
+      v-if="showUserMentions && isGroupConversation && !isPrivate"
       :search-key="mentionSearchKey"
+      :group-contact-id="groupContactId"
+      :exclude-phone-number="inboxPhoneNumber"
+      @select-agent="content => insertSpecialContent('mention', content)"
+    />
+    <TagAgents
+      v-if="showUserMentions && (isPrivate || enableMentionDropdown)"
+      :search-key="mentionSearchKey"
+      :exclude-user-id="enableMentionDropdown ? currentUser?.id : null"
       @select-agent="content => insertSpecialContent('mention', content)"
     />
     <CannedResponse
@@ -769,6 +907,23 @@ useEmitter(BUS_EVENTS.INSERT_INTO_RICH_EDITOR, insertContentIntoEditor);
       :search-key="toolSearchKey"
       @select-tool="content => insertSpecialContent('tool', content)"
     />
+    <TagConversations
+      v-if="showConversationMenu && enableConversationMention"
+      :search-key="conversationSearchKey"
+      @select-conversation="content => insertSpecialContent('mention', content)"
+    />
+    <CopilotMenuBar
+      v-if="showSelectionMenu"
+      v-on-click-outside="handleClickOutside"
+      :has-selection="isTextSelected"
+      :is-editor-menu-popover="isEditorMenuPopover"
+      :editor-content="modelValue"
+      :conversation-id="conversationId"
+      :show-selection-menu="showSelectionMenu"
+      :show-general-menu="false"
+      class="copilot-editor-menu"
+      @execute-copilot-action="handleCopilotAction"
+    />
     <input
       ref="imageUpload"
       type="file"
@@ -779,6 +934,7 @@ useEmitter(BUS_EVENTS.INSERT_INTO_RICH_EDITOR, insertContentIntoEditor);
     <!-- Signature preview at top -->
     <div
       v-if="shouldShowSignaturePreview && signaturePosition === 'top'"
+      v-tooltip="t('CONVERSATION.FOOTER.SIGNATURE_LABEL_TOP_TOOLTIP')"
       class="signature-preview signature-preview--top"
     >
       <div class="signature-label">
@@ -793,6 +949,7 @@ useEmitter(BUS_EVENTS.INSERT_INTO_RICH_EDITOR, insertContentIntoEditor);
     <!-- Signature preview at bottom -->
     <div
       v-if="shouldShowSignaturePreview && signaturePosition === 'bottom'"
+      v-tooltip="t('CONVERSATION.FOOTER.SIGNATURE_LABEL_BOTTOM_TOOLTIP')"
       class="signature-preview signature-preview--bottom"
     >
       <div class="signature-label">
@@ -828,7 +985,7 @@ useEmitter(BUS_EVENTS.INSERT_INTO_RICH_EDITOR, insertContentIntoEditor);
 @import '@chatwoot/prosemirror-schema/src/styles/base.scss';
 
 .signature-preview {
-  @apply px-1 py-1 text-n-slate-10 text-sm pointer-events-none select-none opacity-70;
+  @apply px-1 py-1 text-n-slate-10 text-sm select-none opacity-70 cursor-default;
 
   &--top {
     @apply border-b border-n-weak pb-1;
@@ -884,6 +1041,10 @@ useEmitter(BUS_EVENTS.INSERT_INTO_RICH_EDITOR, insertContentIntoEditor);
           @apply size-full;
         }
       }
+
+      .ProseMirror-copilot svg {
+        @apply fill-n-violet-9 text-n-violet-9 stroke-none;
+      }
     }
   }
 
@@ -922,14 +1083,43 @@ useEmitter(BUS_EVENTS.INSERT_INTO_RICH_EDITOR, insertContentIntoEditor);
 }
 
 .ProseMirror-woot-style {
-  @apply overflow-auto min-h-[5rem] max-h-[7.5rem];
+  @apply overflow-auto;
+}
+
+.ProseMirror-woot-style:not(
+    :where(.resizable-editor-wrapper .ProseMirror-woot-style)
+  ) {
+  @apply min-h-[5rem] max-h-[7.5rem];
+}
+
+// Resizable editor wrapper styles
+.resizable-editor-wrapper {
+  .ProseMirror-woot-style {
+    min-height: clamp(
+      var(--editor-min-allowed, var(--editor-min-height, 5rem)),
+      var(--editor-height, var(--editor-min-height, 5rem)),
+      var(--editor-max-allowed, var(--editor-max-height, 7.5rem))
+    );
+    max-height: clamp(
+      var(--editor-min-allowed, var(--editor-min-height, 5rem)),
+      var(--editor-height, var(--editor-min-height, 5rem)),
+      var(--editor-max-allowed, var(--editor-max-height, 7.5rem))
+    );
+    transition:
+      min-height var(--editor-height-transition, 180ms ease),
+      max-height var(--editor-height-transition, 180ms ease);
+  }
+}
+
+.ProseMirror-prompt-backdrop::backdrop {
+  @apply bg-n-alpha-black1 backdrop-blur-[4px];
 }
 
 .ProseMirror-prompt {
-  @apply z-[9999] bg-n-alpha-3 backdrop-blur-[100px] border border-n-strong p-6 shadow-xl rounded-xl;
+  @apply bg-n-alpha-3 border border-n-strong p-6 shadow-xl rounded-xl w-96 !important;
 
   h5 {
-    @apply text-n-slate-12 mb-1.5;
+    @apply text-n-slate-12 mb-3;
   }
 
   .ProseMirror-prompt-buttons {
@@ -963,6 +1153,15 @@ useEmitter(BUS_EVENTS.INSERT_INTO_RICH_EDITOR, insertContentIntoEditor);
   }
 }
 
+.prosemirror-mention-node[mention-type='conversation'] {
+  font-size: 0;
+
+  &::before {
+    font-size: 0.875rem;
+    content: '#' attr(mention-user-full-name);
+  }
+}
+
 .prosemirror-tools-node {
   @apply font-medium text-n-slate-12 py-0;
 }
@@ -981,6 +1180,17 @@ useEmitter(BUS_EVENTS.INSERT_INTO_RICH_EDITOR, insertContentIntoEditor);
 
 .editor-warning__message {
   @apply text-n-ruby-9 dark:text-n-ruby-9 font-normal text-sm pt-1 pb-0 px-0;
+}
+
+// Default copilot menu position (non-popover editors like components-next/Editor)
+// When popover-prosemirror-menu is NOT on the wrapper, anchor below the menubar
+:not(.popover-prosemirror-menu) > .copilot-editor-menu {
+  top: 1.5rem !important;
+
+  [dir='rtl'] & {
+    left: auto !important;
+    right: 0 !important;
+  }
 }
 
 // Float editor menu
@@ -1022,6 +1232,10 @@ useEmitter(BUS_EVENTS.INSERT_INTO_RICH_EDITOR, insertContentIntoEditor);
 
         .ProseMirror-icon {
           @apply p-0.5 flex-shrink-0;
+        }
+
+        .ProseMirror-copilot svg {
+          @apply fill-n-violet-9 text-n-violet-9 stroke-none;
         }
       }
 

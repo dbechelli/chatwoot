@@ -1,13 +1,12 @@
 <script>
-import { ref, provide } from 'vue';
+import { ref, provide, useTemplateRef } from 'vue';
+import { useElementSize } from '@vueuse/core';
 // composable
-import { useConfig } from 'dashboard/composables/useConfig';
-import { useKeyboardEvents } from 'dashboard/composables/useKeyboardEvents';
-import { useAI } from 'dashboard/composables/useAI';
+import { useLabelSuggestions } from 'dashboard/composables/useLabelSuggestions';
 import { useSnakeCase } from 'dashboard/composables/useTransformKeys';
 import { useAdmin } from 'dashboard/composables/useAdmin';
-import { useAlert } from 'dashboard/composables';
-import { useStore } from 'vuex';
+import { useKeyboardEvents } from 'dashboard/composables/useKeyboardEvents';
+import { useAlert, usePendingAlert } from 'dashboard/composables';
 
 // components
 import ReplyBox from './ReplyBox.vue';
@@ -15,6 +14,7 @@ import MessageList from 'next/message/MessageList.vue';
 import ConversationLabelSuggestion from './conversation/LabelSuggestion.vue';
 import Banner from 'dashboard/components/ui/Banner.vue';
 import Spinner from 'dashboard/components-next/spinner/Spinner.vue';
+import ResizableEditorWrapper from './ResizableEditorWrapper.vue';
 
 // stores and apis
 import { mapGetters } from 'vuex';
@@ -40,6 +40,7 @@ import wootConstants from 'dashboard/constants/globals';
 import { LOCAL_STORAGE_KEYS } from 'dashboard/constants/localStorage';
 import { INBOX_TYPES } from 'dashboard/helper/inbox';
 import WhatsappLinkDeviceModal from '../../../routes/dashboard/settings/inbox/components/WhatsappLinkDeviceModal.vue';
+import { isInboxAdminInGroup } from 'dashboard/helper/phoneHelper';
 
 export default {
   components: {
@@ -48,6 +49,7 @@ export default {
     Banner,
     ConversationLabelSuggestion,
     Spinner,
+    ResizableEditorWrapper,
     WhatsappLinkDeviceModal,
   },
   mixins: [inboxMixin],
@@ -55,8 +57,11 @@ export default {
     const { isAdmin } = useAdmin();
     const isPopOutReplyBox = ref(false);
     const conversationPanelRef = ref(null);
-    const { isEnterprise } = useConfig();
-    const store = useStore();
+    const resizableEditorWrapperRef = ref(null);
+    const messagesViewRef = useTemplateRef('messagesViewRef');
+    const topBannerRef = useTemplateRef('topBannerRef');
+    const { height: containerHeight } = useElementSize(messagesViewRef);
+    const { height: topBannerHeight } = useElementSize(topBannerRef);
 
     const keyboardEvents = {
       Escape: {
@@ -69,24 +74,25 @@ export default {
     useKeyboardEvents(keyboardEvents);
 
     const {
-      isAIIntegrationEnabled,
+      captainTasksEnabled,
       isLabelSuggestionFeatureEnabled,
-      fetchIntegrationsIfRequired,
-      fetchLabelSuggestions,
-    } = useAI();
+      getLabelSuggestions,
+    } = useLabelSuggestions();
 
     provide('contextMenuElementTarget', conversationPanelRef);
 
     return {
-      isEnterprise,
-      isPopOutReplyBox,
-      isAIIntegrationEnabled,
+      captainTasksEnabled,
+      getLabelSuggestions,
       isLabelSuggestionFeatureEnabled,
-      fetchIntegrationsIfRequired,
-      fetchLabelSuggestions,
       conversationPanelRef,
+      resizableEditorWrapperRef,
+      messagesViewRef,
+      topBannerRef,
+      containerHeight,
+      topBannerHeight,
       isAdmin,
-      store,
+      isPopOutReplyBox,
     };
   },
   data() {
@@ -106,8 +112,10 @@ export default {
     ...mapGetters({
       currentChat: 'getSelectedChat',
       currentUserId: 'getCurrentUserID',
+      currentUser: 'getCurrentUser',
       listLoadingStatus: 'getAllMessagesLoaded',
       currentAccountId: 'getCurrentAccountId',
+      globalConfig: 'globalConfig/get',
     }),
     currentInbox() {
       return this.$store.getters['inboxes/getInbox'](this.currentChat.inbox_id);
@@ -118,8 +126,8 @@ export default {
     shouldShowLabelSuggestions() {
       return (
         this.isOpen &&
-        this.isEnterprise &&
-        this.isAIIntegrationEnabled &&
+        this.captainTasksEnabled &&
+        this.isLabelSuggestionFeatureEnabled &&
         !this.messageSentSinceOpened
       );
     },
@@ -266,6 +274,69 @@ export default {
       // Currently only Baileys WhatsApp channel supports message editing
       return this.isAWhatsAppBaileysChannel;
     },
+    currentContact() {
+      const senderId = this.currentChat?.meta?.sender?.id;
+      if (!senderId) return {};
+      return this.$store.getters['contacts/getContact'](senderId);
+    },
+    isGroupConversation() {
+      return this.currentChat?.group_type === 'group';
+    },
+    groupContactId() {
+      return this.currentChat?.meta?.sender?.id || null;
+    },
+    groupMembers() {
+      if (!this.groupContactId) return [];
+      return (
+        this.$store.getters['groupMembers/getGroupMembers'](
+          this.groupContactId
+        ) || []
+      );
+    },
+    groupMembersMeta() {
+      if (!this.groupContactId) return {};
+      return (
+        this.$store.getters['groupMembers/getGroupMembersMeta'](
+          this.groupContactId
+        ) || {}
+      );
+    },
+    isInboxAdminInCurrentGroup() {
+      const meta = this.groupMembersMeta;
+      if (meta.is_inbox_admin != null) return meta.is_inbox_admin;
+      const inboxPhone = meta.inbox_phone_number || this.inbox?.phone_number;
+      return isInboxAdminInGroup(inboxPhone, this.groupMembers);
+    },
+    isGroupMembersLoaded() {
+      const meta = this.groupMembersMeta;
+      return meta.is_inbox_admin != null || this.groupMembers.length > 0;
+    },
+    isAnnouncementModeRestricted() {
+      return (
+        this.isAWhatsAppBaileysChannel &&
+        this.isGroupConversation &&
+        this.currentContact?.additional_attributes?.announce === true &&
+        this.isGroupMembersLoaded &&
+        !this.isInboxAdminInCurrentGroup
+      );
+    },
+    isGroupLeft() {
+      return (
+        this.isAWhatsAppBaileysChannel &&
+        this.isGroupConversation &&
+        this.currentContact?.additional_attributes?.group_left === true
+      );
+    },
+    isGroupsDisabled() {
+      return (
+        this.isAWhatsAppBaileysChannel &&
+        this.isGroupConversation &&
+        !this.globalConfig.baileysWhatsappGroupsEnabled
+      );
+    },
+    isSuperAdmin() {
+      return this.currentUser.type === 'SuperAdmin';
+    },
     inboxProviderConnection() {
       return this.currentInbox.provider_connection?.connection;
     },
@@ -279,6 +350,22 @@ export default {
       this.fetchAllAttachmentsFromCurrentChat();
       this.fetchSuggestions();
       this.messageSentSinceOpened = false;
+      this.resetReplyEditorHeight();
+    },
+    groupContactId: {
+      immediate: true,
+      handler(contactId) {
+        if (
+          contactId &&
+          this.isAWhatsAppBaileysChannel &&
+          this.isGroupConversation &&
+          !this.isGroupMembersLoaded
+        ) {
+          this.$store.dispatch('groupMembers/fetch', {
+            contactId,
+          });
+        }
+      },
     },
   },
 
@@ -311,24 +398,15 @@ export default {
         return;
       }
 
-      if (!this.isEnterprise) {
-        return;
-      }
-
       // Early exit if conversation already has labels - no need to suggest more
       const existingLabels = this.currentChat?.labels || [];
       if (existingLabels.length > 0) return;
 
-      // method available in mixin, need to ensure that integrations are present
-      await this.fetchIntegrationsIfRequired();
-
-      if (!this.isLabelSuggestionFeatureEnabled) {
+      if (!this.captainTasksEnabled || !this.isLabelSuggestionFeatureEnabled) {
         return;
       }
 
-      this.labelSuggestions = await this.fetchLabelSuggestions({
-        conversationId: this.currentChat.id,
-      });
+      this.labelSuggestions = await this.getLabelSuggestions();
 
       // once the labels are fetched, we need to scroll to bottom
       // but we need to wait for the DOM to be updated
@@ -365,12 +443,41 @@ export default {
         if (messageElement) {
           this.isProgrammaticScroll = true;
           messageElement.scrollIntoView({ behavior: 'smooth' });
-          this.fetchPreviousMessages();
+          if (messageId) {
+            emitter.emit(BUS_EVENTS.HIGHLIGHT_MESSAGE, { messageId });
+          }
+        } else if (messageId) {
+          this.fetchAndScrollToMessage(messageId);
         } else {
           this.scrollToBottom();
         }
       });
       this.makeMessagesRead();
+    },
+    async fetchAndScrollToMessage(messageId) {
+      const dismissSearch = usePendingAlert(
+        this.$t('SCHEDULED_MESSAGES.ITEM.SEARCHING_MESSAGE')
+      );
+      try {
+        await this.$store.dispatch('fetchPreviousMessages', {
+          conversationId: this.currentChat.id,
+          after: messageId,
+        });
+        this.$nextTick(() => {
+          dismissSearch();
+          const messageElement = document.getElementById('message' + messageId);
+          if (messageElement) {
+            this.isProgrammaticScroll = true;
+            messageElement.scrollIntoView({ behavior: 'smooth' });
+            emitter.emit(BUS_EVENTS.HIGHLIGHT_MESSAGE, { messageId });
+          } else {
+            useAlert(this.$t('SCHEDULED_MESSAGES.ITEM.MESSAGE_NOT_FOUND'));
+          }
+        });
+      } catch {
+        dismissSearch();
+        useAlert(this.$t('SCHEDULED_MESSAGES.ITEM.MESSAGE_NOT_FOUND'));
+      }
     },
     addScrollListener() {
       this.conversationPanel = this.$el.querySelector('.conversation-panel');
@@ -471,6 +578,12 @@ export default {
       const payload = useSnakeCase(message);
       await this.$store.dispatch('sendMessageWithData', payload);
     },
+    toggleReplyEditorSize() {
+      this.resizableEditorWrapperRef?.toggleEditorExpand?.();
+    },
+    resetReplyEditorHeight() {
+      this.resizableEditorWrapperRef?.resetEditorHeight?.();
+    },
     getInReplyToMessage(parentMessage) {
       if (!parentMessage) return {};
       const inReplyToMessageId = parentMessage.content_attributes?.in_reply_to;
@@ -483,6 +596,9 @@ export default {
         return false;
       });
     },
+    onOpenGroupsEnabledLink() {
+      window.open(wootConstants.FAZER_AI_GUIDES_URL, '_blank');
+    },
     onOpenLinkDeviceModal() {
       this.showLinkDeviceModal = true;
     },
@@ -490,7 +606,7 @@ export default {
       this.showLinkDeviceModal = false;
     },
     onSetupProviderConnection() {
-      this.store
+      this.$store
         .dispatch('inboxes/setupChannelProvider', this.inbox.id)
         .catch(e => {
           // eslint-disable-next-line no-console
@@ -507,53 +623,87 @@ export default {
 </script>
 
 <template>
-  <div class="flex flex-col justify-between flex-grow h-full min-w-0 m-0">
-    <template v-if="isAWhatsAppBaileysChannel || isAWhatsAppZapiChannel">
-      <WhatsappLinkDeviceModal
-        v-if="showLinkDeviceModal"
-        :show="showLinkDeviceModal"
-        :on-close="onCloseLinkDeviceModal"
-        :inbox="currentInbox"
+  <div
+    ref="messagesViewRef"
+    class="flex flex-col justify-between flex-grow h-full min-w-0 m-0"
+  >
+    <div ref="topBannerRef">
+      <template v-if="isAWhatsAppBaileysChannel || isAWhatsAppZapiChannel">
+        <WhatsappLinkDeviceModal
+          v-if="showLinkDeviceModal"
+          :show="showLinkDeviceModal"
+          :on-close="onCloseLinkDeviceModal"
+          :inbox="currentInbox"
+        />
+        <Banner
+          v-if="inboxProviderConnection !== 'open'"
+          color-scheme="alert"
+          class="mt-2 mx-2 rounded-lg overflow-hidden"
+          :banner-message="
+            isAdmin
+              ? $t(
+                  'CONVERSATION.INBOX.WHATSAPP_PROVIDER_CONNECTION.NOT_CONNECTED'
+                )
+              : $t(
+                  'CONVERSATION.INBOX.WHATSAPP_PROVIDER_CONNECTION.NOT_CONNECTED_CONTACT_ADMIN'
+                )
+          "
+          has-action-button
+          :action-button-label="
+            isAdmin
+              ? $t(
+                  'CONVERSATION.INBOX.WHATSAPP_PROVIDER_CONNECTION.LINK_DEVICE'
+                )
+              : ''
+          "
+          :action-button-icon="isAdmin ? '' : 'i-lucide-refresh-cw'"
+          @primary-action="
+            isAdmin ? onOpenLinkDeviceModal() : onSetupProviderConnection()
+          "
+        />
+      </template>
+      <Banner
+        v-if="!currentChat.can_reply"
+        color-scheme="alert"
+        class="mx-2 mt-2 overflow-hidden rounded-lg"
+        :banner-message="replyWindowBannerMessage"
+        :href-link="replyWindowLink"
+        :href-link-text="replyWindowLinkText"
       />
       <Banner
-        v-if="inboxProviderConnection !== 'open'"
+        v-else-if="hasDuplicateInstagramInbox"
         color-scheme="alert"
-        class="mt-2 mx-2 rounded-lg overflow-hidden"
-        :banner-message="
-          isAdmin
-            ? $t(
-                'CONVERSATION.INBOX.WHATSAPP_PROVIDER_CONNECTION.NOT_CONNECTED'
-              )
-            : $t(
-                'CONVERSATION.INBOX.WHATSAPP_PROVIDER_CONNECTION.NOT_CONNECTED_CONTACT_ADMIN'
-              )
-        "
-        has-action-button
-        :action-button-label="
-          isAdmin
-            ? $t('CONVERSATION.INBOX.WHATSAPP_PROVIDER_CONNECTION.LINK_DEVICE')
-            : ''
-        "
-        :action-button-icon="isAdmin ? '' : 'i-lucide-refresh-cw'"
-        @primary-action="
-          isAdmin ? onOpenLinkDeviceModal() : onSetupProviderConnection()
-        "
+        class="mx-2 mt-2 overflow-hidden rounded-lg"
+        :banner-message="$t('CONVERSATION.OLD_INSTAGRAM_INBOX_REPLY_BANNER')"
       />
-    </template>
-    <Banner
-      v-if="!currentChat.can_reply"
-      color-scheme="alert"
-      class="mx-2 mt-2 overflow-hidden rounded-lg"
-      :banner-message="replyWindowBannerMessage"
-      :href-link="replyWindowLink"
-      :href-link-text="replyWindowLinkText"
-    />
-    <Banner
-      v-else-if="hasDuplicateInstagramInbox"
-      color-scheme="alert"
-      class="mx-2 mt-2 overflow-hidden rounded-lg"
-      :banner-message="$t('CONVERSATION.OLD_INSTAGRAM_INBOX_REPLY_BANNER')"
-    />
+      <Banner
+        v-else-if="isGroupLeft"
+        color-scheme="alert"
+        class="mx-2 mt-2 overflow-hidden rounded-lg"
+        :banner-message="$t('CONVERSATION.GROUP_LEFT_BANNER')"
+      />
+      <Banner
+        v-else-if="isAnnouncementModeRestricted"
+        color-scheme="alert"
+        class="mx-2 mt-2 overflow-hidden rounded-lg"
+        :banner-message="$t('CONVERSATION.ANNOUNCEMENT_MODE_BANNER')"
+      />
+      <Banner
+        v-if="isGroupsDisabled && isSuperAdmin"
+        color-scheme="warning"
+        class="mx-2 mt-2 overflow-hidden rounded-lg"
+        :banner-message="$t('CONVERSATION.GROUPS_DISABLED_BANNER')"
+        has-action-button
+        :action-button-label="$t('CONVERSATION.GROUPS_DISABLED_CTA')"
+        @primary-action="onOpenGroupsEnabledLink"
+      />
+      <Banner
+        v-else-if="isGroupsDisabled"
+        color-scheme="warning"
+        class="mx-2 mt-2 overflow-hidden rounded-lg"
+        :banner-message="$t('CONVERSATION.GROUPS_DISABLED_BANNER_NON_ADMIN')"
+      />
+    </div>
     <MessageList
       ref="conversationPanelRef"
       class="conversation-panel flex-shrink flex-grow basis-px flex flex-col overflow-y-auto relative h-full m-0 pb-4"
@@ -596,13 +746,7 @@ export default {
         />
       </template>
     </MessageList>
-    <div
-      class="flex relative flex-col"
-      :class="{
-        'modal-mask': isPopOutReplyBox,
-        'bg-n-background': !isPopOutReplyBox,
-      }"
-    >
+    <div class="flex relative flex-col bg-n-surface-1">
       <div
         v-if="isAnyoneTyping"
         class="absolute flex items-center w-full h-0 -top-7"
@@ -618,42 +762,12 @@ export default {
           />
         </div>
       </div>
-      <ReplyBox
-        :pop-out-reply-box="isPopOutReplyBox"
-        @update:pop-out-reply-box="isPopOutReplyBox = $event"
-      />
+      <ResizableEditorWrapper
+        ref="resizableEditorWrapperRef"
+        :container-height="Math.max(0, containerHeight - topBannerHeight)"
+      >
+        <ReplyBox @toggle-editor-size="toggleReplyEditorSize" />
+      </ResizableEditorWrapper>
     </div>
   </div>
 </template>
-
-<style scoped lang="scss">
-.modal-mask {
-  @apply fixed;
-
-  &::v-deep {
-    .ProseMirror-woot-style {
-      @apply max-h-[25rem];
-    }
-
-    .reply-box {
-      @apply border border-n-weak max-w-[75rem] w-[70%];
-
-      &.is-private {
-        @apply dark:border-n-amber-3/30 border-n-amber-12/5;
-      }
-    }
-
-    .reply-box .reply-box__top {
-      @apply relative min-h-[27.5rem];
-    }
-
-    .reply-box__top .input {
-      @apply min-h-[27.5rem];
-    }
-
-    .emoji-dialog {
-      @apply absolute ltr:left-auto rtl:right-auto bottom-1;
-    }
-  }
-}
-</style>

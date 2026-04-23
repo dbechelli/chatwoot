@@ -33,6 +33,25 @@ export function extractTextFromMarkdown(markdown) {
 }
 
 /**
+ * Removes inline base64 markdown images from signature content.
+ *
+ * @param {string} content
+ * @returns {{ sanitizedContent: string, hasInlineImages: boolean }}
+ */
+export function stripInlineBase64Images(content) {
+  if (!content || typeof content !== 'string') {
+    return { sanitizedContent: content || '', hasInlineImages: false };
+  }
+
+  const markdownInlineBase64ImageRegex =
+    /!\[[^\]]*]\(\s*data:image\/[a-zA-Z0-9.+-]+;base64,[^)]+\s*\)/gi;
+  const sanitizedContent = content.replace(markdownInlineBase64ImageRegex, '');
+  const hasInlineImages = sanitizedContent !== content;
+
+  return { sanitizedContent, hasInlineImages };
+}
+
+/**
  * Strip unsupported markdown formatting based on channel capabilities.
  * Uses MARKDOWN_PATTERNS from editor constants.
  *
@@ -515,12 +534,19 @@ export const getContentNode = (
 /**
  * Get the formatting configuration for a specific channel type.
  * Returns the appropriate marks, nodes, and menu items for the editor.
+ * TODO: We're hiding captain, enable it back when we add selection improvements
  *
  * @param {string} channelType - The channel type (e.g., 'Channel::FacebookPage', 'Channel::WebWidget')
  * @returns {Object} The formatting configuration with marks, nodes, and menu properties
  */
-export function getFormattingForEditor(channelType) {
-  return FORMATTING[channelType] || FORMATTING['Context::Default'];
+export function getFormattingForEditor(channelType, showCaptain = false) {
+  const formatting = FORMATTING[channelType] || FORMATTING['Context::Default'];
+  return {
+    ...formatting,
+    menu: showCaptain
+      ? formatting.menu
+      : formatting.menu.filter(item => item !== 'copilot'),
+  };
 }
 
 /**

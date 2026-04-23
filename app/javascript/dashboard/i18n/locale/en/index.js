@@ -1,4 +1,5 @@
 import advancedFilters from './advancedFilters.json';
+import groups from './groups.json';
 import agentBots from './agentBots.json';
 import agentMgmt from './agentMgmt.json';
 import attributesMgmt from './attributesMgmt.json';
@@ -24,6 +25,8 @@ import inbox from './inbox.json';
 import inboxMgmt from './inboxMgmt.json';
 import integrationApps from './integrationApps.json';
 import integrations from './integrations.json';
+import internalChat from './internalChat.json';
+import kanban from './kanban.json';
 import labelsMgmt from './labelsMgmt.json';
 import login from './login.json';
 import macros from './macros.json';
@@ -34,6 +37,7 @@ import setNewPassword from './setNewPassword.json';
 import settings from './settings.json';
 import signup from './signup.json';
 import sla from './sla.json';
+import snooze from './snooze.json';
 import teamsSettings from './teamsSettings.json';
 import whatsappTemplates from './whatsappTemplates.json';
 import contentTemplates from './contentTemplates.json';
@@ -42,6 +46,7 @@ import yearInReview from './yearInReview.json';
 
 export default {
   ...advancedFilters,
+  ...groups,
   ...agentBots,
   ...agentMgmt,
   ...attributesMgmt,
@@ -67,6 +72,8 @@ export default {
   ...inboxMgmt,
   ...integrationApps,
   ...integrations,
+  ...internalChat,
+  ...kanban,
   ...labelsMgmt,
   ...login,
   ...macros,
@@ -77,6 +84,7 @@ export default {
   ...settings,
   ...signup,
   ...sla,
+  ...snooze,
   ...teamsSettings,
   ...whatsappTemplates,
   ...contentTemplates,
