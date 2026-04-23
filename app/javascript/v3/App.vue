@@ -40,7 +40,9 @@ export default {
       };
     },
     setLocale(locale) {
-      this.i18nLocale = locale;
+      if (locale) {
+        this.$root.$i18n.locale = locale;
+      }
     },
   },
 };

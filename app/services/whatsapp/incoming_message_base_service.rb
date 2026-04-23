@@ -40,14 +40,13 @@ class Whatsapp::IncomingMessageBaseService # rubocop:disable Metrics/ClassLength
 
     # Lock by contact phone to prevent race conditions when multiple messages
     # from the same contact arrive simultaneously (e.g., WhatsApp albums).
-    contact_phone = @processed_params[:messages].first[:from]
-    with_contact_lock(contact_phone) do
+    with_contact_lock(contact_phone_for_lock) do
       # Re-check after acquiring lock to handle race conditions where an outgoing message
       # was sent from Chatwoot and the webhook arrived before source_id was saved
-      return if find_message_by_source_id(@processed_params[:messages].first[:id])
+      return if find_message_by_source_id(messages_data.first[:id])
 
       set_contact
-      return unless @contact
+      return unless contact_processable?
 
       ActiveRecord::Base.transaction do
         set_conversation
@@ -58,6 +57,17 @@ class Whatsapp::IncomingMessageBaseService # rubocop:disable Metrics/ClassLength
     # Clear lock AFTER transaction commits to prevent race conditions where another request
     # acquires the lock before this transaction is visible to other connections
     clear_message_source_id_from_redis if @lock_acquired
+  end
+
+  # For regular messages the contact phone is in :from; for echoes it's in :to.
+  def contact_phone_for_lock
+    outgoing_echo ? messages_data.first[:to] : messages_data.first[:from]
+  end
+
+  # Blocked contacts should not generate new incoming messages, but we still
+  # accept echoes so outgoing messages tracked from native apps are preserved.
+  def contact_processable?
+    @contact.present? && !(@contact.blocked? && !outgoing_echo)
   end
 
   def process_statuses
@@ -171,7 +181,7 @@ class Whatsapp::IncomingMessageBaseService # rubocop:disable Metrics/ClassLength
       file_type: file_content_type(message_type),
       file: {
         io: attachment_file,
-        filename: attachment_file.original_filename,
+        filename: attachment_payload[:filename].presence || attachment_file.original_filename,
         content_type: attachment_file.content_type
       },
       meta: ({ is_recorded_audio: true } if attachment_payload[:voice])

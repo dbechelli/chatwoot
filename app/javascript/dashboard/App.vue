@@ -101,7 +101,9 @@ export default {
       mql.onchange = e => setColorTheme(e.matches);
     },
     setLocale(locale) {
-      this.i18nLocale = locale;
+      if (locale) {
+        this.$root.$i18n.locale = locale;
+      }
     },
     async initializeAccount() {
       await this.$store.dispatch('accounts/get');

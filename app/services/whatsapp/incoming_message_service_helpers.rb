@@ -75,7 +75,7 @@ module Whatsapp::IncomingMessageServiceHelpers
   end
 
   def acquire_message_processing_lock
-    return false if @processed_params.try(:[], :messages).blank?
+    return false if messages_data.blank?
 
     key = format(Redis::RedisKeys::MESSAGE_SOURCE_KEY, id: "#{inbox.id}_#{messages_data.first[:id]}")
     Redis::Alfred.set(key, true, nx: true, ex: 1.day)

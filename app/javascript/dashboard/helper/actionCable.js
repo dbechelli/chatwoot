@@ -23,6 +23,7 @@ class ActionCableConnector extends BaseActionCableConnector {
       'assignee.changed': this.onAssigneeChanged,
       'conversation.typing_on': this.onTypingOn,
       'conversation.typing_off': this.onTypingOff,
+      'conversation.recording': this.onRecording,
       'conversation.contact_changed': this.onConversationContactChange,
       'presence.update': this.onPresenceUpdate,
       'contact.deleted': this.onContactDelete,
@@ -45,6 +46,15 @@ class ActionCableConnector extends BaseActionCableConnector {
         this.onRecurringScheduledMessageUpdated,
       'recurring_scheduled_message.deleted':
         this.onRecurringScheduledMessageDeleted,
+      'internal_chat.channel.updated': this.onInternalChatChannelUpdated,
+      'internal_chat.message.created': this.onInternalChatMessageCreated,
+      'internal_chat.message.updated': this.onInternalChatMessageUpdated,
+      'internal_chat.message.deleted': this.onInternalChatMessageDeleted,
+      'internal_chat.typing_on': this.onInternalChatTypingOn,
+      'internal_chat.typing_off': this.onInternalChatTypingOff,
+      'internal_chat.reaction.created': this.onInternalChatReactionCreated,
+      'internal_chat.reaction.deleted': this.onInternalChatReactionDeleted,
+      'internal_chat.poll.voted': this.onInternalChatPollVoted,
     };
   }
 
@@ -162,22 +172,33 @@ class ActionCableConnector extends BaseActionCableConnector {
   };
 
   onTypingOn = ({ conversation, user }) => {
-    const conversationId = conversation.id;
+    const timerKey = `${conversation.id}:${user.type}:${user.id}`;
 
-    this.clearTimer(conversationId);
+    this.clearTimer(timerKey);
     this.app.$store.dispatch('conversationTypingStatus/create', {
-      conversationId,
-      user,
+      conversationId: conversation.id,
+      user: { ...user, recording: false },
     });
-    this.initTimer({ conversation, user });
+    this.initTimer({ conversation, user, timerKey });
+  };
+
+  onRecording = ({ conversation, user }) => {
+    const timerKey = `${conversation.id}:${user.type}:${user.id}`;
+
+    this.clearTimer(timerKey);
+    this.app.$store.dispatch('conversationTypingStatus/create', {
+      conversationId: conversation.id,
+      user: { ...user, recording: true },
+    });
+    this.initTimer({ conversation, user, timerKey });
   };
 
   onTypingOff = ({ conversation, user }) => {
-    const conversationId = conversation.id;
+    const timerKey = `${conversation.id}:${user.type}:${user.id}`;
 
-    this.clearTimer(conversationId);
+    this.clearTimer(timerKey);
     this.app.$store.dispatch('conversationTypingStatus/destroy', {
-      conversationId,
+      conversationId: conversation.id,
       user,
     });
   };
@@ -186,19 +207,18 @@ class ActionCableConnector extends BaseActionCableConnector {
     this.app.$store.dispatch('addMentions', data);
   };
 
-  clearTimer = conversationId => {
-    const timerEvent = this.CancelTyping[conversationId];
+  clearTimer = timerKey => {
+    const timerEvent = this.CancelTyping[timerKey];
 
     if (timerEvent) {
       clearTimeout(timerEvent);
-      this.CancelTyping[conversationId] = null;
+      this.CancelTyping[timerKey] = null;
     }
   };
 
-  initTimer = ({ conversation, user }) => {
-    const conversationId = conversation.id;
+  initTimer = ({ conversation, user, timerKey }) => {
     // Turn off typing automatically after 30 seconds
-    this.CancelTyping[conversationId] = setTimeout(() => {
+    this.CancelTyping[timerKey] = setTimeout(() => {
       this.onTypingOff({ conversation, user });
     }, 30000);
   };
@@ -251,6 +271,111 @@ class ActionCableConnector extends BaseActionCableConnector {
     this.app.$store.dispatch('labels/revalidate', { newKey: keys.label });
     this.app.$store.dispatch('inboxes/revalidate', { newKey: keys.inbox });
     this.app.$store.dispatch('teams/revalidate', { newKey: keys.team });
+  };
+
+  onInternalChatMessageCreated = data => {
+    this.app.$store.dispatch('internalChat/messages/addMessageFromCable', {
+      channelId: data.internal_chat_channel_id,
+      message: data,
+    });
+    const channel = this.app.$store.getters['internalChat/getChannelById'](
+      data.internal_chat_channel_id
+    );
+    if (channel) {
+      const currentUserId = this.app.$store.getters.getCurrentUser?.id;
+      const isOwnMessage = data.sender?.id === currentUserId;
+      const activeChannelId =
+        this.app.$store.getters['internalChat/getActiveChannelId'];
+      const isActiveChannel = activeChannelId === data.internal_chat_channel_id;
+      const mentionedIds = data.content_attributes?.mentioned_user_ids || [];
+      const isMentioned = mentionedIds.includes(currentUserId);
+      this.app.$store.dispatch('internalChat/updateChannel', {
+        id: data.internal_chat_channel_id,
+        unread_count:
+          isActiveChannel || isOwnMessage
+            ? channel.unread_count || 0
+            : (channel.unread_count || 0) + 1,
+        has_unread_mention:
+          isActiveChannel || isOwnMessage
+            ? false
+            : channel.has_unread_mention || isMentioned,
+        last_activity_at: data.created_at,
+      });
+    }
+  };
+
+  onInternalChatMessageUpdated = data => {
+    this.app.$store.dispatch('internalChat/messages/updateMessageFromCable', {
+      channelId: data.internal_chat_channel_id,
+      message: data,
+    });
+  };
+
+  onInternalChatMessageDeleted = data => {
+    this.app.$store.dispatch('internalChat/messages/deleteMessageFromCable', {
+      channelId: data.internal_chat_channel_id,
+      messageId: data.id,
+    });
+  };
+
+  onInternalChatTypingOn = ({ channel, user }) => {
+    this.app.$store.dispatch('internalChatTypingStatus/create', {
+      channelId: channel.id,
+      user,
+    });
+  };
+
+  onInternalChatTypingOff = ({ channel, user }) => {
+    this.app.$store.dispatch('internalChatTypingStatus/destroy', {
+      channelId: channel.id,
+      user,
+    });
+  };
+
+  onInternalChatReactionCreated = data => {
+    this.app.$store.dispatch('internalChat/messages/addReactionFromCable', {
+      channelId: data.internal_chat_channel_id,
+      messageId: data.message_id,
+      reaction: data,
+    });
+  };
+
+  onInternalChatReactionDeleted = data => {
+    this.app.$store.dispatch('internalChat/messages/removeReactionFromCable', {
+      channelId: data.internal_chat_channel_id,
+      messageId: data.message_id,
+      reactionId: data.id,
+    });
+  };
+
+  onInternalChatChannelUpdated = data => {
+    const currentUserId = this.app.$store.getters.getCurrentUser?.id;
+    const memberIds = data.member_user_ids;
+
+    if (memberIds && currentUserId && data.channel_type === 'private_channel') {
+      if (!memberIds.includes(currentUserId)) {
+        // Current user was removed from channel
+        this.app.$store.commit('internalChat/DELETE_CHANNEL', data.id);
+        return;
+      }
+      // Current user was added: if channel not in store, refetch channels
+      const existing = this.app.$store.getters['internalChat/getChannelById'](
+        data.id
+      );
+      if (!existing) {
+        this.app.$store.dispatch('internalChat/get');
+        return;
+      }
+    }
+
+    this.app.$store.dispatch('internalChat/updateChannel', data);
+  };
+
+  onInternalChatPollVoted = data => {
+    this.app.$store.dispatch('internalChat/polls/updatePollFromCable', {
+      channelId: data.internal_chat_channel_id,
+      poll: data,
+    });
   };
 }
 

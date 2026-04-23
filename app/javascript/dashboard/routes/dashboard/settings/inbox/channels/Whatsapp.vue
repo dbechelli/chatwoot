@@ -11,6 +11,20 @@ import BaileysWhatsapp from './BaileysWhatsapp.vue';
 import ZapiWhatsapp from './ZapiWhatsapp.vue';
 import PromoBanner from 'dashboard/components-next/banner/PromoBanner.vue';
 
+const props = defineProps({
+  mode: {
+    type: String,
+    default: 'create',
+    validator: value => ['create', 'convert'].includes(value),
+  },
+  inbox: {
+    type: Object,
+    default: null,
+  },
+});
+
+const isConvertMode = computed(() => props.mode === 'convert');
+
 const route = useRoute();
 const router = useRouter();
 const { t } = useI18n();
@@ -35,40 +49,99 @@ const hasWhatsappAppId = computed(() => {
 
 const selectedProvider = computed(() => route.query.provider);
 
-const showProviderSelection = computed(() => !selectedProvider.value);
+const INBOX_PROVIDER_TO_KEY = {
+  whatsapp_cloud: PROVIDER_TYPES.WHATSAPP,
+  default: PROVIDER_TYPES.THREE_SIXTY_DIALOG,
+  baileys: PROVIDER_TYPES.BAILEYS,
+  zapi: PROVIDER_TYPES.ZAPI,
+};
 
-const showConfiguration = computed(() => Boolean(selectedProvider.value));
+const currentProviderKey = computed(() => {
+  if (!props.inbox?.provider) return null;
+  return INBOX_PROVIDER_TO_KEY[props.inbox.provider] || null;
+});
+
+const PROVIDER_CATALOG = computed(() => [
+  {
+    key: PROVIDER_TYPES.WHATSAPP,
+    title: t('INBOX_MGMT.ADD.WHATSAPP.PROVIDERS.WHATSAPP_CLOUD'),
+    description: t('INBOX_MGMT.ADD.WHATSAPP.PROVIDERS.WHATSAPP_CLOUD_DESC'),
+    icon: 'i-woot-whatsapp',
+  },
+  {
+    key: PROVIDER_TYPES.TWILIO,
+    title: t('INBOX_MGMT.ADD.WHATSAPP.PROVIDERS.TWILIO'),
+    description: t('INBOX_MGMT.ADD.WHATSAPP.PROVIDERS.TWILIO_DESC'),
+    icon: 'i-woot-twilio',
+  },
+  {
+    key: PROVIDER_TYPES.BAILEYS,
+    title: t('INBOX_MGMT.ADD.WHATSAPP.PROVIDERS.BAILEYS'),
+    description: t('INBOX_MGMT.ADD.WHATSAPP.PROVIDERS.BAILEYS_DESC'),
+    icon: 'i-woot-baileys',
+  },
+  {
+    key: PROVIDER_TYPES.ZAPI,
+    title: t('INBOX_MGMT.ADD.WHATSAPP.PROVIDERS.ZAPI'),
+    description: t('INBOX_MGMT.ADD.WHATSAPP.PROVIDERS.ZAPI_DESC'),
+    icon: 'i-woot-zapi',
+  },
+  {
+    key: PROVIDER_TYPES.THREE_SIXTY_DIALOG,
+    title: t('INBOX_MGMT.ADD.WHATSAPP.PROVIDERS.360_DIALOG'),
+    description: t('INBOX_MGMT.ADD.WHATSAPP.PROVIDERS.360_DIALOG_DESC'),
+    icon: 'i-woot-whatsapp',
+  },
+]);
+
+// Keys shown in the picker. 360Dialog is intentionally hidden in create mode
+// (URL-reachable only) but offered in convert mode where it is a valid target.
+const CREATE_PICKER_KEYS = [
+  PROVIDER_TYPES.WHATSAPP,
+  PROVIDER_TYPES.TWILIO,
+  PROVIDER_TYPES.BAILEYS,
+  PROVIDER_TYPES.ZAPI,
+];
+const CONVERT_PICKER_KEYS = [
+  PROVIDER_TYPES.WHATSAPP,
+  PROVIDER_TYPES.BAILEYS,
+  PROVIDER_TYPES.ZAPI,
+  PROVIDER_TYPES.THREE_SIXTY_DIALOG,
+];
 
 const availableProviders = computed(() => {
-  const providers = [
-    {
-      key: PROVIDER_TYPES.WHATSAPP,
-      title: t('INBOX_MGMT.ADD.WHATSAPP.PROVIDERS.WHATSAPP_CLOUD'),
-      description: t('INBOX_MGMT.ADD.WHATSAPP.PROVIDERS.WHATSAPP_CLOUD_DESC'),
-      icon: 'i-woot-whatsapp',
-    },
-    {
-      key: PROVIDER_TYPES.TWILIO,
-      title: t('INBOX_MGMT.ADD.WHATSAPP.PROVIDERS.TWILIO'),
-      description: t('INBOX_MGMT.ADD.WHATSAPP.PROVIDERS.TWILIO_DESC'),
-      icon: 'i-woot-twilio',
-    },
-    {
-      key: PROVIDER_TYPES.BAILEYS,
-      title: t('INBOX_MGMT.ADD.WHATSAPP.PROVIDERS.BAILEYS'),
-      description: t('INBOX_MGMT.ADD.WHATSAPP.PROVIDERS.BAILEYS_DESC'),
-      icon: 'i-woot-baileys',
-    },
-    {
-      key: PROVIDER_TYPES.ZAPI,
-      title: t('INBOX_MGMT.ADD.WHATSAPP.PROVIDERS.ZAPI'),
-      description: t('INBOX_MGMT.ADD.WHATSAPP.PROVIDERS.ZAPI_DESC'),
-      icon: 'i-woot-zapi',
-    },
-  ];
-
-  return providers;
+  const allowed = isConvertMode.value
+    ? CONVERT_PICKER_KEYS
+    : CREATE_PICKER_KEYS;
+  return PROVIDER_CATALOG.value
+    .filter(p => allowed.includes(p.key))
+    .filter(p => !isConvertMode.value || p.key !== currentProviderKey.value);
 });
+
+const currentProviderLabel = computed(() => {
+  if (!isConvertMode.value || !currentProviderKey.value) return '';
+  return (
+    PROVIDER_CATALOG.value.find(({ key }) => key === currentProviderKey.value)
+      ?.title || ''
+  );
+});
+
+const isValidSelectedProvider = computed(() => {
+  if (!selectedProvider.value) return false;
+  // In create mode, allow the embedded-signup manual fallback link and the
+  // legacy-URL path to 360Dialog even though neither is in the picker.
+  if (!isConvertMode.value) {
+    if (selectedProvider.value === PROVIDER_TYPES.WHATSAPP_MANUAL) return true;
+    if (selectedProvider.value === PROVIDER_TYPES.THREE_SIXTY_DIALOG)
+      return true;
+  }
+  return availableProviders.value.some(
+    ({ key }) => key === selectedProvider.value
+  );
+});
+
+const showProviderSelection = computed(() => !isValidSelectedProvider.value);
+const showConfiguration = computed(() => isValidSelectedProvider.value);
 
 const selectProvider = providerValue => {
   router.push({
@@ -81,7 +154,8 @@ const selectProvider = providerValue => {
 const shouldShowCloudWhatsapp = provider => {
   return (
     provider === PROVIDER_TYPES.WHATSAPP_MANUAL ||
-    (provider === PROVIDER_TYPES.WHATSAPP && !hasWhatsappAppId.value)
+    (provider === PROVIDER_TYPES.WHATSAPP &&
+      (!hasWhatsappAppId.value || isConvertMode.value))
   );
 };
 
@@ -95,10 +169,21 @@ const handleManualLinkClick = () => {
     <div v-if="showProviderSelection">
       <div class="mb-10 text-left">
         <h1 class="mb-2 text-lg font-medium text-n-slate-12">
-          {{ $t('INBOX_MGMT.ADD.WHATSAPP.SELECT_PROVIDER.TITLE') }}
+          {{
+            isConvertMode
+              ? $t('INBOX_MGMT.CONVERT.SELECT_PROVIDER_TITLE')
+              : $t('INBOX_MGMT.ADD.WHATSAPP.SELECT_PROVIDER.TITLE')
+          }}
         </h1>
         <p class="text-sm leading-relaxed text-n-slate-11">
-          {{ $t('INBOX_MGMT.ADD.WHATSAPP.SELECT_PROVIDER.DESCRIPTION') }}
+          {{
+            isConvertMode
+              ? $t('INBOX_MGMT.CONVERT.SELECT_PROVIDER_DESCRIPTION', {
+                  inboxName: inbox?.name,
+                  currentProvider: currentProviderLabel,
+                })
+              : $t('INBOX_MGMT.ADD.WHATSAPP.SELECT_PROVIDER.DESCRIPTION')
+          }}
         </p>
       </div>
 
@@ -113,7 +198,7 @@ const handleManualLinkClick = () => {
         />
       </div>
 
-      <div class="mt-6 relative overflow-visible">
+      <div v-if="!isConvertMode" class="mt-6 relative overflow-visible">
         <img
           src="~dashboard/assets/images/curved-arrow.svg"
           alt=""
@@ -142,7 +227,9 @@ const handleManualLinkClick = () => {
         <!-- Show embedded signup if app ID is configured -->
         <div
           v-if="
-            hasWhatsappAppId && selectedProvider === PROVIDER_TYPES.WHATSAPP
+            !isConvertMode &&
+            hasWhatsappAppId &&
+            selectedProvider === PROVIDER_TYPES.WHATSAPP
           "
         >
           <WhatsappEmbeddedSignup />
@@ -172,7 +259,11 @@ const handleManualLinkClick = () => {
         </div>
 
         <!-- Show manual setup -->
-        <CloudWhatsapp v-else-if="shouldShowCloudWhatsapp(selectedProvider)" />
+        <CloudWhatsapp
+          v-else-if="shouldShowCloudWhatsapp(selectedProvider)"
+          :mode="mode"
+          :inbox="inbox"
+        />
 
         <!-- Other providers -->
         <Twilio
@@ -181,14 +272,19 @@ const handleManualLinkClick = () => {
         />
         <ThreeSixtyDialogWhatsapp
           v-else-if="selectedProvider === PROVIDER_TYPES.THREE_SIXTY_DIALOG"
-        />
-        <CloudWhatsapp
-          v-else-if="selectedProvider === PROVIDER_TYPES.WHATSAPP"
+          :mode="mode"
+          :inbox="inbox"
         />
         <BaileysWhatsapp
           v-else-if="selectedProvider === PROVIDER_TYPES.BAILEYS"
+          :mode="mode"
+          :inbox="inbox"
         />
-        <ZapiWhatsapp v-else-if="selectedProvider === PROVIDER_TYPES.ZAPI" />
+        <ZapiWhatsapp
+          v-else-if="selectedProvider === PROVIDER_TYPES.ZAPI"
+          :mode="mode"
+          :inbox="inbox"
+        />
       </div>
     </div>
   </div>

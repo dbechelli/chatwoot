@@ -154,6 +154,24 @@ class WebhookListener < BaseListener
     handle_typing_status(__method__.to_s, event)
   end
 
+  def conversation_recording(event)
+    handle_typing_status(__method__.to_s, event)
+  end
+
+  %i[internal_chat_message_created internal_chat_message_updated internal_chat_message_deleted].each do |event_name|
+    define_method(event_name) do |event|
+      message = event.data[:message]
+      payload = internal_chat_message_payload(message).merge(event: event_name.to_s)
+      deliver_account_webhooks(payload, message.account)
+    end
+  end
+
+  def internal_chat_channel_updated(event)
+    channel = event.data[:channel]
+    payload = internal_chat_channel_payload(channel).merge(event: __method__.to_s)
+    deliver_account_webhooks(payload, channel.account)
+  end
+
   def provider_event_received(event)
     inbox, account = extract_inbox_and_account(event)
 
@@ -183,6 +201,30 @@ class WebhookListener < BaseListener
     deliver_webhook_payloads(payload, inbox)
   end
 
+  def internal_chat_message_payload(message)
+    {
+      id: message.id,
+      content: message.content,
+      content_type: message.content_type,
+      internal_chat_channel_id: message.internal_chat_channel_id,
+      sender: message.sender&.push_event_data,
+      account_id: message.account_id,
+      created_at: message.created_at,
+      updated_at: message.updated_at
+    }
+  end
+
+  def internal_chat_channel_payload(channel)
+    {
+      id: channel.id,
+      name: channel.name,
+      channel_type: channel.channel_type,
+      account_id: channel.account_id,
+      created_at: channel.created_at,
+      updated_at: channel.updated_at
+    }
+  end
+
   def deliver_account_webhooks(payload, account)
     account.webhooks.account_type.each do |webhook|
       next unless webhook.subscriptions.include?(payload[:event])
@@ -199,7 +241,7 @@ class WebhookListener < BaseListener
     return if inbox.channel.webhook_url.blank?
 
     WebhookJob.perform_later(inbox.channel.webhook_url, payload, :api_inbox_webhook,
-                             delivery_id: SecureRandom.uuid)
+                             secret: inbox.channel.secret, delivery_id: SecureRandom.uuid)
   end
 
   def deliver_webhook_payloads(payload, inbox)

@@ -101,7 +101,8 @@ describe Whatsapp::Providers::WhatsappBaileysService do
               webhookUrl: whatsapp_channel.inbox.callback_webhook_url,
               webhookVerifyToken: whatsapp_channel.provider_config['webhook_verify_token'],
               includeMedia: false,
-              groupsEnabled: described_class.groups_enabled?
+              groupsEnabled: described_class.groups_enabled?,
+              autoPresenceSubscribe: whatsapp_channel.provider_config['presence_subscribe'] || false
             }.to_json
           )
           .to_return(status: 200)
@@ -122,7 +123,8 @@ describe Whatsapp::Providers::WhatsappBaileysService do
               webhookUrl: whatsapp_channel.inbox.callback_webhook_url,
               webhookVerifyToken: whatsapp_channel.provider_config['webhook_verify_token'],
               includeMedia: false,
-              groupsEnabled: described_class.groups_enabled?
+              groupsEnabled: described_class.groups_enabled?,
+              autoPresenceSubscribe: whatsapp_channel.provider_config['presence_subscribe'] || false
             }.to_json
           )
           .to_return(
@@ -205,10 +207,10 @@ describe Whatsapp::Providers::WhatsappBaileysService do
         stub_request(:post, request_path)
           .with(
             headers: stub_headers(whatsapp_channel),
-            body: {
-              jid: test_send_jid,
-              messageContent: { text: 'Please rate us http://example.com/survey' }
-            }.to_json
+            body: send_message_body({
+                                      jid: test_send_jid,
+                                      messageContent: { text: 'Please rate us http://example.com/survey' }
+                                    })
           )
           .to_return(
             status: 200,
@@ -240,10 +242,10 @@ describe Whatsapp::Providers::WhatsappBaileysService do
         stub_request(:post, request_path)
           .with(
             headers: stub_headers(whatsapp_channel),
-            body: {
-              jid: test_send_jid,
-              messageContent: { fileName: 'image.png', caption: message.content, image: base64_image }
-            }.to_json
+            body: send_message_body({
+                                      jid: test_send_jid,
+                                      messageContent: { fileName: 'image.png', caption: message.content, image: base64_image }
+                                    })
           )
           .to_return(
             status: 200,
@@ -261,10 +263,10 @@ describe Whatsapp::Providers::WhatsappBaileysService do
         stub_request(:post, request_path)
           .with(
             headers: stub_headers(whatsapp_channel),
-            body: {
-              jid: test_send_jid,
-              messageContent: { fileName: 'image.png', image: base64_image }
-            }.to_json
+            body: send_message_body({
+                                      jid: test_send_jid,
+                                      messageContent: { fileName: 'image.png', image: base64_image }
+                                    })
           )
           .to_return(
             status: 200,
@@ -296,10 +298,10 @@ describe Whatsapp::Providers::WhatsappBaileysService do
         stub_request(:post, request_path)
           .with(
             headers: stub_headers(whatsapp_channel),
-            body: {
-              jid: test_send_jid,
-              messageContent: { fileName: 'audio.wav', caption: message.content, audio: base64_audio }
-            }.to_json
+            body: send_message_body({
+                                      jid: test_send_jid,
+                                      messageContent: { fileName: 'audio.wav', caption: message.content, audio: base64_audio }
+                                    })
           )
           .to_return(
             status: 200,
@@ -318,10 +320,10 @@ describe Whatsapp::Providers::WhatsappBaileysService do
         stub_request(:post, request_path)
           .with(
             headers: stub_headers(whatsapp_channel),
-            body: {
-              jid: test_send_jid,
-              messageContent: { fileName: 'audio.wav', caption: message.content, audio: base64_audio, ptt: true }
-            }.to_json
+            body: send_message_body({
+                                      jid: test_send_jid,
+                                      messageContent: { fileName: 'audio.wav', caption: message.content, audio: base64_audio, ptt: true }
+                                    })
           )
           .to_return(
             status: 200,
@@ -340,10 +342,10 @@ describe Whatsapp::Providers::WhatsappBaileysService do
         stub_request(:post, request_path)
           .with(
             headers: stub_headers(whatsapp_channel),
-            body: {
-              jid: test_send_jid,
-              messageContent: { text: message.content }
-            }.to_json
+            body: send_message_body({
+                                      jid: test_send_jid,
+                                      messageContent: { text: message.content }
+                                    })
           )
           .to_return(
             status: 200,
@@ -360,10 +362,10 @@ describe Whatsapp::Providers::WhatsappBaileysService do
         stub_request(:post, request_path)
           .with(
             headers: stub_headers(whatsapp_channel),
-            body: {
-              jid: test_send_jid,
-              messageContent: { text: message.content }
-            }.to_json
+            body: send_message_body({
+                                      jid: test_send_jid,
+                                      messageContent: { text: message.content }
+                                    })
           )
           .to_return(
             status: 200,
@@ -393,13 +395,13 @@ describe Whatsapp::Providers::WhatsappBaileysService do
         stub_request(:post, request_path)
           .with(
             headers: stub_headers(whatsapp_channel),
-            body: {
-              jid: test_send_jid,
-              messageContent: { react: { key: { id: message.source_id,
-                                                remoteJid: test_send_jid,
-                                                fromMe: true },
-                                         text: '👍' } }
-            }.to_json
+            body: send_message_body({
+                                      jid: test_send_jid,
+                                      messageContent: { react: { key: { id: message.source_id,
+                                                                        remoteJid: test_send_jid,
+                                                                        fromMe: true },
+                                                                 text: '👍' } }
+                                    }, reaction)
           )
           .to_return(
             status: 200,
@@ -419,13 +421,13 @@ describe Whatsapp::Providers::WhatsappBaileysService do
         stub_request(:post, request_path)
           .with(
             headers: stub_headers(whatsapp_channel),
-            body: {
-              jid: test_send_jid,
-              messageContent: { react: { key: { id: message.source_id,
-                                                remoteJid: test_send_jid,
-                                                fromMe: false },
-                                         text: '👍' } }
-            }.to_json
+            body: send_message_body({
+                                      jid: test_send_jid,
+                                      messageContent: { react: { key: { id: message.source_id,
+                                                                        remoteJid: test_send_jid,
+                                                                        fromMe: false },
+                                                                 text: '👍' } }
+                                    }, reaction)
           )
           .to_return(
             status: 200,
@@ -457,20 +459,20 @@ describe Whatsapp::Providers::WhatsappBaileysService do
         stub_request(:post, request_path)
           .with(
             headers: stub_headers(whatsapp_channel),
-            body: {
-              jid: test_send_jid,
-              messageContent: {
-                text: 'Reply text',
-                quotedMessage: {
-                  key: {
-                    id: 'original_msg_123',
-                    remoteJid: test_send_jid,
-                    fromMe: true
-                  },
-                  message: { conversation: 'Original text' }
-                }
-              }
-            }.to_json
+            body: send_message_body({
+                                      jid: test_send_jid,
+                                      messageContent: {
+                                        text: 'Reply text',
+                                        quotedMessage: {
+                                          key: {
+                                            id: 'original_msg_123',
+                                            remoteJid: test_send_jid,
+                                            fromMe: true
+                                          },
+                                          message: { conversation: 'Original text' }
+                                        }
+                                      }
+                                    }, reply_message)
           )
           .to_return(
             status: 200,
@@ -492,20 +494,20 @@ describe Whatsapp::Providers::WhatsappBaileysService do
         stub_request(:post, request_path)
           .with(
             headers: stub_headers(whatsapp_channel),
-            body: {
-              jid: test_send_jid,
-              messageContent: {
-                text: 'Reply to incoming',
-                quotedMessage: {
-                  key: {
-                    id: 'incoming_msg_456',
-                    remoteJid: test_send_jid,
-                    fromMe: false
-                  },
-                  message: { conversation: 'Incoming text' }
-                }
-              }
-            }.to_json
+            body: send_message_body({
+                                      jid: test_send_jid,
+                                      messageContent: {
+                                        text: 'Reply to incoming',
+                                        quotedMessage: {
+                                          key: {
+                                            id: 'incoming_msg_456',
+                                            remoteJid: test_send_jid,
+                                            fromMe: false
+                                          },
+                                          message: { conversation: 'Incoming text' }
+                                        }
+                                      }
+                                    }, reply_message)
           )
           .to_return(
             status: 200,
@@ -530,20 +532,20 @@ describe Whatsapp::Providers::WhatsappBaileysService do
         stub_request(:post, request_path)
           .with(
             headers: stub_headers(whatsapp_channel),
-            body: {
-              jid: test_send_jid,
-              messageContent: {
-                text: 'Nice image!',
-                quotedMessage: {
-                  key: {
-                    id: 'image_msg_789',
-                    remoteJid: test_send_jid,
-                    fromMe: false
-                  },
-                  message: { imageMessage: { caption: 'Check this image' } }
-                }
-              }
-            }.to_json
+            body: send_message_body({
+                                      jid: test_send_jid,
+                                      messageContent: {
+                                        text: 'Nice image!',
+                                        quotedMessage: {
+                                          key: {
+                                            id: 'image_msg_789',
+                                            remoteJid: test_send_jid,
+                                            fromMe: false
+                                          },
+                                          message: { imageMessage: { caption: 'Check this image' } }
+                                        }
+                                      }
+                                    }, reply_message)
           )
           .to_return(
             status: 200,
@@ -562,10 +564,10 @@ describe Whatsapp::Providers::WhatsappBaileysService do
         stub_request(:post, request_path)
           .with(
             headers: stub_headers(whatsapp_channel),
-            body: {
-              jid: test_send_jid,
-              messageContent: { text: 'Regular message' }
-            }.to_json
+            body: send_message_body({
+                                      jid: test_send_jid,
+                                      messageContent: { text: 'Regular message' }
+                                    }, regular_message)
           )
           .to_return(
             status: 200,
@@ -586,10 +588,10 @@ describe Whatsapp::Providers::WhatsappBaileysService do
         stub_request(:post, request_path)
           .with(
             headers: stub_headers(whatsapp_channel),
-            body: {
-              jid: group_jid,
-              messageContent: { text: message.content }
-            }.to_json
+            body: send_message_body({
+                                      jid: group_jid,
+                                      messageContent: { text: message.content }
+                                    })
           )
           .to_return(
             status: 200,
@@ -619,6 +621,23 @@ describe Whatsapp::Providers::WhatsappBaileysService do
         expect do
           service.send_message(test_send_phone_number, message)
         end.to raise_error(Whatsapp::Providers::WhatsappBaileysService::ProviderUnavailableError)
+      end
+    end
+
+    context 'when server returns 409 (message already processing)' do
+      it 'raises MessageAlreadyProcessingError without triggering channel reconnection' do
+        stub_request(:post, request_path)
+          .to_return(status: 409, body: 'Message is already being processed')
+
+        setup_url = "#{whatsapp_channel.provider_config['provider_url']}/connections/#{whatsapp_channel.phone_number}"
+
+        expect do
+          service.send_message(test_send_phone_number, message)
+        end.to(raise_error do |error|
+          expect(error.class.name).to eq('Whatsapp::Providers::WhatsappBaileysService::MessageAlreadyProcessingError')
+        end)
+
+        expect(WebMock).not_to have_requested(:post, setup_url)
       end
     end
   end
@@ -1104,16 +1123,16 @@ describe Whatsapp::Providers::WhatsappBaileysService do
         stub_request(:post, send_message_path)
           .with(
             headers: stub_headers(whatsapp_channel),
-            body: {
-              jid: group_jid,
-              messageContent: {
-                text: 'World!',
-                quotedMessage: {
-                  key: { id: 'incoming_group_msg', remoteJid: group_jid, fromMe: false, participant: participant_lid },
-                  message: { conversation: 'Hello' }
-                }
-              }
-            }.to_json
+            body: send_message_body({
+                                      jid: group_jid,
+                                      messageContent: {
+                                        text: 'World!',
+                                        quotedMessage: {
+                                          key: { id: 'incoming_group_msg', remoteJid: group_jid, fromMe: false, participant: participant_lid },
+                                          message: { conversation: 'Hello' }
+                                        }
+                                      }
+                                    }, reply_message)
           )
           .to_return(status: 200, headers: { 'Content-Type' => 'application/json' }, body: result_body.to_json)
 
@@ -1131,16 +1150,16 @@ describe Whatsapp::Providers::WhatsappBaileysService do
         stub_request(:post, send_message_path)
           .with(
             headers: stub_headers(whatsapp_channel),
-            body: {
-              jid: group_jid,
-              messageContent: {
-                text: 'World!',
-                quotedMessage: {
-                  key: { id: 'outgoing_group_msg', remoteJid: group_jid, fromMe: true },
-                  message: { conversation: 'Hello' }
-                }
-              }
-            }.to_json
+            body: send_message_body({
+                                      jid: group_jid,
+                                      messageContent: {
+                                        text: 'World!',
+                                        quotedMessage: {
+                                          key: { id: 'outgoing_group_msg', remoteJid: group_jid, fromMe: true },
+                                          message: { conversation: 'Hello' }
+                                        }
+                                      }
+                                    }, reply_message)
           )
           .to_return(status: 200, headers: { 'Content-Type' => 'application/json' }, body: result_body.to_json)
 
@@ -1157,15 +1176,15 @@ describe Whatsapp::Providers::WhatsappBaileysService do
         stub_request(:post, send_message_path)
           .with(
             headers: stub_headers(whatsapp_channel),
-            body: {
-              jid: group_jid,
-              messageContent: {
-                react: {
-                  key: { id: original_message.source_id, remoteJid: group_jid, fromMe: false, participant: participant_lid },
-                  text: '👍'
-                }
-              }
-            }.to_json
+            body: send_message_body({
+                                      jid: group_jid,
+                                      messageContent: {
+                                        react: {
+                                          key: { id: original_message.source_id, remoteJid: group_jid, fromMe: false, participant: participant_lid },
+                                          text: '👍'
+                                        }
+                                      }
+                                    }, reaction)
           )
           .to_return(status: 200, headers: { 'Content-Type' => 'application/json' }, body: result_body.to_json)
 
@@ -1182,15 +1201,15 @@ describe Whatsapp::Providers::WhatsappBaileysService do
         stub_request(:post, send_message_path)
           .with(
             headers: stub_headers(whatsapp_channel),
-            body: {
-              jid: group_jid,
-              messageContent: {
-                react: {
-                  key: { id: original_message.source_id, remoteJid: group_jid, fromMe: true },
-                  text: '❤️'
-                }
-              }
-            }.to_json
+            body: send_message_body({
+                                      jid: group_jid,
+                                      messageContent: {
+                                        react: {
+                                          key: { id: original_message.source_id, remoteJid: group_jid, fromMe: true },
+                                          text: '❤️'
+                                        }
+                                      }
+                                    }, reaction)
           )
           .to_return(status: 200, headers: { 'Content-Type' => 'application/json' }, body: result_body.to_json)
 
@@ -1361,7 +1380,8 @@ describe Whatsapp::Providers::WhatsappBaileysService do
               webhookUrl: whatsapp_channel.inbox.callback_webhook_url,
               webhookVerifyToken: whatsapp_channel.provider_config['webhook_verify_token'],
               includeMedia: false,
-              groupsEnabled: described_class.groups_enabled?
+              groupsEnabled: described_class.groups_enabled?,
+              autoPresenceSubscribe: whatsapp_channel.provider_config['presence_subscribe'] || false
             }.to_json
           )
           .to_return(status: 200)
@@ -1380,7 +1400,8 @@ describe Whatsapp::Providers::WhatsappBaileysService do
               webhookUrl: whatsapp_channel.inbox.callback_webhook_url,
               webhookVerifyToken: whatsapp_channel.provider_config['webhook_verify_token'],
               includeMedia: false,
-              groupsEnabled: described_class.groups_enabled?
+              groupsEnabled: described_class.groups_enabled?,
+              autoPresenceSubscribe: whatsapp_channel.provider_config['presence_subscribe'] || false
             }.to_json
           )
           .to_return(status: 200)
@@ -1399,7 +1420,8 @@ describe Whatsapp::Providers::WhatsappBaileysService do
               webhookUrl: whatsapp_channel.inbox.callback_webhook_url,
               webhookVerifyToken: whatsapp_channel.provider_config['webhook_verify_token'],
               includeMedia: false,
-              groupsEnabled: described_class.groups_enabled?
+              groupsEnabled: described_class.groups_enabled?,
+              autoPresenceSubscribe: whatsapp_channel.provider_config['presence_subscribe'] || false
             }.to_json
           )
           .to_return(status: 400, body: 'reconnection failed')
@@ -1800,5 +1822,9 @@ describe Whatsapp::Providers::WhatsappBaileysService do
       'Content-Type' => 'application/json',
       'x-api-key' => channel.provider_config['api_key']
     }
+  end
+
+  def send_message_body(hash, msg = message)
+    hash.merge(chatwootMessageId: msg.id).to_json
   end
 end

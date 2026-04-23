@@ -42,7 +42,7 @@ const { fetchInboxSignatures, getInboxSignature, hasInboxSignature } =
 
 const selectedInboxId = ref(INBOX_OPTION_DEFAULT);
 const selectedInbox = ref(null);
-const signature = ref(props.messageSignature);
+const signature = ref(props.messageSignature ?? '');
 const signaturePosition = ref(props.signaturePosition);
 const signatureSeparator = ref(props.signatureSeparator);
 const isSaving = ref(false);
@@ -134,7 +134,7 @@ const messagePreview = computed(() => {
 
 const loadSignatureForSelection = () => {
   if (isDefaultSelected.value) {
-    signature.value = props.messageSignature;
+    signature.value = props.messageSignature ?? '';
     signaturePosition.value = props.signaturePosition;
     signatureSeparator.value = props.signatureSeparator;
     return;
@@ -142,12 +142,12 @@ const loadSignatureForSelection = () => {
 
   const inboxSig = getInboxSignature(selectedInboxId.value);
   if (inboxSig) {
-    signature.value = inboxSig.message_signature;
+    signature.value = inboxSig.message_signature ?? '';
     signaturePosition.value = inboxSig.signature_position || 'top';
     signatureSeparator.value = inboxSig.signature_separator || 'blank';
   } else {
     // Pre-fill with global signature for convenience
-    signature.value = props.messageSignature;
+    signature.value = props.messageSignature ?? '';
     signaturePosition.value = props.signaturePosition;
     signatureSeparator.value = props.signatureSeparator;
   }

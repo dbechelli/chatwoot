@@ -48,9 +48,10 @@ describe CsatSurveyService do
 
     context 'when CSAT survey should not be sent' do
       it 'does nothing when conversation is not resolved' do
-        conversation.update!(status: :open)
+        open_conversation = create(:conversation, contact_inbox: contact_inbox, inbox: inbox, account: account, status: :open)
+        open_service = described_class.new(conversation: open_conversation)
 
-        service.perform
+        open_service.perform
 
         expect(MessageTemplates::Template::CsatSurvey).not_to have_received(:new)
         expect(Conversations::ActivityMessageJob).not_to have_received(:perform_later)
@@ -66,7 +67,7 @@ describe CsatSurveyService do
       end
 
       it 'does nothing when CSAT already sent' do
-        create(:message, conversation: conversation, content_type: :input_csat)
+        create(:message, conversation: conversation, content_type: :input_csat, message_type: :outgoing)
 
         service.perform
 

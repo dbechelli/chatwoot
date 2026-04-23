@@ -4,6 +4,7 @@ class Whatsapp::Providers::WhatsappBaileysService < Whatsapp::Providers::BaseSer
   class MessageContentTypeNotSupported < StandardError; end
   class ProviderUnavailableError < StandardError; end
   class GroupParticipantNotAllowedError < StandardError; end
+  class MessageAlreadyProcessingError < StandardError; end
 
   DEFAULT_CLIENT_NAME = ENV.fetch('BAILEYS_PROVIDER_DEFAULT_CLIENT_NAME', nil)
   DEFAULT_URL = ENV.fetch('BAILEYS_PROVIDER_DEFAULT_URL', nil)
@@ -46,7 +47,8 @@ class Whatsapp::Providers::WhatsappBaileysService < Whatsapp::Providers::BaseSer
         webhookVerifyToken: whatsapp_channel.provider_config['webhook_verify_token'],
         # TODO: Remove on Baileys v2, default will be false
         includeMedia: false,
-        groupsEnabled: self.class.groups_enabled?
+        groupsEnabled: self.class.groups_enabled?,
+        autoPresenceSubscribe: whatsapp_channel.provider_config['presence_subscribe'] || false
       }.compact.to_json
     )
 
@@ -308,6 +310,19 @@ class Whatsapp::Providers::WhatsappBaileysService < Whatsapp::Providers::BaseSer
     raise ProviderUnavailableError unless process_response(response)
 
     true
+  end
+
+  def presence_subscribe(jids)
+    response = HTTParty.post(
+      "#{provider_url}/connections/#{whatsapp_channel.phone_number}/presence-subscribe",
+      headers: api_headers,
+      body: { jids: Array(jids) }.to_json,
+      timeout: 10
+    )
+
+    raise ProviderUnavailableError unless process_response(response)
+
+    response.parsed_response&.dig('data')
   end
 
   def update_presence(status)
@@ -687,10 +702,13 @@ class Whatsapp::Providers::WhatsappBaileysService < Whatsapp::Providers::BaseSer
       headers: api_headers,
       body: {
         jid: remote_jid,
-        messageContent: @message_content
-      }.to_json
+        messageContent: @message_content,
+        chatwootMessageId: @message.id
+      }.to_json,
+      timeout: 120
     )
 
+    raise MessageAlreadyProcessingError if response.code == 409
     raise ProviderUnavailableError unless process_response(response)
 
     update_external_created_at(response)
@@ -936,6 +954,8 @@ class Whatsapp::Providers::WhatsappBaileysService < Whatsapp::Providers::BaseSer
 
       define_method(method_name) do |*args, **kwargs, &block|
         original_method.bind_call(self, *args, **kwargs, &block)
+      rescue MessageAlreadyProcessingError
+        raise
       rescue StandardError => e
         handle_channel_error
         raise e
@@ -962,6 +982,7 @@ class Whatsapp::Providers::WhatsappBaileysService < Whatsapp::Providers::BaseSer
                       :disconnect_channel_provider,
                       :send_message,
                       :toggle_typing_status,
+                      :presence_subscribe,
                       :update_presence,
                       :read_messages,
                       :unread_message,

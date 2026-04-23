@@ -3,7 +3,7 @@ class Api::V1::Accounts::ConversationsController < Api::V1::Accounts::BaseContro
   include DateRangeHelper
   include HmacConcern
 
-  before_action :conversation, except: [:index, :meta, :search, :create, :filter]
+  before_action :conversation, except: [:index, :meta, :search, :create, :filter, :presence_subscribe_bulk]
   before_action :inbox, :contact, :contact_inbox, only: [:create]
   before_action :set_current_conversation, only: [:previous_resolved]
 
@@ -38,6 +38,11 @@ class Api::V1::Accounts::ConversationsController < Api::V1::Accounts::BaseContro
                                 .order(created_at: :desc)
                                 .page(attachment_params[:page])
                                 .per(ATTACHMENT_RESULTS_PER_PAGE)
+  end
+
+  def presence_subscribe_bulk
+    Conversations::PresenceSubscribeService.new(Current.account, presence_subscribe_params[:conversation_ids]).perform
+    head :ok
   end
 
   def show; end
@@ -118,15 +123,21 @@ class Api::V1::Accounts::ConversationsController < Api::V1::Accounts::BaseContro
     head :ok
   end
 
+  def presence_subscribe
+    Conversations::PresenceSubscribeService.new(Current.account, [@conversation.display_id]).perform
+    head :ok
+  end
+
   def update_last_seen
     # High-traffic accounts generate excessive DB writes when agents frequently switch between conversations.
     # Throttle last_seen updates to once per hour when there are no unread messages to reduce DB load.
     # Always update immediately if there are unread messages to maintain accurate read/unread state.
-    return update_last_seen_on_conversation(DateTime.now.utc, true) if assignee? && @conversation.assignee_unread_messages.any?
-    return update_last_seen_on_conversation(DateTime.now.utc, false) if !assignee? && @conversation.unread_messages.any?
+    # Visiting a conversation should clear any unread inbox notifications for this conversation.
+    Notification::MarkConversationReadService.new(user: Current.user, account: Current.account, conversation: @conversation).perform
+    has_unread = assignee? ? @conversation.assignee_unread_messages.any? : @conversation.unread_messages.any?
 
     # No unread messages - apply throttling to limit DB writes
-    return unless should_update_last_seen?
+    return if !has_unread && !should_update_last_seen?
 
     dispatch_messages_read_event if assignee?
 
@@ -207,6 +218,9 @@ class Api::V1::Accounts::ConversationsController < Api::V1::Accounts::BaseContro
            .includes(:contact)
            .distinct
            .order(last_activity_at: :desc)
+
+  def presence_subscribe_params
+    params.permit(conversation_ids: [])
   end
 
   def update_last_seen_on_conversation(last_seen_at, update_assignee)

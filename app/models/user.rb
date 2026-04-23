@@ -37,6 +37,7 @@
 #
 # Indexes
 #
+#  idx_users_name_unaccent_trgm           (f_unaccent((name)::text) gin_trgm_ops) USING gin
 #  index_users_on_email                   (email)
 #  index_users_on_otp_required_for_login  (otp_required_for_login)
 #  index_users_on_otp_secret              (otp_secret) UNIQUE
@@ -98,6 +99,8 @@ class User < ApplicationRecord
   has_many :inbox_members, dependent: :destroy_async
   has_many :inbox_signatures, dependent: :destroy_async
   has_many :inboxes, through: :inbox_members, source: :inbox
+  has_many :internal_chat_channel_memberships, class_name: 'InternalChat::ChannelMember', dependent: :destroy_async
+  has_many :internal_chat_channels, through: :internal_chat_channel_memberships, source: :channel
   has_many :messages, as: :sender, dependent: :nullify
   has_many :invitees, through: :account_users, class_name: 'User', foreign_key: 'inviter_id', source: :inviter, dependent: :nullify
 
@@ -129,7 +132,8 @@ class User < ApplicationRecord
   end
 
   def send_devise_notification(notification, *)
-    devise_mailer.with(account: Current.account).send(notification, self, *).deliver_later
+    account = Current.account || accounts.first
+    devise_mailer.with(account: account).send(notification, self, *).deliver_later
   end
 
   def set_password_and_uid

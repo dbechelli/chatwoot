@@ -552,6 +552,242 @@ RSpec.describe Channel::Whatsapp do
     end
   end
 
+  describe '#convert_provider!' do
+    let(:channel) do
+      create(:channel_whatsapp,
+             provider: 'baileys',
+             provider_connection: { 'connection' => 'open' },
+             validate_provider_config: false,
+             sync_templates: false)
+    end
+
+    let(:new_cloud_config) do
+      { 'api_key' => 'new_cloud_key', 'phone_number_id' => 'new_phone_id', 'business_account_id' => 'new_waba_id' }
+    end
+
+    before do
+      stub_request(:delete, "#{channel.provider_config['provider_url']}/connections/#{channel.phone_number}")
+        .to_return(status: 200)
+      stub_request(:get, %r{graph\.facebook\.com/v\d+\.\d+/.*message_templates})
+        .to_return(status: 200, body: { data: [] }.to_json, headers: { 'Content-Type' => 'application/json' })
+      stub_request(:delete, %r{graph\.facebook\.com/v\d+\.\d+/.*/subscribed_apps})
+        .to_return(status: 200, body: { success: true }.to_json, headers: { 'Content-Type' => 'application/json' })
+      webhook_setup_service = instance_double(Whatsapp::WebhookSetupService, perform: nil)
+      allow(Whatsapp::WebhookSetupService).to receive(:new).and_return(webhook_setup_service)
+    end
+
+    it 'swaps provider and provider_config atomically' do
+      channel.convert_provider!(new_provider: 'whatsapp_cloud', new_provider_config: new_cloud_config)
+
+      channel.reload
+      expect(channel.provider).to eq('whatsapp_cloud')
+      expect(channel.provider_config).to include(new_cloud_config)
+      expect(channel.provider_config).not_to have_key('provider_url')
+    end
+
+    it 'clears provider_connection and message_templates' do
+      channel.convert_provider!(new_provider: 'whatsapp_cloud', new_provider_config: new_cloud_config)
+
+      channel.reload
+      expect(channel.provider_connection).to eq({})
+      expect(channel.message_templates).to eq({})
+      expect(channel.message_templates_last_updated).to be_nil
+    end
+
+    it 'calls disconnect on the old provider when supported' do
+      disconnect_url = "#{channel.provider_config['provider_url']}/connections/#{channel.phone_number}"
+
+      channel.convert_provider!(new_provider: 'whatsapp_cloud', new_provider_config: new_cloud_config)
+
+      expect(WebMock).to have_requested(:delete, disconnect_url)
+    end
+
+    it 'does not raise when the old provider has no disconnect method' do
+      cloud_channel = create(:channel_whatsapp,
+                             provider: 'whatsapp_cloud',
+                             provider_config: {
+                               'source' => 'embedded_signup',
+                               'api_key' => 'old_key',
+                               'phone_number_id' => 'old_phone_id',
+                               'business_account_id' => 'old_waba_id'
+                             },
+                             validate_provider_config: false,
+                             sync_templates: false)
+
+      expect do
+        cloud_channel.convert_provider!(
+          new_provider: 'baileys',
+          new_provider_config: { 'provider_url' => 'https://baileys.api', 'api_key' => 'k' }
+        )
+      end.not_to raise_error
+    end
+
+    it 'rolls back and raises when the new provider config is invalid, leaving the old provider session untouched' do
+      # The factory installs a singleton `validate_provider_config` stub that
+      # bypasses validation; reload from DB to get a clean instance.
+      fresh_channel = described_class.find(channel.id)
+      cloud_service = instance_double(Whatsapp::Providers::WhatsappCloudService, validate_provider_config?: false)
+      allow(Whatsapp::Providers::WhatsappCloudService).to receive(:new).and_return(cloud_service)
+      disconnect_url = "#{fresh_channel.provider_config['provider_url']}/connections/#{fresh_channel.phone_number}"
+
+      expect do
+        fresh_channel.convert_provider!(new_provider: 'whatsapp_cloud', new_provider_config: { 'api_key' => 'bad' })
+      end.to(raise_error { |error| expect(error.class.name).to eq('ActiveRecord::RecordInvalid') })
+
+      fresh_channel.reload
+      expect(fresh_channel.provider).to eq('baileys')
+      expect(WebMock).not_to have_requested(:delete, disconnect_url)
+    end
+
+    it 'triggers webhook setup on the new provider when auto-setup applies' do
+      webhook_setup_service = instance_double(Whatsapp::WebhookSetupService, perform: nil)
+      allow(Whatsapp::WebhookSetupService).to receive(:new).and_return(webhook_setup_service)
+
+      channel.convert_provider!(new_provider: 'whatsapp_cloud', new_provider_config: new_cloud_config)
+
+      expect(Whatsapp::WebhookSetupService).to have_received(:new).with(channel, 'new_waba_id', 'new_cloud_key')
+      expect(webhook_setup_service).to have_received(:perform)
+    end
+
+    it 'does not trigger webhook setup when the new provider does not auto-setup' do
+      cloud_channel = create(:channel_whatsapp,
+                             provider: 'whatsapp_cloud',
+                             provider_config: {
+                               'source' => 'embedded_signup',
+                               'api_key' => 'old_key',
+                               'phone_number_id' => 'old_phone_id',
+                               'business_account_id' => 'old_waba_id'
+                             },
+                             validate_provider_config: false,
+                             sync_templates: false)
+      allow(Whatsapp::WebhookSetupService).to receive(:new)
+
+      cloud_channel.convert_provider!(
+        new_provider: 'baileys',
+        new_provider_config: { 'provider_url' => 'https://baileys.api', 'api_key' => 'k' }
+      )
+
+      expect(Whatsapp::WebhookSetupService).not_to have_received(:new)
+    end
+
+    it 'rejects no-op conversions targeting the current provider' do
+      original_templates_count = channel.message_templates.count
+
+      expect do
+        channel.convert_provider!(new_provider: 'baileys', new_provider_config: channel.provider_config)
+      end.to(raise_error { |error| expect(error.class.name).to eq('ActiveRecord::RecordInvalid') })
+
+      channel.reload
+      expect(channel.provider_connection).to eq('connection' => 'open')
+      expect(channel.message_templates.count).to eq(original_templates_count)
+    end
+
+    it 'aborts and does not persist the new provider when the disconnect fails' do
+      original_templates_count = channel.message_templates.count
+      baileys_service = instance_double(Whatsapp::Providers::WhatsappBaileysService)
+      allow(Whatsapp::Providers::WhatsappBaileysService).to receive(:new).and_return(baileys_service)
+      allow(baileys_service).to receive(:disconnect_channel_provider).and_raise(StandardError, 'boom')
+
+      expect do
+        channel.convert_provider!(new_provider: 'whatsapp_cloud', new_provider_config: new_cloud_config)
+      end.to(raise_error { |error| expect(error.class.name).to eq('StandardError') })
+
+      channel.reload
+      expect(channel.provider).to eq('baileys')
+      expect(channel.message_templates.count).to eq(original_templates_count)
+    end
+
+    it 'swallows and logs errors raised by post-conversion template sync' do
+      # Bypass both the factory's singleton `sync_templates` stub and validation,
+      # so we can observe the rescue branch on the real instance.
+      fresh_channel = described_class.find(channel.id)
+      cloud_service = instance_double(
+        Whatsapp::Providers::WhatsappCloudService,
+        validate_provider_config?: true
+      )
+      allow(Whatsapp::Providers::WhatsappCloudService).to receive(:new).and_return(cloud_service)
+      # Some provider services stamp `message_templates_last_updated` before
+      # the remote fetch; emulate that by setting the timestamp right before
+      # the raise, so the rescue must reset it to avoid a "synced" state.
+      allow(fresh_channel).to receive(:sync_templates) do
+        fresh_channel.mark_message_templates_updated
+        raise StandardError, 'boom'
+      end
+      allow(Rails.logger).to receive(:error)
+
+      expect do
+        fresh_channel.convert_provider!(new_provider: 'whatsapp_cloud', new_provider_config: new_cloud_config)
+      end.not_to raise_error
+
+      fresh_channel.reload
+      expect(fresh_channel.provider).to eq('whatsapp_cloud')
+      expect(fresh_channel.provider_connection).to eq({})
+      expect(fresh_channel.message_templates).to eq({})
+      expect(fresh_channel.message_templates_last_updated).to be_nil
+      expect(Rails.logger).to have_received(:error).with(/Post-conversion template sync failed.*boom/)
+    end
+
+    context 'when converting from whatsapp_cloud to baileys' do
+      let(:cloud_channel) do
+        create(:channel_whatsapp,
+               provider: 'whatsapp_cloud',
+               provider_config: {
+                 'source' => 'embedded_signup',
+                 'api_key' => 'old_key',
+                 'phone_number_id' => 'old_phone_id',
+                 'business_account_id' => 'old_waba_id'
+               },
+               validate_provider_config: false,
+               sync_templates: false)
+      end
+      let(:new_baileys_config) { { 'provider_url' => 'https://baileys.api', 'api_key' => 'new_baileys_key' } }
+
+      before do
+        stub_request(:delete, %r{https://baileys\.api/connections/.*})
+          .to_return(status: 200)
+      end
+
+      it 'invokes WebhookTeardownService on the old cloud channel before swapping' do
+        teardown_service = instance_double(Whatsapp::WebhookTeardownService, perform: nil)
+        allow(Whatsapp::WebhookTeardownService).to receive(:new).with(cloud_channel).and_return(teardown_service)
+
+        cloud_channel.convert_provider!(new_provider: 'baileys', new_provider_config: new_baileys_config)
+
+        expect(Whatsapp::WebhookTeardownService).to have_received(:new).with(cloud_channel)
+        expect(teardown_service).to have_received(:perform)
+      end
+
+      it 'swallows and logs errors raised by pre-conversion webhook teardown' do
+        teardown_service = instance_double(Whatsapp::WebhookTeardownService)
+        allow(Whatsapp::WebhookTeardownService).to receive(:new).with(cloud_channel).and_return(teardown_service)
+        allow(teardown_service).to receive(:perform).and_raise(StandardError, 'teardown boom')
+        allow(Rails.logger).to receive(:error)
+
+        expect do
+          cloud_channel.convert_provider!(new_provider: 'baileys', new_provider_config: new_baileys_config)
+        end.not_to raise_error
+
+        cloud_channel.reload
+        expect(cloud_channel.provider).to eq('baileys')
+        expect(Rails.logger).to have_received(:error).with(/Pre-conversion webhook teardown failed.*teardown boom/)
+      end
+
+      it 'resets the teardown guard so a subsequent destroy still tears down webhooks' do
+        teardown_service = instance_double(Whatsapp::WebhookTeardownService, perform: nil)
+        allow(Whatsapp::WebhookTeardownService).to receive(:new).and_return(teardown_service)
+
+        cloud_channel.convert_provider!(new_provider: 'baileys', new_provider_config: new_baileys_config)
+        # The convert path no longer matches the teardown branch (provider is
+        # now baileys), so destroy! hitting teardown_webhooks again proves the
+        # `@webhook_teardown_initiated` guard was reset by the ensure block.
+        cloud_channel.destroy!
+
+        # One teardown from the pre-conversion branch, one from destroy.
+        expect(teardown_service).to have_received(:perform).twice
+      end
+    end
+  end
+
   describe '#sync_group' do
     it 'delegates to provider_service when it supports sync_group' do
       channel = create(:channel_whatsapp, provider: 'baileys', validate_provider_config: false, sync_templates: false)

@@ -42,6 +42,10 @@
   value: 'Chatwoot'
   display_title: 'Brand Name'
   description: 'The name that would be used in emails and the widget'
+- name: BRAND_COLOR
+  value: '#1f93ff'
+  display_title: 'Brand Color'
+  description: 'Hex color used for PWA theme/tile color (example: #1f93ff). For reliable Android PWA install prompts, pair with a 192x192 and 512x512 PNG logo thumbnail.'
 - name: TERMS_URL
   value: 'https://www.chatwoot.com/terms-of-service'
   display_title: 'Terms URL'
@@ -210,6 +214,13 @@
   value:
   type: code
 # End of Captain Config
+
+# ------- Context.dev Config ------- #
+- name: CONTEXT_DEV_API_KEY
+  display_title: 'Context.dev API Key'
+  description: 'API key for Context.dev branding service used during account onboarding'
+  type: secret
+# ------- End of Context.dev Config ------- #
 
 # ------- Chatwoot Internal Config for Cloud ----#
 - name: CHATWOOT_INBOX_TOKEN

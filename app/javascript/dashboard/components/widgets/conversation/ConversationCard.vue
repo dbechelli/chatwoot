@@ -2,6 +2,7 @@
 import { computed, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useStore, useMapGetter } from 'dashboard/composables/store';
+import { useI18n } from 'vue-i18n';
 import { getLastMessage } from 'dashboard/helper/conversationHelper';
 import { frontendURL, conversationUrl } from 'dashboard/helper/URLHelper';
 import Avatar from 'next/avatar/Avatar.vue';
@@ -10,7 +11,7 @@ import InboxName from '../InboxName.vue';
 import ConversationContextMenu from './contextMenu/Index.vue';
 import TimeAgo from 'dashboard/components/ui/TimeAgo.vue';
 import CardLabels from './conversationCardComponents/CardLabels.vue';
-import PriorityMark from './PriorityMark.vue';
+import CardPriorityIcon from 'dashboard/components-next/Conversation/ConversationCard/CardPriorityIcon.vue';
 import SLACardLabel from './components/SLACardLabel.vue';
 import ContextMenu from 'dashboard/components/ui/ContextMenu.vue';
 import VoiceCallStatus from './VoiceCallStatus.vue';
@@ -114,6 +115,21 @@ const isInboxNameVisible = computed(() => !activeInbox.value);
 
 const lastMessageInChat = computed(() => getLastMessage(props.chat));
 
+const { t } = useI18n();
+const typingUsersList = computed(() => {
+  const users = store.getters['conversationTypingStatus/getUserList'](
+    props.chat.id
+  );
+  return users.filter(u => u.type === 'contact');
+});
+const isAnyoneTyping = computed(() => typingUsersList.value.length > 0);
+const typingPreviewText = computed(() => {
+  if (!isAnyoneTyping.value) return '';
+  return typingUsersList.value.some(u => u.recording)
+    ? t('CHAT_LIST.RECORDING')
+    : t('CHAT_LIST.TYPING');
+});
+
 const voiceCallData = computed(() => ({
   status: props.chat.additional_attributes?.call_status,
   direction: props.chat.additional_attributes?.call_direction,
@@ -147,11 +163,17 @@ const showLabelsSection = computed(() => {
   return props.chat.labels?.length > 0 || hasSlaPolicyId.value;
 });
 
+const messagePreviewPaddingClass = computed(() => {
+  return [
+    !props.compact && hasUnread.value ? 'ltr:pr-4 rtl:pl-4' : '',
+    props.compact && hasUnread.value ? 'ltr:pr-6 rtl:pl-6' : '',
+  ];
+});
+
 const messagePreviewClass = computed(() => {
   return [
     hasUnread.value ? 'font-medium text-n-slate-12' : 'text-n-slate-11',
-    !props.compact && hasUnread.value ? 'ltr:pr-4 rtl:pl-4' : '',
-    props.compact && hasUnread.value ? 'ltr:pr-6 rtl:pl-6' : '',
+    ...messagePreviewPaddingClass.value,
   ];
 });
 
@@ -334,7 +356,7 @@ const forwardMessage = () => {
       >
         <InboxName v-if="showInboxName" :inbox="inbox" class="flex-1 min-w-0" />
         <div
-          class="flex items-center gap-2 flex-shrink-0"
+          class="flex items-baseline gap-2 flex-shrink-0"
           :class="{
             'flex-1 justify-between': !showInboxName,
           }"
@@ -346,7 +368,10 @@ const forwardMessage = () => {
             <fluent-icon icon="person" size="12" class="text-n-slate-11" />
             {{ assignee.name }}
           </span>
-          <PriorityMark :priority="chat.priority" class="flex-shrink-0" />
+          <CardPriorityIcon
+            :priority="chat.priority"
+            class="flex-shrink-0 !size-3.5"
+          />
         </div>
       </div>
       <h4
@@ -362,6 +387,14 @@ const forwardMessage = () => {
         :direction="voiceCallData.direction"
         :message-preview-class="messagePreviewClass"
       />
+      <p
+        v-else-if="isAnyoneTyping"
+        key="typing-preview"
+        class="text-green-500 text-sm font-medium my-0 mx-2 leading-6 h-6 flex-1 min-w-0 overflow-hidden text-ellipsis whitespace-nowrap"
+        :class="messagePreviewPaddingClass"
+      >
+        {{ typingPreviewText }}
+      </p>
       <MessagePreview
         v-else-if="lastMessageInChat"
         key="message-preview"

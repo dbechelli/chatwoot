@@ -240,6 +240,12 @@ const menuItems = computed(() => {
           to: accountScopedRoute('conversation_mentions'),
         },
         {
+          name: 'Participating',
+          label: t('SIDEBAR.PARTICIPATING_CONVERSATIONS'),
+          activeOn: ['conversation_through_participating'],
+          to: accountScopedRoute('conversation_participating'),
+        },
+        {
           name: 'Unattended',
           activeOn: ['conversation_through_unattended'],
           label: t('SIDEBAR.UNATTENDED_CONVERSATIONS'),
@@ -302,6 +308,23 @@ const menuItems = computed(() => {
           })),
         },
       ],
+    },
+    {
+      name: 'InternalChat',
+      label: t('SIDEBAR.INTERNAL_CHAT'),
+      icon: 'i-lucide-messages-square',
+      to: accountScopedRoute('internal_chat_home'),
+      activeOn: [
+        'internal_chat',
+        'internal_chat_home',
+        'internal_chat_channel',
+        'internal_chat_dm',
+        'internal_chat_thread',
+        'internal_chat_drafts',
+      ],
+      getterKeys: {
+        count: 'internalChat/getUnreadCount',
+      },
     },
     {
       name: 'Kanban',

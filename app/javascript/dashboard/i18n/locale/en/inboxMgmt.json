@@ -86,6 +86,14 @@
           "PLACEHOLDER": "Please enter your Webhook URL",
           "ERROR": "Please enter a valid URL"
         },
+        "CHANNEL_WEBHOOK_SECRET": {
+          "LABEL": "Webhook Secret",
+          "COPY": "Copy secret to clipboard",
+          "COPY_SUCCESS": "Secret copied to clipboard",
+          "TOGGLE": "Toggle secret visibility",
+          "RESET_SUCCESS": "Webhook secret regenerated successfully",
+          "RESET_ERROR": "Unable to regenerate webhook secret. Please try again"
+        },
         "CHANNEL_DOMAIN": {
           "LABEL": "Website Domain",
           "PLACEHOLDER": "Enter your website domain (eg: acme.com)"
@@ -240,6 +248,7 @@
           "WHATSAPP_CLOUD_DESC": "Quick setup through Meta",
           "TWILIO_DESC": "Connect via Twilio credentials",
           "360_DIALOG": "360Dialog",
+          "360_DIALOG_DESC": "Connect via 360Dialog credentials",
           "BAILEYS": "Baileys",
           "BAILEYS_DESC": "Connect via non-official API Baileys",
           "ZAPI": "Z-API",
@@ -298,6 +307,9 @@
         },
         "MARK_AS_READ": {
           "LABEL": "Send read receipts"
+        },
+        "PRESENCE_SUBSCRIBE": {
+          "LABEL": "Show contact typing indicators"
         },
         "INSTANCE_ID": {
           "LABEL": "Instance ID",
@@ -682,6 +694,29 @@
         "AVATAR_ERROR_MESSAGE": "Could not delete the inbox avatar. Please try again later."
       }
     },
+    "CONVERT": {
+      "BUTTON": "Convert",
+      "CONFIRM": {
+        "TITLE": "Convert inbox provider",
+        "INTRO": "You are about to change the WhatsApp provider for '{inboxName}' (currently {currentProvider}). Before continuing, review what will happen:",
+        "EFFECT_DISCONNECT": "The current session with {currentProvider} will be disconnected.",
+        "EFFECT_TEMPLATES": "Message templates will be cleared and must be resynced on the new provider.",
+        "EFFECT_CONNECTION": "Provider connection state will be reset.",
+        "EFFECT_PRESERVED": "Conversations, messages, contacts, agent assignments and history are preserved.",
+        "EFFECT_IDENTITY": "Inbox name and phone number stay the same.",
+        "CONFIRM_PROMPT": "To confirm, type the inbox name below:",
+        "PLACE_HOLDER": "Type {inboxName} to continue",
+        "CONTINUE": "Continue to convert",
+        "CANCEL": "Cancel"
+      },
+      "SELECT_PROVIDER_TITLE": "Select the new provider",
+      "SELECT_PROVIDER_DESCRIPTION": "Converting '{inboxName}' from {currentProvider}.",
+      "SUBMIT_BUTTON": "Convert inbox",
+      "API": {
+        "SUCCESS_MESSAGE": "Inbox successfully converted",
+        "ERROR_MESSAGE": "Could not convert inbox. Please check the credentials and try again."
+      }
+    },
     "TABS": {
       "SETTINGS": "Settings",
       "COLLABORATORS": "Collaborators",
@@ -856,6 +891,9 @@
       "WHATSAPP_MARK_AS_READ_TITLE": "Read receipts",
       "WHATSAPP_MARK_AS_READ_SUBHEADER": "If turned off, when a message is viewed in Chatwoot, a read receipt will not be sent to the sender. Your messages will still be able to receive read receipts from the sender.",
       "WHATSAPP_MARK_AS_READ_LABEL": "Send read receipts",
+      "WHATSAPP_PRESENCE_SUBSCRIBE_TITLE": "Contact typing indicators",
+      "WHATSAPP_PRESENCE_SUBSCRIBE_SUBHEADER": "When enabled, you will see typing indicators in the conversation when a WhatsApp contact is typing or recording audio. Requires reconnecting the channel to take effect.",
+      "WHATSAPP_PRESENCE_SUBSCRIBE_LABEL": "Show contact typing indicators",
       "WHATSAPP_INSTANCE_ID_TITLE": "Instance ID",
       "WHATSAPP_INSTANCE_ID_SUBHEADER": "Your Z-API Instance ID.",
       "WHATSAPP_INSTANCE_ID_UPDATE_TITLE": "Update Instance ID",

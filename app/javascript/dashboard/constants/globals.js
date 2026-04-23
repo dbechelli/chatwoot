@@ -13,6 +13,11 @@ export default {
     SNOOZED: 'snoozed',
     ALL: 'all',
   },
+  CONVERSATION_TYPE: {
+    MENTION: 'mention',
+    PARTICIPATING: 'participating',
+    UNATTENDED: 'unattended',
+  },
   SORT_BY_TYPE: {
     LAST_ACTIVITY_AT_ASC: 'last_activity_at_asc',
     LAST_ACTIVITY_AT_DESC: 'last_activity_at_desc',
@@ -40,7 +45,7 @@ export default {
     'https://testimonials.cdn.chatwoot.com/testimonial-content.json',
   WHATSAPP_EMBEDDED_SIGNUP_DOCS_URL:
     'https://developers.facebook.com/docs/whatsapp/embedded-signup/custom-flows/onboarding-business-app-users#limitations',
-  FAZER_AI_GUIDES_URL: 'https://app.fazer.ai/#/dashboard#guides',
+  FAZER_AI_GUIDES_URL: 'https://app.fazer.ai/#/guides',
   SMALL_SCREEN_BREAKPOINT: 768,
   AVAILABILITY_STATUS_KEYS: ['online', 'busy', 'offline'],
   SNOOZE_OPTIONS: {

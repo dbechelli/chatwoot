@@ -6,6 +6,7 @@ import { createPendingMessage } from 'dashboard/helper/commons';
 import {
   buildConversationList,
   isOnMentionsView,
+  isOnParticipatingView,
   isOnUnattendedView,
   isOnFoldersView,
 } from './helpers/actionHelpers';
@@ -206,6 +207,7 @@ const actions = {
         // Ignore error
       }
     }
+    ConversationApi.presenceSubscribe(data.id)?.catch(() => {});
   },
 
   assignAgent: async ({ dispatch }, { conversationId, agentId }) => {
@@ -390,6 +392,7 @@ const actions = {
       !hasAppliedFilters &&
       !isOnFoldersView(rootState) &&
       !isOnMentionsView(rootState) &&
+      !isOnParticipatingView(rootState) &&
       !isOnUnattendedView(rootState) &&
       isMatchingInboxFilter
     ) {
@@ -414,6 +417,7 @@ const actions = {
     const {
       meta: { sender },
     } = conversation;
+
     commit(types.UPDATE_CONVERSATION, conversation);
 
     dispatch('conversationLabels/setConversationLabel', {

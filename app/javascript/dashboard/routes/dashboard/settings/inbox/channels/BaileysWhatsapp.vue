@@ -12,16 +12,33 @@ import { isValidURL } from '../../../../../helper/URLHelper';
 import NextButton from 'dashboard/components-next/button/Button.vue';
 import Switch from 'dashboard/components-next/switch/Switch.vue';
 
+const props = defineProps({
+  mode: {
+    type: String,
+    default: 'create',
+    validator: value => ['create', 'convert'].includes(value),
+  },
+  inbox: {
+    type: Object,
+    default: null,
+  },
+});
+
+const isConvertMode = computed(() => props.mode === 'convert');
+
 const router = useRouter();
 const store = useStore();
 const { t } = useI18n();
 
-const inboxName = ref('');
-const phoneNumber = ref('');
+const inboxName = ref(isConvertMode.value ? props.inbox?.name || '' : '');
+const phoneNumber = ref(
+  isConvertMode.value ? props.inbox?.phone_number || '' : ''
+);
 const apiKey = ref('');
 const providerUrl = ref('');
 const showAdvancedOptions = ref(false);
 const markAsRead = ref(true);
+const presenceSubscribe = ref(false);
 
 const uiFlags = computed(() => store.getters['inboxes/getUIFlags']);
 
@@ -42,6 +59,20 @@ const v$ = useVuelidate(rules, {
   apiKey,
 });
 
+const buildProviderConfig = () => {
+  const providerConfig = {
+    mark_as_read: markAsRead.value,
+    presence_subscribe: presenceSubscribe.value,
+  };
+
+  if (apiKey.value || providerUrl.value) {
+    providerConfig.api_key = apiKey.value;
+    providerConfig.provider_url = providerUrl.value;
+  }
+
+  return providerConfig;
+};
+
 const createChannel = async () => {
   v$.value.$touch();
   if (v$.value.$invalid) {
@@ -49,13 +80,22 @@ const createChannel = async () => {
   }
 
   try {
-    const providerConfig = {
-      mark_as_read: markAsRead.value,
-    };
+    if (isConvertMode.value) {
+      await store.dispatch('inboxes/convertProvider', {
+        inboxId: props.inbox.id,
+        provider: 'baileys',
+        providerConfig: buildProviderConfig(),
+      });
 
-    if (apiKey.value || providerUrl.value) {
-      providerConfig.api_key = apiKey.value;
-      providerConfig.url = providerUrl.value;
+      useAlert(t('INBOX_MGMT.CONVERT.API.SUCCESS_MESSAGE'));
+      router.replace({
+        name: 'settings_inbox_show',
+        params: {
+          accountId: router.currentRoute.value.params.accountId,
+          inboxId: props.inbox.id,
+        },
+      });
+      return;
     }
 
     const whatsappChannel = await store.dispatch('inboxes/createChannel', {
@@ -64,7 +104,7 @@ const createChannel = async () => {
         type: 'whatsapp',
         phone_number: phoneNumber.value,
         provider: 'baileys',
-        provider_config: providerConfig,
+        provider_config: buildProviderConfig(),
       },
     });
 
@@ -76,7 +116,14 @@ const createChannel = async () => {
       },
     });
   } catch (error) {
-    useAlert(error.message || t('INBOX_MGMT.ADD.WHATSAPP.API.ERROR_MESSAGE'));
+    useAlert(
+      error.message ||
+        t(
+          isConvertMode.value
+            ? 'INBOX_MGMT.CONVERT.API.ERROR_MESSAGE'
+            : 'INBOX_MGMT.ADD.WHATSAPP.API.ERROR_MESSAGE'
+        )
+    );
   }
 };
 
@@ -93,6 +140,7 @@ const setShowAdvancedOptions = () => {
         <input
           v-model="inboxName"
           type="text"
+          :disabled="isConvertMode"
           :placeholder="$t('INBOX_MGMT.ADD.WHATSAPP.INBOX_NAME.PLACEHOLDER')"
           @blur="v$.inboxName.$touch"
         />
@@ -108,6 +156,7 @@ const setShowAdvancedOptions = () => {
         <input
           v-model="phoneNumber"
           type="text"
+          :disabled="isConvertMode"
           :placeholder="$t('INBOX_MGMT.ADD.WHATSAPP.PHONE_NUMBER.PLACEHOLDER')"
           @blur="v$.phoneNumber.$touch"
         />
@@ -169,15 +218,30 @@ const setShowAdvancedOptions = () => {
           </div>
         </label>
       </div>
+
+      <div class="w-[65%] flex-shrink-0 flex-grow-0 max-w-[65%]">
+        <label>
+          <div class="flex mb-2 items-center">
+            <span class="mr-2 text-sm">
+              {{ $t('INBOX_MGMT.ADD.WHATSAPP.PRESENCE_SUBSCRIBE.LABEL') }}
+            </span>
+            <Switch id="presenceSubscribe" v-model="presenceSubscribe" />
+          </div>
+        </label>
+      </div>
     </template>
 
     <div class="w-full">
       <NextButton
-        :is-loading="uiFlags.isCreating"
+        :is-loading="uiFlags.isCreating || uiFlags.isUpdating"
         type="submit"
         solid
         blue
-        :label="$t('INBOX_MGMT.ADD.WHATSAPP.SUBMIT_BUTTON')"
+        :label="
+          isConvertMode
+            ? $t('INBOX_MGMT.CONVERT.SUBMIT_BUTTON')
+            : $t('INBOX_MGMT.ADD.WHATSAPP.SUBMIT_BUTTON')
+        "
       />
     </div>
   </form>
