@@ -44,6 +44,8 @@ import VoiceCallBubble from './bubbles/VoiceCall.vue';
 
 import MessageError from './MessageError.vue';
 import ContextMenu from 'dashboard/modules/conversations/components/MessageContextMenu.vue';
+import EmojiReactionPicker from './EmojiReactionPicker.vue';
+import ReactionDisplay from './ReactionDisplay.vue';
 import { useBranding } from 'shared/composables/useBranding';
 
 /**
@@ -115,6 +117,7 @@ const props = defineProps({
     validator: value => Object.values(MESSAGE_STATUS).includes(value),
   },
   attachments: { type: Array, default: () => [] },
+  call: { type: Object, default: null }, // eslint-disable-line vue/no-unused-properties
   content: { type: String, default: null },
   contentAttributes: { type: Object, default: () => ({}) },
   contentType: {
@@ -138,13 +141,16 @@ const props = defineProps({
   senderId: { type: Number, default: null },
   senderType: { type: String, default: null },
   sourceId: { type: String, default: '' }, // eslint-disable-line vue/no-unused-properties
+  reactions: { type: Array, default: () => [] },
+  inboxSupportsReactions: { type: Boolean, default: false },
 });
 
-const emit = defineEmits(['retry']);
+const emit = defineEmits(['retry', 'toggleReaction']);
 
 const contextMenuPosition = ref({});
 const showBackgroundHighlight = ref(false);
 const showContextMenu = ref(false);
+const reactionPickerOpen = ref(false);
 const { t } = useI18n();
 const route = useRoute();
 const inboxGetter = useMapGetter('inboxes/getInbox');
@@ -360,6 +366,8 @@ const componentToRender = computed(() => {
   return TextBubble;
 });
 
+const isAudioBubble = computed(() => componentToRender.value === AudioBubble);
+
 const shouldShowContextMenu = computed(() => {
   return !props.contentAttributes?.isUnsupported;
 });
@@ -401,8 +409,7 @@ const contextMenuEnabledOptions = computed(() => {
     translate: !isFailedOrProcessing && !isMessageDeleted.value && hasText,
     forward: !isFailedOrProcessing && !isMessageDeleted.value,
     replyTo:
-      !props.private &&
-      props.inboxSupportsReplyTo.outgoing &&
+      (props.private || props.inboxSupportsReplyTo.outgoing) &&
       !isFailedOrProcessing,
     edit:
       isOutgoing &&
@@ -411,6 +418,67 @@ const contextMenuEnabledOptions = computed(() => {
       !isMessageDeleted.value &&
       props.inboxSupportsEdit,
   };
+});
+
+const canShowReactionToolbar = computed(() => {
+  if (!isBubble.value) return false;
+  if (isMessageDeleted.value) return false;
+  if (props.contentAttributes?.isUnsupported) return false;
+  if (props.status === MESSAGE_STATUS.FAILED) return false;
+  if (props.status === MESSAGE_STATUS.PROGRESS) return false;
+  if (props.messageType === MESSAGE_TYPES.TEMPLATE) return false;
+  // Private notes are agent-only and never leave Chatwoot, so reactions on
+  // them don't depend on inbox channel capabilities or a provider source_id.
+  if (props.private) return true;
+  if (!props.inboxSupportsReactions) return false;
+  // Mirror ReactionsController#target_unreactable_error: a non-private message
+  // without a provider source_id can't be reacted to on WhatsApp, so the API
+  // would 422 if the user clicked. Hide the picker instead of a dead action.
+  if (!props.sourceId) return false;
+  return true;
+});
+
+// Short cooldown after a click so a quick double-tap (or open-pick-reopen-pick
+// on the picker) doesn't fire two POSTs against the same emoji. Watching
+// reactions is not enough — the optimistic add mutates them synchronously, so
+// we'd unblock before the human could react.
+const REACTION_COOLDOWN_MS = 500;
+const pendingEmojis = ref(new Set());
+
+const currentUserReactionEmoji = computed(() => {
+  const own = props.reactions.find(
+    r =>
+      (r.senderType === 'user' && r.senderId === props.currentUserId) ||
+      (r.messageType === 1 && r.senderId == null)
+  );
+  return own?.emoji ?? null;
+});
+
+// Track pending cooldown timers so we can clear them on unmount and avoid
+// touching `pendingEmojis` after the component is gone.
+const pendingTimeouts = new Set();
+
+function handleToggleReaction(emoji) {
+  if (pendingEmojis.value.has(emoji)) return;
+  pendingEmojis.value = new Set([...pendingEmojis.value, emoji]);
+  emit('toggleReaction', {
+    messageId: props.id,
+    targetSourceId: props.sourceId,
+    emoji,
+  });
+  const timeoutId = setTimeout(() => {
+    pendingTimeouts.delete(timeoutId);
+    if (!pendingEmojis.value.has(emoji)) return;
+    const next = new Set(pendingEmojis.value);
+    next.delete(emoji);
+    pendingEmojis.value = next;
+  }, REACTION_COOLDOWN_MS);
+  pendingTimeouts.add(timeoutId);
+}
+
+onUnmounted(() => {
+  pendingTimeouts.forEach(clearTimeout);
+  pendingTimeouts.clear();
 });
 
 const shouldRenderMessage = computed(() => {
@@ -549,7 +617,7 @@ provideMessageContext({
   <div
     v-if="shouldRenderMessage"
     :id="`message${props.id}`"
-    class="flex w-full mb-2 message-bubble-container"
+    class="flex w-full mb-2 message-bubble-container group"
     :data-message-id="props.id"
     :class="[
       flexOrientationClass,
@@ -598,7 +666,46 @@ provideMessageContext({
         >
           {{ groupSenderInfo.name || groupSenderInfo.phone }}
         </div>
-        <Component :is="componentToRender" />
+        <div class="relative">
+          <Component :is="componentToRender" />
+          <div
+            v-if="canShowReactionToolbar"
+            class="absolute top-1/2 -translate-y-1/2 z-10 flex items-center gap-0.5 rounded-full border border-n-slate-6 bg-n-solid-2 shadow-sm p-0.5 transition-opacity [@media(hover:none)]:opacity-100"
+            :class="[
+              reactionPickerOpen
+                ? 'opacity-100'
+                : 'opacity-0 group-hover:opacity-100 group-focus-within:opacity-100',
+              orientation === ORIENTATION.RIGHT
+                ? 'ltr:right-full ltr:mr-2 rtl:left-full rtl:ml-2'
+                : 'ltr:left-full ltr:ml-2 rtl:right-full rtl:mr-2',
+            ]"
+          >
+            <EmojiReactionPicker
+              :alignment="orientation === ORIENTATION.RIGHT ? 'right' : 'left'"
+              :current-user-emoji="currentUserReactionEmoji"
+              @select="handleToggleReaction"
+              @update:open="value => (reactionPickerOpen = value)"
+            />
+          </div>
+        </div>
+        <div
+          v-if="reactions.length > 0"
+          class="flex"
+          :class="{
+            'ltr:ml-8 rtl:mr-8 justify-end': orientation === ORIENTATION.RIGHT,
+            'ltr:mr-8 rtl:ml-8': orientation === ORIENTATION.LEFT,
+          }"
+        >
+          <ReactionDisplay
+            :reactions="reactions"
+            :current-user-id="currentUserId"
+            :pending-emojis="pendingEmojis"
+            :alignment="orientation === ORIENTATION.RIGHT ? 'right' : 'left'"
+            :read-only="!inboxSupportsReactions && !props.private"
+            :overlap="!isAudioBubble"
+            @toggle="handleToggleReaction"
+          />
+        </div>
       </div>
       <MessageError
         v-if="contentAttributes.externalError"

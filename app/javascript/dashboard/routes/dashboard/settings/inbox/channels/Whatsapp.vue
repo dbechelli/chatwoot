@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n, I18nT } from 'vue-i18n';
 import Twilio from './Twilio.vue';
@@ -9,7 +9,6 @@ import WhatsappEmbeddedSignup from './WhatsappEmbeddedSignup.vue';
 import ChannelSelector from 'dashboard/components/ChannelSelector.vue';
 import BaileysWhatsapp from './BaileysWhatsapp.vue';
 import ZapiWhatsapp from './ZapiWhatsapp.vue';
-import PromoBanner from 'dashboard/components-next/banner/PromoBanner.vue';
 
 const props = defineProps({
   mode: {
@@ -29,6 +28,16 @@ const route = useRoute();
 const router = useRouter();
 const { t } = useI18n();
 
+// Latched by the child once it triggers the post-success router.replace.
+// Suppresses rendering during the navigation tail so the parent doesn't
+// briefly re-render against the new route's query params (which would clear
+// `route.query.provider` and flash the provider picker between the success
+// toast and the unmount).
+const isLeaving = ref(false);
+const handleEmbeddedSignupLeaving = () => {
+  isLeaving.value = true;
+};
+
 const PROVIDER_TYPES = {
   WHATSAPP: 'whatsapp',
   TWILIO: 'twilio',
@@ -40,10 +49,14 @@ const PROVIDER_TYPES = {
   ZAPI: 'zapi',
 };
 
-const hasWhatsappAppId = computed(() => {
+const hasEmbeddedSignupConfig = computed(() => {
+  const { whatsappAppId, whatsappConfigurationId } =
+    window.chatwootConfig ?? {};
   return (
-    window.chatwootConfig?.whatsappAppId &&
-    window.chatwootConfig.whatsappAppId !== 'none'
+    whatsappAppId &&
+    whatsappAppId !== 'none' &&
+    whatsappConfigurationId &&
+    whatsappConfigurationId !== 'none'
   );
 });
 
@@ -140,8 +153,12 @@ const isValidSelectedProvider = computed(() => {
   );
 });
 
-const showProviderSelection = computed(() => !isValidSelectedProvider.value);
-const showConfiguration = computed(() => isValidSelectedProvider.value);
+const showProviderSelection = computed(
+  () => !isLeaving.value && !isValidSelectedProvider.value
+);
+const showConfiguration = computed(
+  () => !isLeaving.value && isValidSelectedProvider.value
+);
 
 const selectProvider = providerValue => {
   router.push({
@@ -154,8 +171,7 @@ const selectProvider = providerValue => {
 const shouldShowCloudWhatsapp = provider => {
   return (
     provider === PROVIDER_TYPES.WHATSAPP_MANUAL ||
-    (provider === PROVIDER_TYPES.WHATSAPP &&
-      (!hasWhatsappAppId.value || isConvertMode.value))
+    (provider === PROVIDER_TYPES.WHATSAPP && !hasEmbeddedSignupConfig.value)
   );
 };
 
@@ -197,29 +213,6 @@ const handleManualLinkClick = () => {
           @click="selectProvider(provider.key)"
         />
       </div>
-
-      <div v-if="!isConvertMode" class="mt-6 relative overflow-visible">
-        <img
-          src="~dashboard/assets/images/curved-arrow.svg"
-          alt=""
-          class="absolute -top-12 right-0 w-20 h-20 pointer-events-none z-10 scale-y-[-1] -rotate-45"
-        />
-        <PromoBanner
-          :title="
-            $t('INBOX_MGMT.ADD.WHATSAPP.SELECT_PROVIDER.ZAPI_PROMO.TITLE')
-          "
-          :description="
-            $t('INBOX_MGMT.ADD.WHATSAPP.SELECT_PROVIDER.ZAPI_PROMO.DESCRIPTION')
-          "
-          variant="success"
-          logo-src="/assets/images/dashboard/channels/z-api/z-api-dark-green.png"
-          logo-alt="Z-API"
-          :cta-text="
-            $t('INBOX_MGMT.ADD.WHATSAPP.SELECT_PROVIDER.ZAPI_PROMO.CTA')
-          "
-          @cta-click="selectProvider(PROVIDER_TYPES.ZAPI)"
-        />
-      </div>
     </div>
 
     <div v-else-if="showConfiguration">
@@ -227,12 +220,15 @@ const handleManualLinkClick = () => {
         <!-- Show embedded signup if app ID is configured -->
         <div
           v-if="
-            !isConvertMode &&
-            hasWhatsappAppId &&
+            hasEmbeddedSignupConfig &&
             selectedProvider === PROVIDER_TYPES.WHATSAPP
           "
         >
-          <WhatsappEmbeddedSignup />
+          <WhatsappEmbeddedSignup
+            :mode="mode"
+            :inbox="inbox"
+            @leaving="handleEmbeddedSignupLeaving"
+          />
 
           <!-- Manual setup fallback option -->
           <div class="pt-6 mt-6 border-t border-n-weak">

@@ -32,6 +32,7 @@ export default {
       errorMessage: null,
       selectedRating: null,
       feedbackMessage: '',
+      hasSubmittedFeedback: false,
       isUpdating: false,
       logo: '',
       inboxName: '',
@@ -48,10 +49,14 @@ export default {
       return this.surveyDetails && this.surveyDetails.rating;
     },
     isFeedbackSubmitted() {
-      return this.surveyDetails && this.surveyDetails.feedback_message;
+      return (
+        this.hasSubmittedFeedback || !!this.surveyDetails?.feedback_message
+      );
     },
     isButtonDisabled() {
-      return !(this.selectedRating && this.feedback);
+      if (!this.selectedRating) return true;
+      if (this.isUpdating) return true;
+      return false;
     },
     isEmojiType() {
       return this.displayType === CSAT_DISPLAY_TYPES.EMOJI;
@@ -83,12 +88,13 @@ export default {
   },
   methods: {
     selectRating(rating) {
+      if (this.isFeedbackSubmitted || this.isUpdating) return;
       this.selectedRating = rating;
       this.updateSurveyDetails();
     },
     sendFeedback(message) {
       this.feedbackMessage = message;
-      this.updateSurveyDetails();
+      this.updateSurveyDetails({ markFeedbackSubmitted: true });
     },
     async getSurveyDetails() {
       this.isLoading = true;
@@ -111,7 +117,7 @@ export default {
         this.isLoading = false;
       }
     },
-    async updateSurveyDetails() {
+    async updateSurveyDetails({ markFeedbackSubmitted = false } = {}) {
       this.isUpdating = true;
       try {
         const data = {
@@ -132,6 +138,9 @@ export default {
           rating: this.selectedRating,
           feedback_message: this.feedbackMessage,
         };
+        if (markFeedbackSubmitted) {
+          this.hasSubmittedFeedback = true;
+        }
       } catch (error) {
         const errorMessage = error?.response?.data?.error;
         this.errorMessage = errorMessage || this.$t('SURVEY.API.ERROR_MESSAGE');
@@ -184,12 +193,13 @@ export default {
         <Rating
           v-if="isEmojiType"
           :selected-rating="selectedRating"
+          :is-disabled="isFeedbackSubmitted || isUpdating"
           @select-rating="selectRating"
         />
         <StarRating
           v-if="isStarType"
           :selected-rating="selectedRating"
-          :is-disabled="isRatingSubmitted"
+          :is-disabled="isFeedbackSubmitted || isUpdating"
           class="[&>button>span]:text-4xl !justify-start !px-0"
           @select-rating="selectRating"
         />

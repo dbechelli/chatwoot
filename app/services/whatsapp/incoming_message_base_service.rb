@@ -23,12 +23,13 @@ class Whatsapp::IncomingMessageBaseService # rubocop:disable Metrics/ClassLength
 
   private
 
-  def process_messages
+  def process_messages # rubocop:disable Metrics/CyclomaticComplexity,Metrics/PerceivedComplexity,Metrics/AbcSize,Metrics/MethodLength
     @lock_acquired = false
 
-    # We don't support reactions & ephemeral message now, we need to skip processing the message
-    # if the webhook event is a reaction or an ephermal message or an unsupported message.
-    return if unprocessable_message_type?(message_type)
+    # We don't support ephemeral message now, we need to skip processing the message
+    # if the webhook event is an ephermal message or an unsupported message.
+    # Reactions removed by the user arrive with an empty emoji and are skipped to match Baileys behavior.
+    return if skip_message?
 
     # Multiple webhook event can be received against the same message due to misconfigurations in the Meta
     # business manager account. While we have not found the core reason yet, the following line ensure that
@@ -43,10 +44,27 @@ class Whatsapp::IncomingMessageBaseService # rubocop:disable Metrics/ClassLength
     with_contact_lock(contact_phone_for_lock) do
       # Re-check after acquiring lock to handle race conditions where an outgoing message
       # was sent from Chatwoot and the webhook arrived before source_id was saved
-      return if find_message_by_source_id(messages_data.first[:id])
+      next if find_message_by_source_id(messages_data.first[:id])
+
+      # Reaction removals don't persist anything new, so peek for an existing
+      # reaction row before set_contact: a removal webhook for a sender we
+      # never stored has nothing to mark and shouldn't auto-create a contact
+      # just to no-op. The match is sender-agnostic on purpose; the precise
+      # filter happens inside `mark_existing_reaction_as_removed`.
+      process_in_reply_to(messages_data.first)
+      next if reaction_removal? && !existing_reaction_row?
 
       set_contact
-      return unless contact_processable?
+      next if @contact.blank?
+
+      # Reactions don't create a new Message row, so handle them outside the
+      # transaction to avoid set_conversation opening/creating a stray thread
+      # for a blank webhook. We also intentionally run this BEFORE
+      # contact_processable? so blocked contacts can still reconcile an
+      # existing reaction row.
+      next mark_existing_reaction_as_removed if reaction_removal?
+
+      next unless contact_processable?
 
       ActiveRecord::Base.transaction do
         set_conversation
@@ -57,6 +75,10 @@ class Whatsapp::IncomingMessageBaseService # rubocop:disable Metrics/ClassLength
     # Clear lock AFTER transaction commits to prevent race conditions where another request
     # acquires the lock before this transaction is visible to other connections
     clear_message_source_id_from_redis if @lock_acquired
+  end
+
+  def skip_message?
+    unprocessable_message_type?(message_type)
   end
 
   # For regular messages the contact phone is in :from; for echoes it's in :to.
@@ -91,9 +113,71 @@ class Whatsapp::IncomingMessageBaseService # rubocop:disable Metrics/ClassLength
     message = messages_data.first
     log_error(message) && return if error_webhook_event?(message)
 
-    process_in_reply_to(message)
-
     message_type == 'contacts' ? create_contact_messages(message) : create_regular_message(message)
+  end
+
+  # Cloud delivers a reaction removal as a webhook with empty emoji. Our schema
+  # keeps a single Message row per (target, sender) with `deleted` toggled on it,
+  # so we update that row in place.
+  #
+  # Two paths converge here:
+  # - Incoming: contact removed their reaction; mark the contact-owned row.
+  # - Outgoing echo (multi-device, agent un-reacted from the connected phone):
+  #   mark the senderless outgoing row. The Chatwoot-originated removal echo
+  #   also lands here, but the active-only filter drops it (the controller
+  #   already toggled the row to deleted) so it no-ops harmlessly.
+  #
+  # Lookup is intentionally NOT scoped to `@conversation`: the reaction may live
+  # in an older/resolved thread, while `set_conversation` could have just picked
+  # (or created) a different one for this webhook. Find the row globally, then
+  # operate on its real `existing.conversation`.
+  # Sender-agnostic existence check used to skip set_contact for removal
+  # webhooks that have nothing to act on. Mirrors the inbox/in_reply_to scope
+  # of `mark_existing_reaction_as_removed`.
+  def existing_reaction_row?
+    return false if @in_reply_to_external_id.blank?
+
+    json_path = "(content_attributes#>>'{}')::jsonb"
+    Message.where(inbox_id: inbox.id)
+           .where("#{json_path}->>'is_reaction' = 'true'")
+           .exists?(["#{json_path}->>'in_reply_to_external_id' = ?", @in_reply_to_external_id])
+  end
+
+  def mark_existing_reaction_as_removed # rubocop:disable Metrics/MethodLength,Metrics/AbcSize
+    return if @in_reply_to_external_id.blank?
+
+    json_path = "(content_attributes#>>'{}')::jsonb"
+    # Scope by inbox so a colliding WhatsApp id from another inbox can't match
+    # here and hand us back the wrong row.
+    base = Message.where(inbox_id: inbox.id)
+                  .where("#{json_path}->>'is_reaction' = 'true'")
+                  .where("#{json_path}->>'in_reply_to_external_id' = ?", @in_reply_to_external_id)
+    matches = if outgoing_echo
+                # Multi-device: agent reacted via the connected phone, so the
+                # local row has no agent (sender_id IS NULL) and is outgoing.
+                base.where(sender_id: nil, sender_type: nil)
+                    .where(message_type: Message.message_types[:outgoing])
+              else
+                base.where(sender: @contact)
+              end
+    # Active-only: when the only matches are already deleted, return nil so
+    # the caller no-ops instead of re-deleting and bumping the conversation
+    # for an echoed Chatwoot-originated removal.
+    existing = matches.where.not(content: '')
+                      .where("COALESCE(#{json_path}->>'deleted', 'false') != 'true'")
+                      .reorder(created_at: :desc)
+                      .first
+    return if existing.nil?
+
+    new_attrs = existing.content_attributes.merge('deleted' => true)
+    existing.update!(content: '', content_attributes: new_attrs)
+    target_conversation = existing.conversation
+    # Refresh the chat list snapshot; cable MESSAGE_UPDATED only touches
+    # chat.messages on the client, so the conversation card preview stays stale
+    # without an explicit conversation.updated dispatch. Touch updated_at so
+    # the frontend out-of-order guard can drop stale cables.
+    target_conversation.update_columns(updated_at: Time.current) # rubocop:disable Rails/SkipsModelValidations
+    target_conversation.dispatch_conversation_updated_event
   end
 
   def create_contact_messages(message)
@@ -168,7 +252,7 @@ class Whatsapp::IncomingMessageBaseService # rubocop:disable Metrics/ClassLength
   end
 
   def attach_files
-    return if %w[text button interactive location contacts].include?(message_type)
+    return if %w[text button interactive location contacts reaction].include?(message_type)
 
     attachment_payload = messages_data.first[message_type.to_sym]
     @message.content ||= attachment_payload[:caption]
@@ -202,10 +286,6 @@ class Whatsapp::IncomingMessageBaseService # rubocop:disable Metrics/ClassLength
   end
 
   def create_message(message, source_id: nil)
-    content_attrs = outgoing_echo ? { external_echo: true } : {}
-    content_attrs[:in_reply_to_external_id] = @in_reply_to_external_id if @in_reply_to_external_id.present?
-    content_attrs[:external_created_at] = message[:timestamp].to_i
-
     @message = @conversation.messages.build(
       content: message_content(message),
       account_id: @inbox.account_id,
@@ -215,8 +295,16 @@ class Whatsapp::IncomingMessageBaseService # rubocop:disable Metrics/ClassLength
       status: outgoing_echo ? :delivered : :sent,
       sender: outgoing_echo ? nil : @contact,
       source_id: (source_id || message[:id]).to_s,
-      content_attributes: content_attrs
+      content_attributes: build_content_attributes(message)
     )
+  end
+
+  def build_content_attributes(message)
+    content_attrs = outgoing_echo ? { external_echo: true } : {}
+    content_attrs[:in_reply_to_external_id] = @in_reply_to_external_id if @in_reply_to_external_id.present?
+    content_attrs[:external_created_at] = message[:timestamp].to_i
+    content_attrs[:is_reaction] = true if message_type == 'reaction'
+    content_attrs
   end
 
   def attach_contact(contact)

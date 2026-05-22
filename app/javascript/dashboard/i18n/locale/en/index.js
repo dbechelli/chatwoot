@@ -43,6 +43,7 @@ import webhooks from './webhooks.json';
 import whatsappTemplates from './whatsappTemplates.json';
 import contentTemplates from './contentTemplates.json';
 import mfa from './mfa.json';
+import onboarding from './onboarding.json';
 import yearInReview from './yearInReview.json';
 import whatsappGroups from './whatsappGroups.json';
 
@@ -92,6 +93,7 @@ export default {
   ...whatsappTemplates,
   ...contentTemplates,
   ...mfa,
+  ...onboarding,
   ...yearInReview,
   ...whatsappGroups,
 };

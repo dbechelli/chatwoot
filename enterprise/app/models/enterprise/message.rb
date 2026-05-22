@@ -1,10 +1,25 @@
 module Enterprise::Message
+  def self.prepended(base)
+    base.class_eval do
+      has_one :call, class_name: 'Call', foreign_key: :message_id, dependent: :nullify, inverse_of: :message
+
+      scope :with_call, -> { includes(call: [:contact, { inbox: :channel }]) }
+    end
+  end
+
+  def push_event_data
+    data = super
+    data[:call] = call.push_event_data if content_type == 'voice_call' && call.present?
+    data
+  end
+
   private
 
   def mark_pending_conversation_as_open_for_human_response
     return unless captain_pending_conversation?
     return unless human_response?
     return if private?
+    return if reaction?
     return if template_bootstrap_message?
 
     previous_user = Current.user

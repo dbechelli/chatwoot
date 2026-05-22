@@ -162,25 +162,30 @@ defineExpose({ resetForm });
 
 <template>
   <div
-    class="w-[42rem] divide-y divide-n-strong overflow-visible transition-all duration-300 ease-in-out top-full flex flex-col bg-n-alpha-3 border border-n-strong shadow-sm backdrop-blur-[100px] rounded-xl min-w-0 max-h-[calc(100vh-8rem)]"
+    class="w-full divide-y divide-n-strong overflow-visible transition-all duration-300 ease-in-out top-full flex flex-col bg-n-alpha-3 border border-n-strong shadow-sm backdrop-blur-[100px] rounded-xl min-w-0 max-h-[calc(100vh-8rem)]"
   >
     <div class="flex-1 divide-y divide-n-strong overflow-visible">
       <div
         v-if="isGroupsDisabled"
-        class="flex items-center gap-2 mx-4 mt-3 px-3 py-2 rounded-lg text-sm text-n-amber-11 bg-n-amber-2"
+        class="flex items-start gap-2 mx-4 mt-3 px-3 py-2 rounded-lg text-sm text-n-amber-11 bg-n-amber-2"
       >
-        <span class="i-lucide-triangle-alert text-base flex-shrink-0" />
-        <span v-if="isSuperAdmin">
-          {{ t('GROUP.CREATE.GROUPS_DISABLED') }}
-          <a
-            :href="wootConstants.FAZER_AI_GUIDES_URL"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="underline font-medium"
-          >
-            {{ t('GROUP.CREATE.GROUPS_DISABLED_CTA') }}
-          </a>
-        </span>
+        <span class="i-lucide-triangle-alert text-base flex-shrink-0 mt-0.5" />
+        <div v-if="isSuperAdmin" class="flex flex-col gap-0.5">
+          <span>
+            {{ t('GROUP.CREATE.GROUPS_DISABLED') }}
+            <a
+              :href="wootConstants.FAZER_AI_GUIDES_URL"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="underline font-medium"
+            >
+              {{ t('GROUP.CREATE.GROUPS_DISABLED_CTA') }}
+            </a>
+          </span>
+          <span class="text-xs opacity-70">
+            {{ t('GENERAL_SETTINGS.SUPER_ADMIN_ONLY_NOTICE') }}
+          </span>
+        </div>
         <span v-else>
           {{ t('GROUP.CREATE.GROUPS_DISABLED_NON_ADMIN') }}
         </span>
