@@ -40,7 +40,6 @@ import teamsSettings from './teamsSettings.json';
 import webhooks from './webhooks.json';
 import whatsappTemplates from './whatsappTemplates.json';
 import contentTemplates from './contentTemplates.json';
-import mfa from './mfa.json';
 import yearInReview from './yearInReview.json';
 
 export default {
@@ -86,6 +85,5 @@ export default {
   ...webhooks,
   ...whatsappTemplates,
   ...contentTemplates,
-  ...mfa,
   ...yearInReview,
 };
