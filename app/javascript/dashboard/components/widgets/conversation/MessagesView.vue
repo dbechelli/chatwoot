@@ -360,7 +360,7 @@ export default {
 
   watch: {
     currentChat(newChat, oldChat) {
-      if (newChat.id === oldChat.id) {
+      if (newChat.id === oldChat?.id) {
         return;
       }
       this.fetchAllAttachmentsFromCurrentChat();
@@ -406,6 +406,7 @@ export default {
     this.addScrollListener();
     this.fetchAllAttachmentsFromCurrentChat();
     this.fetchSuggestions();
+    this.checkForPreviousConversations();
   },
 
   unmounted() {

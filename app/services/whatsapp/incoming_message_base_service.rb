@@ -240,11 +240,14 @@ class Whatsapp::IncomingMessageBaseService # rubocop:disable Metrics/ClassLength
 
   def set_conversation
     # if lock to single conversation is disabled, we will create a new conversation if previous conversation is resolved
+    # Search by contact + inbox instead of contact_inbox so replies still route to
+    # the existing thread when provider/source-id changes create a new contact_inbox.
+    conversation_scope = @contact.conversations.where(inbox_id: @inbox.id)
+
     @conversation = if @inbox.lock_to_single_conversation
-                      @inbox.conversations.where(contact_id: @contact_inbox.contact_id).last
+                      conversation_scope.last
                     else
-                      @contact_inbox.conversations
-                                    .where.not(status: :resolved).last
+                      conversation_scope.where.not(status: :resolved).last
                     end
     return if @conversation
 
