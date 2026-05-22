@@ -4,5 +4,10 @@
         "Conversa",
         "dompurify"
     ],
-    "css.customData": [".vscode/tailwind.json"]
+    "css.customData": [
+        ".vscode/tailwind.json"
+    ],
+    "chat.tools.terminal.autoApprove": {
+        "git push": true
+    }
 }
