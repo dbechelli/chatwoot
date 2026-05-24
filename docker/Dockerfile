@@ -129,6 +129,9 @@ RUN apk update && apk add --no-cache \
   git \
   vips \
   ffmpeg \
+  wget \
+  curl \
+  unzip \
   && gem install bundler -v "$BUNDLER_VERSION"
 
 COPY --from=node /usr/local/bin/node /usr/local/bin/
