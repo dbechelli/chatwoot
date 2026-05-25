@@ -1,5 +1,6 @@
 {
   "CONVERSATION": {
+    "WHATSAPP_GROUP_BADGE": "{count} participants",
     "SELECT_A_CONVERSATION": "Please select a conversation from left pane",
     "CSAT_REPLY_MESSAGE": "Please rate the conversation",
     "404": "Sorry, we cannot find the conversation. Please try again",
@@ -30,6 +31,8 @@
     "CLICK_HERE": "Click here",
     "LOADING_INBOXES": "Loading inboxes",
     "LOADING_CONVERSATIONS": "Loading Conversations",
+    "LOAD_PREVIOUS_CONVERSATIONS": "Load previous conversations",
+    "LOADING_PREVIOUS_CONVERSATIONS": "Loading previous conversations...",
     "CANNOT_REPLY": "You cannot reply due to",
     "24_HOURS_WINDOW": "24 hour message window restriction",
     "48_HOURS_WINDOW": "48 hour message window restriction",
@@ -57,6 +60,13 @@
     "NO_CONTENT": "No content to display",
     "SHARED_ATTACHMENT": {
       "CONTACT": "{sender} has shared a contact",
+      "PIX": "{sender} has sent a PIX button",
+      "PIX_TYPE": "PIX type",
+      "PIX_NAME": "Receiver name",
+      "PIX_KEY": "PIX key",
+      "COPY_PIX_KEY": "Copy PIX key",
+      "PIX_KEY_COPIED": "PIX key copied to clipboard",
+      "PIX_KEY_COPY_FAILED": "Unable to copy the PIX key",
       "LOCATION": "{sender} has shared a location",
       "FILE": "{sender} has shared a file",
       "MEETING": "{sender} has started a meeting"
@@ -77,7 +87,8 @@
     "REPLY_MESSAGE_NOT_FOUND": "Message not available",
     "CARD": {
       "SHOW_LABELS": "Show labels",
-      "HIDE_LABELS": "Hide labels"
+      "HIDE_LABELS": "Hide labels",
+      "LABELS_COUNT": "{count} labels"
     },
     "VOICE_CALL": {
       "INCOMING_CALL": "Incoming call",
@@ -88,7 +99,9 @@
       "CALL_ENDED": "Call ended",
       "NOT_ANSWERED_YET": "Not answered yet",
       "THEY_ANSWERED": "They answered",
-      "YOU_ANSWERED": "You answered"
+      "YOU_ANSWERED": "You answered",
+      "AGENT_ANSWERED": "{agentName} answered",
+      "JOIN_CALL": "Join call"
     },
     "HEADER": {
       "RESOLVE_ACTION": "Resolve",
@@ -98,6 +111,7 @@
       "OPEN": "More",
       "CLOSE": "Close",
       "DETAILS": "details",
+      "COPY_ID_SUCCESS": "Conversation ID copied to clipboard",
       "SNOOZED_UNTIL": "Snoozed until",
       "SNOOZED_UNTIL_TOMORROW": "Snoozed until tomorrow",
       "SNOOZED_UNTIL_NEXT_WEEK": "Snoozed until next week",
@@ -167,6 +181,9 @@
       "ASSIGN_LABEL": "Assign label",
       "AGENTS_LOADING": "Loading agents...",
       "ASSIGN_TEAM": "Assign team",
+      "ASSIGN_STAGE": "Assign sales stage",
+      "AVAILABLE_FUNNELS": "Available funnels",
+      "FORWARD_MESSAGE": "Forward message",
       "DELETE": "Delete conversation",
       "OPEN_IN_NEW_TAB": "Open in new tab",
       "COPY_LINK": "Copy conversation link",
@@ -221,6 +238,7 @@
       "REPLYING_TO": "Replying to:",
       "TIP_EMOJI_ICON": "Show emoji selector",
       "TIP_ATTACH_ICON": "Attach files",
+      "TIP_MORE_ACTIONS_ICON": "More sending actions",
       "TIP_AUDIORECORDER_ICON": "Record audio",
       "TIP_AUDIORECORDER_PERMISSION": "Allow access to audio",
       "TIP_AUDIORECORDER_ERROR": "Could not open the audio",
@@ -249,6 +267,47 @@
         "CONFIRM": {
           "YES": "Send",
           "CANCEL": "Cancel"
+        }
+      },
+      "MORE_ACTIONS": {
+        "SHARE_CONTACT": "Share contact",
+        "SEND_PIX": "Send PIX",
+        "CONTACT_MESSAGE_SUMMARY": "Shared contact: {name}",
+        "PIX_MESSAGE_SUMMARY": "PIX sent: {name}",
+        "CONTACT_MODAL": {
+          "TITLE": "Share contact",
+          "DESCRIPTION": "Send a WhatsApp contact card through UAZAPI.",
+          "SEARCH_LABEL": "Find existing contact",
+          "SEARCH_PLACEHOLDER": "Search by name or phone",
+          "SEARCHING": "Searching contacts...",
+          "NO_RESULTS": "No contacts found for this search.",
+          "NO_CONTACT_INFO": "No phone or email available",
+          "USE_CONTACT": "Use contact",
+          "FULL_NAME": "Full name",
+          "PHONE_NUMBER": "Phone number(s)",
+          "PHONE_HELP": "Use international format. You can add more than one number separated by commas.",
+          "ORGANIZATION": "Organization",
+          "EMAIL": "Email",
+          "URL": "Website",
+          "CANCEL": "Cancel",
+          "SUBMIT": "Share contact"
+        },
+        "PIX_MODAL": {
+          "TITLE": "Send PIX",
+          "DESCRIPTION": "Find a professional contact and send their PIX button through UAZAPI.",
+          "SEARCH_LABEL": "Find professional",
+          "SEARCH_PLACEHOLDER": "Search by name or phone",
+          "SEARCHING": "Searching professionals...",
+          "NO_RESULTS": "No professional contact found for this search.",
+          "NO_CONTACT_INFO": "No phone or email available",
+          "USE_PROFESSIONAL": "Use professional",
+          "SELECTED_PROFESSIONAL": "Selected professional",
+          "PIX_TYPE": "PIX type",
+          "PIX_NAME": "Receiver name",
+          "PIX_KEY": "PIX key",
+          "MISSING_PIX_DATA": "This professional does not have a complete PIX configuration yet. Fill in pix_type and pix_key in the contact custom attributes.",
+          "CANCEL": "Cancel",
+          "SUBMIT": "Send PIX"
         }
       },
       "QUOTED_REPLY": {
@@ -291,6 +350,7 @@
       "DELETE": "Delete",
       "CREATE_A_CANNED_RESPONSE": "Add to canned responses",
       "TRANSLATE": "Translate",
+      "FORWARD": "Forward message",
       "COPY_PERMALINK": "Copy link to the message",
       "LINK_COPIED": "Message URL copied to the clipboard",
       "DELETE_CONFIRMATION": {
@@ -313,6 +373,23 @@
     "SIDEBAR": {
       "CONTACT": "Contact",
       "COPILOT": "Copilot"
+    },
+    "REACTIONS": {
+      "ADD_REACTION": "Add reaction",
+      "MORE_EMOJIS": "More emojis",
+      "FAILED": "Couldn't update reaction. Try again.",
+      "YOU": "You",
+      "CLICK_TO_REMOVE": "Click to remove",
+      "QUICK": {
+        "THUMBS_UP": "Thumbs up",
+        "HEART": "Heart",
+        "JOY": "Joy",
+        "SURPRISED": "Surprised",
+        "SAD": "Sad",
+        "PRAY": "Pray",
+        "FIRE": "Fire",
+        "PARTY": "Party"
+      }
     },
     "VOICE_WIDGET": {
       "INCOMING_CALL": "Incoming call",
@@ -397,7 +474,19 @@
       "PREVIOUS_CONVERSATION": "Previous Conversations",
       "MACROS": "Macros",
       "LINEAR_ISSUES": "Linked Linear Issues",
-      "SHOPIFY_ORDERS": "Shopify Orders"
+      "SHOPIFY_ORDERS": "Shopify Orders",
+      "SHARED_FILES": "Attachments"
+    },
+    "SHARED_FILES": {
+      "EMPTY": "No attachments yet",
+      "DOWNLOAD": "Download file",
+      "DOWNLOAD_ERROR": "Could not download the file. Please try again.",
+      "MEDIA_HEADING": "Media",
+      "FILES_HEADING": "Files",
+      "VIEW_ALL": "View all",
+      "SHOW_LESS": "Show less",
+      "MORE_COUNT": "+{count}",
+      "UNTITLED_FILE": "Untitled file"
     },
     "SHOPIFY": {
       "ORDER_ID": "Order #{id}",
@@ -650,5 +739,23 @@
   },
   "GALLERY_VIEW": {
     "ERROR_DOWNLOADING": "Unable to download attachment. Please try again"
+  },
+  "FORWARD_MESSAGE": {
+    "TITLE": "Forward message",
+    "DESCRIPTION": "Select contacts to forward this message to",
+    "SEARCH_PLACEHOLDER": "Search contacts by name, email or phone...",
+    "NO_CONTACTS": "No contacts found",
+    "NO_CONTACTS_FOUND": "No contacts found for this search",
+    "SEARCHING": "Searching contacts...",
+    "NO_SELECTION": "No contacts selected",
+    "UNKNOWN_CONTACT": "Unknown contact",
+    "SELECTED_COUNT": "{count} selected",
+    "INCLUDE_ATTACHMENTS": "Include attachments",
+    "CANCEL": "Cancel",
+    "FORWARD": "Forward",
+    "SUCCESS": "Message forwarded to {count} contact(s)",
+    "ERROR": "Failed to forward message",
+    "PARTIAL_ERROR": "Failed to forward to {count} contact(s)",
+    "NO_MESSAGES": "No messages to forward"
   }
 }

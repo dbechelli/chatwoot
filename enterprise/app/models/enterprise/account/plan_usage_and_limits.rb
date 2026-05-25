@@ -147,8 +147,8 @@ module Enterprise::Account::PlanUsageAndLimits # rubocop:disable Metrics/ModuleL
   # rubocop:enable Rails/SkipsModelValidations
 
   def validate_limit_keys
-    errors.add(:limits, ': Invalid data') unless self[:limits].is_a? Hash
     self[:limits] = {} if self[:limits].blank?
+    errors.add(:limits, ': Invalid data') unless self[:limits].is_a? Hash
 
     limit_schema = {
       'type' => 'object',

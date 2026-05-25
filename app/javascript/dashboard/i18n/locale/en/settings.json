@@ -328,6 +328,7 @@
     "SWITCH": "Switch",
     "INBOX_VIEW": "Inbox View",
     "CONVERSATIONS": "Conversations",
+    "KANBAN": "Sales Pipeline",
     "INBOX": "My Inbox",
     "ALL_CONVERSATIONS": "All Conversations",
     "MENTIONED_CONVERSATIONS": "Mentions",
@@ -380,6 +381,11 @@
     "LIVE_CHAT": "Live Chat",
     "SMS": "SMS",
     "WHATSAPP": "WhatsApp",
+    "WHATSAPP_GROUPS": "Groups",
+    "WHATSAPP_GROUPS_SYNC": "Sync groups",
+    "WHATSAPP_GROUPS_SYNC_SUCCESS": "Groups synced successfully!",
+    "WHATSAPP_GROUPS_SYNC_FAILURE": "Failed to sync groups.",
+    "WHATSAPP_GROUPS_SYNC_EMPTY": "No WhatsApp inboxes found.",
     "CAMPAIGNS": "Campaigns",
     "ONGOING": "Ongoing",
     "ONE_OFF": "One off",
@@ -412,6 +418,7 @@
     },
     "DOCS": "Read docs",
     "SECURITY": "Security",
+    "KANBAN_SETTINGS": "Kanban Settings",
     "CAPTAIN_AI": "Captain",
     "CONVERSATION_WORKFLOW": "Conversation Workflow"
   },
@@ -949,6 +956,152 @@
       "DESCRIPTION": "Are you sure you want to delete this policy? This action cannot be undone.",
       "CONFIRM_BUTTON_LABEL": "Delete",
       "CANCEL_BUTTON_LABEL": "Cancel"
+    },
+    "KANBAN_SETTINGS": {
+      "TITLE": "Kanban Settings",
+      "DESCRIPTION": "Manage your Kanban boards and workflows",
+      "BOARDS_TITLE": "Kanban Boards",
+      "BOARDS_DESCRIPTION": "Create and manage visual boards to track your conversations and deals",
+      "CREATE_BOARD": "Create Board",
+      "CREATE": "Create",
+      "CREATE_FIRST_BOARD": "Create Your First Board",
+      "EDIT_BOARD": "Edit Board",
+      "BOARD_CREATED": "Board created successfully",
+      "BOARD_UPDATED": "Board updated successfully",
+      "DUPLICATE_SUCCESS": "Board duplicated successfully",
+      "DUPLICATE_ERROR": "Error duplicating board",
+      "DELETE_SUCCESS": "Board deleted successfully",
+      "DELETE_ERROR": "Error deleting board",
+      "SAVE_ERROR": "Error saving board",
+      "LOAD_ERROR": "Error loading configuration",
+      "CONFIRM_DELETE": "Are you sure you want to delete this board? This action cannot be undone.",
+      "DEFAULT": "Default",
+      "NO_BOARDS": "No Boards Yet",
+      "NO_BOARDS_DESCRIPTION": "Get started by creating your first Kanban board",
+      "EDIT": "Edit",
+      "DUPLICATE": "Duplicate",
+      "DELETE": "Delete",
+      "BOARD_EDITOR_DESCRIPTION": "Configure your board settings and stages",
+      "BASIC_CONFIG": "Basic Configuration",
+      "BOARD_NAME": "Board Name",
+      "BOARD_NAME_PLACEHOLDER": "e.g., Sales Pipeline",
+      "REQUIRED": "*",
+      "BOARD_DESCRIPTION": "Description",
+      "BOARD_DESCRIPTION_PLACEHOLDER": "Describe the purpose of this board",
+      "CUSTOM_ATTRIBUTE_KEY": "Custom Attribute Key",
+      "CUSTOM_ATTRIBUTE_PLACEHOLDER": "sales_stage",
+      "VALUE_ATTRIBUTE_PLACEHOLDER": "deal_value",
+      "CUSTOM_ATTRIBUTE_HELP": "Internal identifier used to store stage data",
+      "AGENTS": "Agents",
+      "AGENTS_HELP": "Select which agents can access this board",
+      "VISIBLE_ATTRIBUTES": "Visible Attributes",
+      "VISIBLE_ATTRIBUTES_HELP": "Choose which conversation attributes to display on cards",
+      "ENABLE_VALUE": "Enable value tracking",
+      "ENABLE_VALUE_HELP": "Track monetary values for deals in this board",
+      "VALUE_ATTRIBUTE_KEY": "Value Attribute Key",
+      "VALUE_ATTRIBUTE_HELP": "Custom attribute key to store deal values",
+      "ADVANCED_CONFIG": "Advanced Configuration",
+      "WEBHOOK_AUTOMATION": "Automation (Webhook)",
+      "WEBHOOK_URL": "Webhook URL",
+      "WEBHOOK_PLACEHOLDER": "https://your-domain.com/webhook/...",
+      "WEBHOOK_HELP": "When a card is moved, we'll send a POST request to this URL with the item data",
+      "AUTO_ASSIGN": "Auto-Assignment",
+      "AUTO_ASSIGN_DESCRIPTION": "Automatically add new conversations from selected inboxes to this board",
+      "INBOXES": "Inboxes",
+      "INITIAL_STAGE": "Initial Stage",
+      "SELECT_STAGE": "Select...",
+      "ROUND_ROBIN": "Round-Robin Distribution",
+      "ROUND_ROBIN_HELP": "Assign conversations circularly among board agents",
+      "SET_AS_DEFAULT": "Set as default board",
+      "STAGES": "Stages",
+      "ADD_STAGE": "Add Stage",
+      "STAGE_NAME": "Stage Name",
+      "STAGE_NAME_PLACEHOLDER": "e.g., Qualified",
+      "NEW_STAGE": "New Stage",
+      "COLOR": "Color",
+      "WIP_LIMIT": "WIP Limit",
+      "NO_LIMIT": "No limit",
+      "NO_STAGES": "Add stages to organize your workflow",
+      "CANCEL": "Cancel",
+      "SAVE": "Save",
+      "TEMPLATES_TITLE": "Kanban Board Templates",
+      "TEMPLATES_DESCRIPTION": "Start quickly with pre-configured templates",
+      "USE_TEMPLATE": "Use This Template",
+      "CUSTOMIZE_AFTER_CREATE": "You can customize stages after creating the board",
+      "CREATE_BLANK_BOARD": "Create Blank Board",
+      "NEW_BOARD": "New Board",
+      "TEMPLATES": {
+        "SALES_PIPELINE": {
+          "NAME": "Sales Pipeline",
+          "DESCRIPTION": "Manage opportunities from first contact to closure",
+          "STAGES": {
+            "LEAD": "New Lead",
+            "CONTACTED": "Contacted",
+            "QUALIFIED": "Qualified",
+            "PROPOSAL": "Proposal Sent",
+            "NEGOTIATION": "Negotiation",
+            "WON": "Won",
+            "LOST": "Lost"
+          }
+        },
+        "CUSTOMER_SUPPORT": {
+          "NAME": "Customer Support",
+          "DESCRIPTION": "Track support tickets from start to resolution",
+          "STAGES": {
+            "NEW": "New Ticket",
+            "IN_PROGRESS": "In Progress",
+            "WAITING_CUSTOMER": "Waiting Customer",
+            "RESOLVED": "Resolved",
+            "CLOSED": "Closed"
+          }
+        },
+        "RECRUITMENT": {
+          "NAME": "Recruitment",
+          "DESCRIPTION": "Manage candidates through the selection process",
+          "STAGES": {
+            "APPLIED": "Applied",
+            "SCREENING": "Screening",
+            "INTERVIEW": "Interview",
+            "TECHNICAL": "Technical Test",
+            "OFFER": "Offer",
+            "HIRED": "Hired",
+            "REJECTED": "Rejected"
+          }
+        },
+        "ONBOARDING": {
+          "NAME": "Customer Onboarding",
+          "DESCRIPTION": "Guide new customers through the integration process",
+          "STAGES": {
+            "WELCOME": "Welcome",
+            "DOCUMENTATION": "Documentation",
+            "SETUP": "Setup",
+            "TRAINING": "Training",
+            "ACTIVE": "Active"
+          }
+        },
+        "PROJECT_MANAGEMENT": {
+          "NAME": "Project Management",
+          "DESCRIPTION": "Track team tasks and projects",
+          "STAGES": {
+            "BACKLOG": "Backlog",
+            "TODO": "To Do",
+            "IN_PROGRESS": "In Progress",
+            "REVIEW": "In Review",
+            "DONE": "Done"
+          }
+        },
+        "LEAD_QUALIFICATION": {
+          "NAME": "Lead Qualification",
+          "DESCRIPTION": "Filter and qualify leads before sending to sales",
+          "STAGES": {
+            "NEW_LEAD": "New Lead",
+            "CONTACT_ATTEMPT": "Contact Attempt",
+            "QUALIFIED": "Qualified",
+            "DISQUALIFIED": "Disqualified",
+            "PASSED_TO_SALES": "Sent to Sales"
+          }
+        }
+      }
     }
   }
 }

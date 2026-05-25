@@ -1,11 +1,327 @@
 {
   "KANBAN": {
-    "PAYWALL": {
-      "TITLE": "Faça upgrade para usar o Kanban",
-      "DESCRIPTION": "O recurso Kanban requer uma assinatura Chatwoot Pro fazer.ai.",
-      "UPGRADE_PROMPT": "Assine o Chatwoot Pro fazer.ai para acessar funis Kanban, gerenciamento de tarefas e automação de fluxo de trabalho.",
-      "NON_ADMIN_MESSAGE": "O recurso Kanban não está disponível no seu plano atual. Entre em contato com o administrador para fazer o upgrade.",
-      "UPGRADE_NOW": "Fazer upgrade"
+    "TITLE": "Kanban",
+    "SIDEBAR_TITLE": "CRM / Kanban",
+    "SIDEBAR": {
+      "NO_BOARD": "Nenhum quadro Kanban configurado.",
+      "NOT_IN_KANBAN": "Esta conversa não está no Kanban.",
+      "ADD_TO_KANBAN": "Adicionar ao Kanban",
+      "EDIT": "Editar"
+    },
+    "MODAL": {
+      "NEW_ITEM": "Novo Item",
+      "EDIT_ITEM": "Editar Item",
+      "CREATING_CARD": "Criando novo card",
+      "TITLE": "Título do Item",
+      "TITLE_PLACEHOLDER": "Ex: Negociação Empresa X",
+      "DESCRIPTION": "Descrição",
+      "DESCRIPTION_PLACEHOLDER": "Detalhes sobre esta oportunidade...",
+      "NOTES": "Notas Internas",
+      "NOTES_PLACEHOLDER": "Anotações privadas para a equipe...",
+      "DEAL_VALUE": "Valor do Deal",
+      "ACTIVATE": "Ativar",
+      "PRIORITY": "Prioridade",
+      "PRIORITY_LABEL": {
+        "LOW": "Baixa",
+        "MEDIUM": "Média",
+        "HIGH": "Alta",
+        "URGENT": "Urgente"
+      },
+      "START_DATE": "Data de Início",
+      "DUE_DATE": "Data de Vencimento",
+      "CHECKLIST": "Checklist",
+      "ADD_CHECKLIST_ITEM": "Adicionar item ao checklist...",
+      "ADD": "Adicionar",
+      "NO_CHECKLIST_ITEMS": "Nenhum item no checklist",
+      "LINK_CONVERSATION": "Vincular Conversa",
+      "SEARCH_PLACEHOLDER": "Buscar por nome, email ou ID...",
+      "LINKED_CONVERSATION": "Conversa Vinculada",
+      "UNLINK": "Desvincular",
+      "ASSIGNEE": "Agente Responsável",
+      "NO_ASSIGNEE": "Sem agente",
+      "STAGE": "Estágio",
+      "CANCEL": "Cancelar",
+      "SAVE": "Salvar Item",
+      "SAVING": "Salvando...",
+      "NO_CONVERSATION_SELECTED": "Selecione uma conversa para continuar",
+      "SUCCESS_MESSAGE": "Item salvo com sucesso",
+      "ERROR_MESSAGE": "Erro ao salvar item"
+    },
+    "CONTEXT_MENU": {
+      "EDIT": "Editar Item",
+      "VIEW_CONTACT": "Ver Contato",
+      "OPEN_CONVERSATION": "Ir para Conversa",
+      "DELETE": "Excluir"
+    },
+    "ITEM_REMOVED": "Item removido do Kanban",
+    "BOARD": "Quadro",
+    "CALENDAR": {
+      "TODAY": "Hoje",
+      "ADD_ITEM": "Adicionar Item"
+    },
+    "LOADING": "Carregando...",
+    "REFRESH": "Atualizar",
+    "SHOW_METRICS": "Mostrar Métricas",
+    "HIDE_METRICS": "Ocultar Métricas",
+    "NAV": {
+      "DESCRIPTION": "Visão geral, funis e pipelines ativos",
+      "OVERVIEW": "Visão geral",
+      "FUNNELS": "Funis",
+      "NEW_FUNNEL": "Novo funil",
+      "DEFAULT": "Padrão",
+      "NO_FUNNELS": "Nenhum funil criado ainda",
+      "SETTINGS": "Configurações avançadas"
+    },
+    "OVERVIEW": {
+      "TITLE": "Um workspace de Kanban organizado por funis",
+      "DESCRIPTION": "Acompanhe pipelines ativos, mantenha o time alinhado e entre no funil certo sem cavar telas de configuração.",
+      "TOTAL_FUNNELS": "Funis",
+      "TOTAL_STAGES": "Etapas",
+      "DEFAULT_FUNNEL": "Funil padrão",
+      "AUTOMATIONS": "Funis com automação",
+      "SPOTLIGHT_TITLE": "Funis em destaque",
+      "SPOTLIGHT_DESCRIPTION": "Os funis mais importantes ficam sempre a um clique de distância.",
+      "SEE_ALL": "Ver todos",
+      "NO_DESCRIPTION": "Sem descrição ainda.",
+      "QUICK_ACTIONS": "Ações rápidas",
+      "MANAGE_FUNNELS": "Gerenciar todos os funis",
+      "OPEN_DEFAULT": "Abrir funil padrão",
+      "EMPTY_TITLE": "Crie seu primeiro funil",
+      "EMPTY_DESCRIPTION": "Crie um funil para dar ao seu time uma visão operacional clara de leads, negociações ou fluxos de suporte."
+    },
+    "FUNNELS": {
+      "TITLE": "Funis",
+      "DESCRIPTION": "Crie, edite e organize cada funil que seu time usa no dia a dia.",
+      "OPEN_FUNNEL": "Abrir",
+      "EDIT_FUNNEL": "Editar funil",
+      "DUPLICATE_FUNNEL": "Duplicar funil",
+      "DELETE_FUNNEL": "Excluir funil",
+      "STAGE_COUNT": "etapas",
+      "NO_DESCRIPTION": "Sem descrição ainda.",
+      "EMPTY_TITLE": "Nenhum funil disponível",
+      "EMPTY_DESCRIPTION": "Comece com um modelo ou um funil em branco e monte o fluxo que seu time realmente usa."
+    },
+    "EDITOR": {
+      "BACK_TO_FUNNELS": "Voltar para funis",
+      "CREATE_TITLE": "Criar funil",
+      "EDIT_TITLE": "Editar funil",
+      "DESCRIPTION": "Defina a estrutura do funil, as regras de responsabilidade e os detalhes de automação em um só lugar.",
+      "TEMPLATE_TITLE": "Escolha como deseja começar",
+      "TEMPLATE_DESCRIPTION": "Selecione um modelo para acelerar, ou comece com um funil em branco e monte o fluxo do seu jeito.",
+      "BACK_TO_TEMPLATES": "Trocar modelo",
+      "BLANK_TITLE": "Funil em branco",
+      "BLANK_DESCRIPTION": "Comece do zero e configure cada etapa manualmente.",
+      "STAGES_DESCRIPTION": "Organize a jornada do primeiro contato ao resultado final.",
+      "SHOW_ADVANCED": "Mostrar opções avançadas",
+      "HIDE_ADVANCED": "Ocultar opções avançadas"
+    },
+    "WORKSPACE": {
+      "DEFAULT_DESCRIPTION": "Operação de pipeline para o seu time"
+    },
+    "FETCH_ERROR": "Erro ao carregar conversas",
+    "UPDATE_ERROR": "Erro ao atualizar estágio",
+    "STAGE_UPDATED": "Estágio atualizado com sucesso",
+    "UNKNOWN_CONTACT": "Contato Desconhecido",
+    "NO_MESSAGES": "Sem mensagens",
+    "UNASSIGNED": "Não Atribuído",
+    "EMPTY_COLUMN": "Nenhum item neste estágio",
+    "WIP_LIMIT_EXCEEDED": "Limite de trabalho em andamento excedido!",
+    "NO_BOARDS_TITLE": "Nenhum quadro Kanban encontrado",
+    "NO_BOARDS_DESCRIPTION": "Crie seu primeiro quadro para começar a organizar seus processos de forma visual e eficiente.",
+    "CREATE_FIRST_BOARD": "Criar meu primeiro quadro",
+    "STAGES": {
+      "NEW": "📥 Novo",
+      "QUALIFYING": "🔍 Em Análise",
+      "NEGOTIATION": "💬 Em Andamento",
+      "WON": "✅ Concluído",
+      "LOST": "❌ Cancelado"
+    },
+    "FILTERS": {
+      "INBOX": "Caixa de Entrada",
+      "ALL_INBOXES": "Todas as Caixas",
+      "ASSIGNEE": "Atribuído para",
+      "ALL_AGENTS": "Todos os Agentes",
+      "MY_DEALS": "Meus Itens",
+      "UNASSIGNED": "Não Atribuído"
+    },
+    "METRICS": {
+      "TOTAL_DEALS": "Total de Itens",
+      "TOTAL_VALUE": "Valor Total",
+      "AVG_DEAL_VALUE": "Valor Médio",
+      "CONVERSION_RATE": "Taxa de Conversão",
+      "FORECAST": "Previsão"
+    },
+    "VIEW_MODE": {
+      "BOARD": "Quadro",
+      "LIST": "Lista",
+      "REPORTS": "Relatórios"
+    },
+    "BULK_ACTIONS": {
+      "TITLE": "Ações em Massa",
+      "SELECTED": "selecionado(s)",
+      "SELECT_ACTION": "Selecione a ação",
+      "MOVE_TO_STAGE": "Mover para estágio",
+      "ASSIGN_AGENT": "Atribuir agente",
+      "CHANGE_PRIORITY": "Alterar prioridade",
+      "ARCHIVE": "Arquivar tarefas",
+      "DELETE": "Excluir tarefas",
+      "APPLY": "Aplicar Ação",
+      "SUCCESS": "tarefa(s) atualizada(s) com sucesso"
+    },
+    "REPORTS": {
+      "TITLE": "Relatórios Kanban",
+      "DESCRIPTION": "Análise de desempenho e métricas do seu pipeline",
+      "EXPORT_CSV": "Exportar CSV",
+      "STAGE_PERFORMANCE": "Desempenho por Estágio",
+      "AGENT_PERFORMANCE": "Desempenho por Agente",
+      "NO_BOARD_SELECTED": "Nenhum quadro selecionado"
+    }
+  },
+  "KANBAN_SETTINGS": {
+    "TITLE": "Configurações do Kanban",
+    "DESCRIPTION": "Configure seus quadros Kanban e pipelines de vendas",
+    "BOARDS_TITLE": "Quadros Kanban",
+    "BOARDS_DESCRIPTION": "Crie e gerencie múltiplos quadros Kanban para diferentes processos",
+    "CREATE_BOARD": "Criar Quadro",
+    "CREATE": "Criar",
+    "CREATE_FIRST_BOARD": "Criar Primeiro Quadro",
+    "EDIT_BOARD": "Editar Quadro",
+    "DUPLICATE_SUCCESS": "Quadro duplicado com sucesso",
+    "DUPLICATE_ERROR": "Erro ao duplicar quadro",
+    "NO_BOARDS": "Nenhum quadro ainda",
+    "NO_BOARDS_DESCRIPTION": "Crie seu primeiro quadro Kanban para começar a organizar seu pipeline",
+    "DEFAULT": "Padrão",
+    "EDIT": "Editar",
+    "DUPLICATE": "Duplicar",
+    "DELETE": "Excluir",
+    "SAVE": "Salvar",
+    "CANCEL": "Cancelar",
+    "CONFIRM_DELETE": "Tem certeza que deseja excluir este quadro? Esta ação não pode ser desfeita.",
+    "DELETE_SUCCESS": "Quadro excluído com sucesso",
+    "DELETE_ERROR": "Erro ao excluir quadro",
+    "LOAD_ERROR": "Erro ao carregar configurações do Kanban",
+    "SCHEMA_MISSING": "A estrutura do Kanban ainda não está disponível neste ambiente. Rode as migrations do banco e tente novamente.",
+    "SAVE_ERROR": "Erro ao salvar quadro",
+    "BOARD_CREATED": "Quadro criado com sucesso",
+    "BOARD_UPDATED": "Quadro atualizado com sucesso",
+    "BOARD_EDITOR_DESCRIPTION": "Configure estágios, cores e limites de trabalho para seu pipeline",
+    "BASIC_CONFIG": "Configuração Básica",
+    "BOARD_NAME": "Nome do Quadro",
+    "BOARD_NAME_PLACEHOLDER": "ex: Pipeline de Vendas",
+    "REQUIRED": "*",
+    "BOARD_DESCRIPTION": "Descrição",
+    "BOARD_DESCRIPTION_PLACEHOLDER": "Descreva o propósito deste quadro",
+    "CUSTOM_ATTRIBUTE_KEY": "Identificador do Status (Técnico)",
+    "CUSTOM_ATTRIBUTE_PLACEHOLDER": "sales_stage",
+    "CUSTOM_ATTRIBUTE_HELP": "Nome interno usado pelo sistema para salvar a coluna onde o cartão está.",
+    "AGENTS": "Agentes Permitidos",
+    "AGENTS_HELP": "Selecione quem pode ver e editar este quadro. Deixe vazio para todos.",
+    "VISIBLE_ATTRIBUTES": "Campos no Cartão",
+    "VISIBLE_ATTRIBUTES_HELP": "Selecione quais informações extras devem aparecer nos cartões do Kanban.",
+    "VALUE_ATTRIBUTE_KEY": "Identificador do Valor (Técnico)",
+    "VALUE_ATTRIBUTE_PLACEHOLDER": "deal_value",
+    "VALUE_ATTRIBUTE_HELP": "Nome interno usado para salvar o valor monetário.",
+    "ADVANCED_CONFIG": "Configurações Avançadas",
+    "ENABLE_VALUE": "Monitorar Valor Monetário",
+    "ENABLE_VALUE_HELP": "Habilita um campo para adicionar valor (R$) aos cartões.",
+    "WEBHOOK_AUTOMATION": "Automação (Webhook)",
+    "WEBHOOK_URL": "URL do Webhook",
+    "WEBHOOK_PLACEHOLDER": "https://seu-dominio.com/webhook/...",
+    "WEBHOOK_HELP": "Quando um cartão mudar de estágio, enviaremos um POST para esta URL com os dados do item",
+    "AUTO_ASSIGN": "Atribuição Automática",
+    "AUTO_ASSIGN_DESCRIPTION": "Adiciona automaticamente novas conversas das caixas selecionadas a este quadro",
+    "INBOXES": "Caixas de Entrada",
+    "INITIAL_STAGE": "Estágio Inicial",
+    "SELECT_STAGE": "Selecione...",
+    "ROUND_ROBIN": "Distribuição Round-Robin",
+    "ROUND_ROBIN_HELP": "Distribua conversas em rodízio entre os agentes do quadro",
+    "SET_AS_DEFAULT": "Definir como quadro padrão",
+    "STAGES": "Estágios",
+    "ADD_STAGE": "Adicionar Estágio",
+    "NEW_STAGE": "Novo Estágio",
+    "NEW_BOARD": "Novo Quadro",
+    "NO_STAGES": "Nenhum estágio ainda. Clique em 'Adicionar Estágio' para criar um",
+    "STAGE_NAME": "Nome do Estágio",
+    "STAGE_NAME_PLACEHOLDER": "ex: Negociação",
+    "COLOR": "Cor",
+    "WIP_LIMIT": "Limite WIP",
+    "NO_LIMIT": "Sem limite",
+    "TEMPLATES_TITLE": "Modelos de Quadros Kanban",
+    "TEMPLATES_DESCRIPTION": "Comece rapidamente com modelos pré-configurados",
+    "USE_TEMPLATE": "Usar este Modelo",
+    "CUSTOMIZE_AFTER_CREATE": "Você poderá personalizar os estágios depois de criar o quadro",
+    "CREATE_BLANK_BOARD": "Criar Quadro em Branco",
+    "TEMPLATES": {
+      "SALES_PIPELINE": {
+        "NAME": "Pipeline de Vendas",
+        "DESCRIPTION": "Gerencie oportunidades do primeiro contato ao fechamento",
+        "STAGES": {
+          "LEAD": "Novo Lead",
+          "CONTACTED": "Contactado",
+          "QUALIFIED": "Qualificado",
+          "PROPOSAL": "Proposta Enviada",
+          "NEGOTIATION": "Negociação",
+          "WON": "Ganho",
+          "LOST": "Perdido"
+        }
+      },
+      "CUSTOMER_SUPPORT": {
+        "NAME": "Suporte ao Cliente",
+        "DESCRIPTION": "Acompanhe tickets do início até a resolução",
+        "STAGES": {
+          "NEW": "Novo Ticket",
+          "IN_PROGRESS": "Em Atendimento",
+          "WAITING_CUSTOMER": "Aguardando Cliente",
+          "RESOLVED": "Resolvido",
+          "CLOSED": "Fechado"
+        }
+      },
+      "RECRUITMENT": {
+        "NAME": "Recrutamento",
+        "DESCRIPTION": "Gerencie candidatos durante o processo seletivo",
+        "STAGES": {
+          "APPLIED": "Inscrito",
+          "SCREENING": "Triagem",
+          "INTERVIEW": "Entrevista",
+          "TECHNICAL": "Teste Técnico",
+          "OFFER": "Proposta",
+          "HIRED": "Contratado",
+          "REJECTED": "Rejeitado"
+        }
+      },
+      "ONBOARDING": {
+        "NAME": "Onboarding de Clientes",
+        "DESCRIPTION": "Guie novos clientes no processo de implantação",
+        "STAGES": {
+          "WELCOME": "Boas-vindas",
+          "DOCUMENTATION": "Documentação",
+          "SETUP": "Configuração",
+          "TRAINING": "Treinamento",
+          "ACTIVE": "Ativo"
+        }
+      },
+      "PROJECT_MANAGEMENT": {
+        "NAME": "Gestão de Projetos",
+        "DESCRIPTION": "Acompanhe tarefas e projetos da equipe",
+        "STAGES": {
+          "BACKLOG": "Backlog",
+          "TODO": "A Fazer",
+          "IN_PROGRESS": "Em Progresso",
+          "REVIEW": "Em Revisão",
+          "DONE": "Concluído"
+        }
+      },
+      "LEAD_QUALIFICATION": {
+        "NAME": "Qualificação de Leads",
+        "DESCRIPTION": "Filtre e qualifique leads antes de enviar para vendas",
+        "STAGES": {
+          "NEW_LEAD": "Novo Lead",
+          "CONTACT_ATTEMPT": "Tentativa de Contato",
+          "QUALIFIED": "Qualificado",
+          "DISQUALIFIED": "Desqualificado",
+          "PASSED_TO_SALES": "Enviado para Vendas"
+        }
+      }
     }
   }
 }

@@ -38,9 +38,11 @@ class ConversationFinder
   end
 
   def perform
-    set_up
+    set_up_base_filters
 
-    mine_count, unassigned_count, all_count, = set_count_for_all_conversations
+    mine_count, unassigned_count, all_count, resolved_count = set_count_for_all_conversations
+
+    filter_by_status unless params[:q]
     assigned_count = all_count - unassigned_count
 
     filter_by_assignee_type
@@ -51,15 +53,16 @@ class ConversationFinder
         mine_count: mine_count,
         assigned_count: assigned_count,
         unassigned_count: unassigned_count,
-        all_count: all_count
+        all_count: all_count,
+        resolved_count: resolved_count
       }
     }
   end
 
   def perform_meta_only
-    set_up
+    set_up_base_filters
 
-    mine_count, unassigned_count, all_count, = set_count_for_all_conversations
+    mine_count, unassigned_count, all_count, resolved_count = set_count_for_all_conversations
     assigned_count = all_count - unassigned_count
 
     {
@@ -67,20 +70,20 @@ class ConversationFinder
         mine_count: mine_count,
         assigned_count: assigned_count,
         unassigned_count: unassigned_count,
-        all_count: all_count
+        all_count: all_count,
+        resolved_count: resolved_count
       }
     }
   end
 
   private
 
-  def set_up
+  def set_up_base_filters
     set_inboxes
     set_team
     set_assignee_type
 
     find_all_conversations
-    filter_by_status unless params[:q]
     filter_by_group_type
     filter_by_team
     filter_by_labels
@@ -191,10 +194,13 @@ class ConversationFinder
   end
 
   def set_count_for_all_conversations
+    # Contagem para conversas abertas (status padrão)
+    open_conversations = @conversations.where(status: DEFAULT_STATUS)
     [
-      @conversations.assigned_to(current_user).count,
-      @conversations.unassigned.count,
-      @conversations.count
+      open_conversations.assigned_to(current_user).count,
+      open_conversations.unassigned.count,
+      open_conversations.count,
+      @conversations.where(status: 'resolved').count
     ]
   end
 

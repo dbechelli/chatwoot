@@ -1,11 +1,334 @@
 {
   "KANBAN": {
-    "PAYWALL": {
-      "TITLE": "Upgrade to use Kanban",
-      "DESCRIPTION": "The Kanban feature requires a fazer.ai Chatwoot Pro subscription.",
-      "UPGRADE_PROMPT": "Subscribe to fazer.ai Chatwoot Pro to access Kanban funnels, task management, and workflow automation.",
-      "NON_ADMIN_MESSAGE": "The Kanban feature is not available on your current plan. Please reach out to your administrator to upgrade.",
-      "UPGRADE_NOW": "Upgrade now"
+    "TITLE": "Sales Pipeline",
+    "SIDEBAR_TITLE": "CRM / Kanban",
+    "SIDEBAR": {
+      "NO_BOARD": "No Kanban board configured.",
+      "NOT_IN_KANBAN": "This conversation is not in Kanban.",
+      "ADD_TO_KANBAN": "Add to Kanban",
+      "EDIT": "Edit"
+    },
+    "MODAL": {
+      "NEW_ITEM": "New Item",
+      "EDIT_ITEM": "Edit Item",
+      "CREATING_CARD": "Creating new card",
+      "TITLE": "Item Title",
+      "TITLE_PLACEHOLDER": "Ex: Negotiation Company X",
+      "DESCRIPTION": "Description",
+      "DESCRIPTION_PLACEHOLDER": "Details about this opportunity...",
+      "NOTES": "Internal Notes",
+      "NOTES_PLACEHOLDER": "Private notes for the team...",
+      "DEAL_VALUE": "Deal Value",
+      "ACTIVATE": "Activate",
+      "PRIORITY": "Priority",
+      "PRIORITY_LABEL": {
+        "LOW": "Low",
+        "MEDIUM": "Medium",
+        "HIGH": "High",
+        "URGENT": "Urgent"
+      },
+      "START_DATE": "Start Date",
+      "DUE_DATE": "Due Date",
+      "CHECKLIST": "Checklist",
+      "ADD_CHECKLIST_ITEM": "Add item to checklist...",
+      "ADD": "Add",
+      "NO_CHECKLIST_ITEMS": "No items in checklist",
+      "LINK_CONVERSATION": "Link Conversation",
+      "SEARCH_PLACEHOLDER": "Search by name, email or ID...",
+      "LINKED_CONVERSATION": "Linked Conversation",
+      "UNLINK": "Unlink",
+      "ASSIGNEE": "Assignee",
+      "NO_ASSIGNEE": "No assignee",
+      "STAGE": "Stage",
+      "CANCEL": "Cancel",
+      "SAVE": "Save Item",
+      "SAVING": "Saving...",
+      "NO_CONVERSATION_SELECTED": "Select a conversation to continue",
+      "SUCCESS_MESSAGE": "Item saved successfully",
+      "ERROR_MESSAGE": "Error saving item"
+    },
+    "CONTEXT_MENU": {
+      "EDIT": "Edit Item",
+      "VIEW_CONTACT": "View Contact",
+      "OPEN_CONVERSATION": "Go to Conversation",
+      "DELETE": "Delete"
+    },
+    "ITEM_REMOVED": "Item removed from Kanban",
+    "ITEM_SAVED": "Item saved successfully",
+    "BOARD": "Board",
+    "CALENDAR": {
+      "TODAY": "Today",
+      "ADD_ITEM": "Add Item"
+    },
+    "LOADING": "Loading deals...",
+    "REFRESH": "Refresh",
+    "SHOW_METRICS": "Show Metrics",
+    "HIDE_METRICS": "Hide Metrics",
+    "NAV": {
+      "DESCRIPTION": "Overview, funnels, and active pipelines",
+      "OVERVIEW": "Overview",
+      "FUNNELS": "Funnels",
+      "NEW_FUNNEL": "New Funnel",
+      "DEFAULT": "Default",
+      "NO_FUNNELS": "No funnels created yet",
+      "SETTINGS": "Advanced settings"
+    },
+    "OVERVIEW": {
+      "TITLE": "A Kanban workspace organized around your funnels",
+      "DESCRIPTION": "Track active pipelines, keep your team aligned, and jump into the right funnel without digging through settings screens.",
+      "TOTAL_FUNNELS": "Funnels",
+      "TOTAL_STAGES": "Stages",
+      "DEFAULT_FUNNEL": "Default funnel",
+      "AUTOMATIONS": "Funnels with automation",
+      "SPOTLIGHT_TITLE": "Spotlight funnels",
+      "SPOTLIGHT_DESCRIPTION": "The most important funnels stay one click away.",
+      "SEE_ALL": "See all",
+      "NO_DESCRIPTION": "No description yet.",
+      "QUICK_ACTIONS": "Quick actions",
+      "MANAGE_FUNNELS": "Manage all funnels",
+      "OPEN_DEFAULT": "Open default funnel",
+      "EMPTY_TITLE": "Build your first funnel",
+      "EMPTY_DESCRIPTION": "Create a funnel to give your team a clear operational view of leads, deals, or support flows."
+    },
+    "FUNNELS": {
+      "TITLE": "Funnels",
+      "DESCRIPTION": "Create, edit, and organize every funnel your team uses day to day.",
+      "OPEN_FUNNEL": "Open",
+      "EDIT_FUNNEL": "Edit funnel",
+      "DUPLICATE_FUNNEL": "Duplicate funnel",
+      "DELETE_FUNNEL": "Delete funnel",
+      "STAGE_COUNT": "stages",
+      "NO_DESCRIPTION": "No description yet.",
+      "EMPTY_TITLE": "No funnels available",
+      "EMPTY_DESCRIPTION": "Start with a template or a blank funnel and build the workflow your team actually uses."
+    },
+    "EDITOR": {
+      "BACK_TO_FUNNELS": "Back to funnels",
+      "CREATE_TITLE": "Create funnel",
+      "EDIT_TITLE": "Edit funnel",
+      "DESCRIPTION": "Define the funnel structure, ownership rules, and automation details in one place.",
+      "TEMPLATE_TITLE": "Choose how you want to start",
+      "TEMPLATE_DESCRIPTION": "Pick a template to move faster, or start from a blank funnel and shape the workflow yourself.",
+      "BACK_TO_TEMPLATES": "Change template",
+      "BLANK_TITLE": "Blank funnel",
+      "BLANK_DESCRIPTION": "Start from scratch and configure every step manually.",
+      "STAGES_DESCRIPTION": "Organize the journey from first touch to final outcome.",
+      "SHOW_ADVANCED": "Show advanced options",
+      "HIDE_ADVANCED": "Hide advanced options"
+    },
+    "WORKSPACE": {
+      "DEFAULT_DESCRIPTION": "Pipeline operations for your team"
+    },
+    "NO_BOARDS_TITLE": "No Kanban boards found",
+    "NO_BOARDS_DESCRIPTION": "Create your first board to start organizing your processes visually and efficiently.",
+    "CREATE_FIRST_BOARD": "Create my first board",
+    "FETCH_ERROR": "Failed to load conversations",
+    "UPDATE_ERROR": "Failed to update deal stage",
+    "STAGE_UPDATED": "Deal stage updated successfully",
+    "UNKNOWN_CONTACT": "Unknown Contact",
+    "NO_MESSAGES": "No messages yet",
+    "UNASSIGNED": "Unassigned",
+    "EMPTY_COLUMN": "No deals in this stage",
+    "WIP_LIMIT_EXCEEDED": "Work in progress limit exceeded!",
+    "STAGES": {
+      "LEAD": "New Lead",
+      "QUALIFIED": "Qualified",
+      "PROPOSAL": "Proposal Sent",
+      "NEGOTIATION": "Negotiation",
+      "WON": "Won",
+      "LOST": "Lost"
+    },
+    "FILTERS": {
+      "INBOX": "Inbox",
+      "ALL_INBOXES": "All Inboxes",
+      "ASSIGNEE": "Assigned to",
+      "ALL_AGENTS": "All Agents",
+      "MY_DEALS": "My Deals",
+      "UNASSIGNED": "Unassigned"
+    },
+    "METRICS": {
+      "TOTAL_DEALS": "Total Deals",
+      "TOTAL_VALUE": "Total Value",
+      "AVG_DEAL_VALUE": "Avg Deal Value",
+      "CONVERSION_RATE": "Conversion Rate",
+      "FORECAST": "Forecast"    },
+    "VIEW_MODE": {
+      "BOARD": "Board",
+      "LIST": "List",
+      "REPORTS": "Reports"
+    },
+    "BULK_ACTIONS": {
+      "TITLE": "Bulk Actions",
+      "SELECTED": "selected",
+      "SELECT_ACTION": "Select action",
+      "MOVE_TO_STAGE": "Move to stage",
+      "ASSIGN_AGENT": "Assign agent",
+      "CHANGE_PRIORITY": "Change priority",
+      "ARCHIVE": "Archive tasks",
+      "DELETE": "Delete tasks",
+      "APPLY": "Apply Action",
+      "SUCCESS": "task(s) updated successfully"
+    },
+    "REPORTS": {
+      "TITLE": "Kanban Reports",
+      "DESCRIPTION": "Performance analysis and pipeline metrics",
+      "EXPORT_CSV": "Export CSV",
+      "STAGE_PERFORMANCE": "Performance by Stage",
+      "AGENT_PERFORMANCE": "Performance by Agent",
+      "NO_BOARD_SELECTED": "No board selected"
+    },
+    "PRIORITY_LABEL": {
+      "LOW": "Low",
+      "MEDIUM": "Medium",
+      "HIGH": "High",
+      "URGENT": "Urgent"
+    }
+  },
+  "KANBAN_SETTINGS": {
+    "TITLE": "Kanban Settings",
+    "DESCRIPTION": "Configure your Kanban boards and sales pipelines",
+    "BOARDS_TITLE": "Kanban Boards",
+    "BOARDS_DESCRIPTION": "Create and manage multiple Kanban boards for different processes",
+    "CREATE_BOARD": "Create Board",
+    "CREATE": "Create",
+    "CREATE_FIRST_BOARD": "Create Your First Board",
+    "EDIT_BOARD": "Edit Board",
+    "DUPLICATE_SUCCESS": "Board duplicated successfully",
+    "DUPLICATE_ERROR": "Failed to duplicate board",
+    "NO_BOARDS": "No boards yet",
+    "NO_BOARDS_DESCRIPTION": "Create your first Kanban board to start organizing your sales pipeline",
+    "DEFAULT": "Default",
+    "EDIT": "Edit",
+    "DUPLICATE": "Duplicate",
+    "DELETE": "Delete",
+    "SAVE": "Save",
+    "CANCEL": "Cancel",
+    "CONFIRM_DELETE": "Are you sure you want to delete this board? This action cannot be undone.",
+    "DELETE_SUCCESS": "Board deleted successfully",
+    "DELETE_ERROR": "Failed to delete board",
+    "LOAD_ERROR": "Failed to load Kanban settings",
+    "SCHEMA_MISSING": "The Kanban schema is not available in this environment yet. Run the database migrations and try again.",
+    "SAVE_ERROR": "Failed to save board",
+    "BOARD_CREATED": "Board created successfully",
+    "BOARD_UPDATED": "Board updated successfully",
+    "BOARD_EDITOR_DESCRIPTION": "Configure stages, colors, and work limits for your pipeline",
+    "BASIC_CONFIG": "Basic Configuration",
+    "BOARD_NAME": "Board Name",
+    "BOARD_NAME_PLACEHOLDER": "e.g., Sales Pipeline",
+    "REQUIRED": "*",
+    "BOARD_DESCRIPTION": "Description",
+    "BOARD_DESCRIPTION_PLACEHOLDER": "Describe this board's purpose",
+    "AGENTS": "Allowed Agents",
+    "AGENTS_HELP": "Select who can view and edit this board. Leave empty for everyone.",
+    "VISIBLE_ATTRIBUTES": "Card Fields",
+    "VISIBLE_ATTRIBUTES_HELP": "Select which extra information should appear on Kanban cards.",
+    "ENABLE_VALUE": "Track Monetary Value",
+    "ENABLE_VALUE_HELP": "Enable a field to add value ($) to cards.",
+    "CUSTOM_ATTRIBUTE_KEY": "Custom Attribute Key",
+    "CUSTOM_ATTRIBUTE_PLACEHOLDER": "sales_stage",
+    "CUSTOM_ATTRIBUTE_HELP": "The field name used to store the stage value (e.g., sales_stage)",
+    "VALUE_ATTRIBUTE_KEY": "Value Attribute Key",
+    "VALUE_ATTRIBUTE_PLACEHOLDER": "deal_value",
+    "VALUE_ATTRIBUTE_HELP": "The field name used to store deal value (e.g., deal_value)",
+    "ADVANCED_CONFIG": "Advanced Configuration",
+    "WEBHOOK_AUTOMATION": "Automation (Webhook)",
+    "WEBHOOK_URL": "Webhook URL",
+    "WEBHOOK_PLACEHOLDER": "https://your-domain.com/webhook/...",
+    "WEBHOOK_HELP": "When a card changes stage, we send a POST request to this URL with the item payload",
+    "AUTO_ASSIGN": "Automatic Assignment",
+    "AUTO_ASSIGN_DESCRIPTION": "Automatically add new conversations from selected inboxes to this board",
+    "INBOXES": "Inboxes",
+    "INITIAL_STAGE": "Initial Stage",
+    "SELECT_STAGE": "Select...",
+    "ROUND_ROBIN": "Round-Robin Distribution",
+    "ROUND_ROBIN_HELP": "Distribute conversations in rotation among the board agents",
+    "SET_AS_DEFAULT": "Set as default board",
+    "STAGES": "Stages",
+    "ADD_STAGE": "Add Stage",
+    "NEW_STAGE": "New Stage",
+    "NEW_BOARD": "New Board",
+    "NO_STAGES": "No stages yet. Click 'Add Stage' to create one",
+    "STAGE_NAME": "Stage Name",
+    "STAGE_NAME_PLACEHOLDER": "e.g., Negotiation",
+    "COLOR": "Color",
+    "WIP_LIMIT": "WIP Limit",
+    "NO_LIMIT": "No limit",
+    "TEMPLATES_TITLE": "Kanban Board Templates",
+    "TEMPLATES_DESCRIPTION": "Start quickly with pre-configured templates",
+    "USE_TEMPLATE": "Use This Template",
+    "CUSTOMIZE_AFTER_CREATE": "You can customize stages after creating the board",
+    "CREATE_BLANK_BOARD": "Create Blank Board",
+    "TEMPLATES": {
+      "SALES_PIPELINE": {
+        "NAME": "Sales Pipeline",
+        "DESCRIPTION": "Manage opportunities from first contact to closure",
+        "STAGES": {
+          "LEAD": "New Lead",
+          "CONTACTED": "Contacted",
+          "QUALIFIED": "Qualified",
+          "PROPOSAL": "Proposal Sent",
+          "NEGOTIATION": "Negotiation",
+          "WON": "Won",
+          "LOST": "Lost"
+        }
+      },
+      "CUSTOMER_SUPPORT": {
+        "NAME": "Customer Support",
+        "DESCRIPTION": "Track support tickets from creation to resolution",
+        "STAGES": {
+          "NEW": "New Ticket",
+          "IN_PROGRESS": "In Progress",
+          "WAITING_CUSTOMER": "Waiting for Customer",
+          "RESOLVED": "Resolved",
+          "CLOSED": "Closed"
+        }
+      },
+      "RECRUITMENT": {
+        "NAME": "Recruitment",
+        "DESCRIPTION": "Manage candidates throughout the hiring pipeline",
+        "STAGES": {
+          "APPLIED": "Applied",
+          "SCREENING": "Screening",
+          "INTERVIEW": "Interview",
+          "TECHNICAL": "Technical Test",
+          "OFFER": "Offer",
+          "HIRED": "Hired",
+          "REJECTED": "Rejected"
+        }
+      },
+      "ONBOARDING": {
+        "NAME": "Customer Onboarding",
+        "DESCRIPTION": "Guide new customers through setup and activation",
+        "STAGES": {
+          "WELCOME": "Welcome",
+          "DOCUMENTATION": "Documentation",
+          "SETUP": "Setup",
+          "TRAINING": "Training",
+          "ACTIVE": "Active"
+        }
+      },
+      "PROJECT_MANAGEMENT": {
+        "NAME": "Project Management",
+        "DESCRIPTION": "Track team tasks and project delivery",
+        "STAGES": {
+          "BACKLOG": "Backlog",
+          "TODO": "To Do",
+          "IN_PROGRESS": "In Progress",
+          "REVIEW": "Review",
+          "DONE": "Done"
+        }
+      },
+      "LEAD_QUALIFICATION": {
+        "NAME": "Lead Qualification",
+        "DESCRIPTION": "Qualify leads before handing them over to sales",
+        "STAGES": {
+          "NEW_LEAD": "New Lead",
+          "CONTACT_ATTEMPT": "Contact Attempt",
+          "QUALIFIED": "Qualified",
+          "DISQUALIFIED": "Disqualified",
+          "PASSED_TO_SALES": "Passed to Sales"
+        }
+      }
     }
   }
 }

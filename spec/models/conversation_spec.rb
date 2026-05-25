@@ -613,6 +613,7 @@ RSpec.describe Conversation do
         },
         id: conversation.display_id,
         messages: [],
+        last_non_activity_message: nil,
         labels: [],
         last_activity_at: conversation.last_activity_at.to_i,
         inbox_id: conversation.inbox_id,
@@ -879,6 +880,31 @@ RSpec.describe Conversation do
           conversation_2.id, conversation_1.id, conversation_3.id, conversation_7.id, conversation_6.id, conversation_5.id,
           conversation_4.id
         ]
+      end
+
+      context 'when some conversations have a null waiting_since' do
+        before do
+          # rubocop:disable Rails/SkipsModelValidations
+          conversation_5.update_column(:waiting_since, nil)
+          conversation_2.update_column(:waiting_since, nil)
+          # rubocop:enable Rails/SkipsModelValidations
+        end
+
+        it 'places null waiting_since conversations at the end in ascending order' do
+          records = described_class.sort_on_waiting_since
+          expect(records.map(&:id)).to eq [
+            conversation_4.id, conversation_6.id, conversation_7.id, conversation_3.id, conversation_1.id,
+            conversation_5.id, conversation_2.id
+          ]
+        end
+
+        it 'places null waiting_since conversations at the end in descending order' do
+          records = described_class.sort_on_waiting_since(:desc)
+          expect(records.map(&:id)).to eq [
+            conversation_1.id, conversation_3.id, conversation_7.id, conversation_6.id, conversation_4.id,
+            conversation_5.id, conversation_2.id
+          ]
+        end
       end
     end
   end

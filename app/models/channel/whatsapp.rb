@@ -30,6 +30,7 @@ class Channel::Whatsapp < ApplicationRecord # rubocop:disable Metrics/ClassLengt
 
   # default at the moment is 360dialog lets change later.
   PROVIDERS = %w[default whatsapp_cloud baileys zapi].freeze
+  REACTION_SUPPORTED_PROVIDERS = %w[whatsapp_cloud baileys zapi].freeze
   before_validation :ensure_webhook_verify_token
 
   validates :provider, inclusion: { in: PROVIDERS }
@@ -45,6 +46,20 @@ class Channel::Whatsapp < ApplicationRecord # rubocop:disable Metrics/ClassLengt
 
   def name
     'Whatsapp'
+  end
+
+  def supports_reactions?
+    REACTION_SUPPORTED_PROVIDERS.include?(provider)
+  end
+
+  # Mirrors Channel::TwilioSms#voice_enabled? so the call subsystem can duck-type across providers.
+  # Meta's Calling API is only available via the embedded-signup whatsapp_cloud flow —
+  # 360dialog (default provider) and manual whatsapp_cloud setups can't reach the call APIs.
+  def voice_enabled?
+    provider == 'whatsapp_cloud' &&
+      provider_config['source'] == 'embedded_signup' &&
+      provider_config['calling_enabled'].present? &&
+      account.feature_enabled?('channel_voice')
   end
 
   def provider_service

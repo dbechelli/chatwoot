@@ -31,6 +31,7 @@ export default {
     return {
       shortCode: '',
       content: this.responseContent || '',
+      attachments: [],
       addCanned: {
         showLoading: false,
         message: '',
@@ -38,21 +39,38 @@ export default {
       show: true,
     };
   },
-  validations: {
-    shortCode: {
-      required,
-      minLength: minLength(2),
+  validations() {
+    return {
+      shortCode: {
+        required,
+        minLength: minLength(2),
+      },
+      content: {
+        required: () => this.hasContentOrAttachment,
+      },
+    };
+  },
+  computed: {
+    selectedAttachments() {
+      return Array.from(this.attachments || []);
     },
-    content: {
-      required,
+    hasContentOrAttachment() {
+      return Boolean(this.content?.trim() || this.selectedAttachments.length);
     },
   },
   methods: {
     resetForm() {
       this.shortCode = '';
       this.content = '';
+      this.attachments = [];
+      if (this.$refs.fileInput) {
+        this.$refs.fileInput.value = '';
+      }
       this.v$.shortCode.$reset();
       this.v$.content.$reset();
+    },
+    onFileChange(e) {
+      this.attachments = e.target.files;
     },
     addCannedResponse() {
       // Show loading on button
@@ -62,6 +80,7 @@ export default {
         .dispatch('createCannedResponse', {
           short_code: this.shortCode,
           content: this.content,
+          attachments: this.attachments,
         })
         .then(() => {
           // Reset Form, Show success message
@@ -76,6 +95,17 @@ export default {
             error?.message || this.$t('CANNED_MGMT.ADD.API.ERROR_MESSAGE');
           useAlert(errorMessage);
         });
+    },
+    removeSelectedAttachment(index) {
+      const nextAttachments = this.selectedAttachments.filter(
+        (_, fileIndex) => fileIndex !== index
+      );
+      this.attachments = nextAttachments;
+      if (this.$refs.fileInput) {
+        const dataTransfer = new DataTransfer();
+        nextAttachments.forEach(file => dataTransfer.items.add(file));
+        this.$refs.fileInput.files = dataTransfer.files;
+      }
     },
   },
 };
@@ -102,14 +132,14 @@ export default {
         </div>
 
         <div class="w-full">
-          <label :class="{ error: v$.content.$error }">
+          <label :class="{ error: !hasContentOrAttachment && v$.content.$dirty }">
             {{ $t('CANNED_MGMT.ADD.FORM.CONTENT.LABEL') }}
           </label>
           <div class="editor-wrap">
             <WootMessageEditor
               v-model="content"
               class="message-editor [&>div]:px-1"
-              :class="{ editor_warning: v$.content.$error }"
+              :class="{ editor_warning: !hasContentOrAttachment && v$.content.$dirty }"
               channel-type="Context::Default"
               enable-variables
               :enable-canned-responses="false"
@@ -118,6 +148,40 @@ export default {
             />
           </div>
         </div>
+
+        <div class="w-full">
+          <label>
+            {{ $t('CANNED_MGMT.ATTACHMENTS.LABEL') }}
+            <input
+              ref="fileInput"
+              type="file"
+              multiple
+              @change="onFileChange"
+            />
+          </label>
+          <p class="text-sm text-n-slate-11 mt-1">
+            {{ $t('CANNED_MGMT.ATTACHMENTS.HELP_TEXT') }}
+          </p>
+          <div v-if="selectedAttachments.length" class="mt-3 flex flex-col gap-2">
+            <div
+              v-for="(attachment, index) in selectedAttachments"
+              :key="`${attachment.name}-${attachment.size}-${index}`"
+              class="flex items-center justify-between rounded-lg border border-n-slate-3 px-3 py-2"
+            >
+              <span class="text-sm text-n-slate-12 truncate pr-3">
+                {{ attachment.name }}
+              </span>
+              <button
+                type="button"
+                class="text-sm text-n-ruby-11"
+                @click="removeSelectedAttachment(index)"
+              >
+                {{ $t('CANNED_MGMT.ATTACHMENTS.REMOVE') }}
+              </button>
+            </div>
+          </div>
+        </div>
+
         <div class="flex flex-row justify-end w-full gap-2 px-0 py-2">
           <NextButton
             faded
@@ -130,7 +194,7 @@ export default {
             type="submit"
             :label="$t('CANNED_MGMT.ADD.FORM.SUBMIT')"
             :disabled="
-              v$.content.$invalid ||
+              !hasContentOrAttachment ||
               v$.shortCode.$invalid ||
               addCanned.showLoading
             "

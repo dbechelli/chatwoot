@@ -15,6 +15,25 @@ class WebhookListener < BaseListener
     deliver_webhook_payloads(payload, inbox)
   end
 
+  def kanban_card_created(event)
+    conversation = extract_conversation_and_account(event)[0]
+    payload = conversation.webhook_data.merge(event: __method__.to_s)
+    deliver_webhook_payloads(payload, conversation.inbox)
+  end
+
+  def kanban_card_updated(event)
+    conversation = extract_conversation_and_account(event)[0]
+    changed_attributes = extract_changed_attributes(event)
+    payload = conversation.webhook_data.merge(event: __method__.to_s, changed_attributes: changed_attributes)
+    deliver_webhook_payloads(payload, conversation.inbox)
+  end
+
+  def kanban_card_deleted(event)
+    conversation = extract_conversation_and_account(event)[0]
+    payload = conversation.webhook_data.merge(event: __method__.to_s)
+    deliver_webhook_payloads(payload, conversation.inbox)
+  end
+
   def conversation_created(event)
     conversation = extract_conversation_and_account(event)[0]
     inbox = conversation.inbox
@@ -29,7 +48,11 @@ class WebhookListener < BaseListener
     return unless message.webhook_sendable?
 
     payload = message.webhook_data.merge(event: __method__.to_s)
-    deliver_webhook_payloads(payload, inbox)
+    if skip_api_inbox_webhook_for_uazapi_outgoing_message?(message)
+      deliver_account_webhooks(payload, inbox.account)
+    else
+      deliver_webhook_payloads(payload, inbox)
+    end
 
     message_incoming(event)
     message_outgoing(event)
@@ -56,6 +79,23 @@ class WebhookListener < BaseListener
   end
 
   def message_updated(event)
+    message = extract_message_and_account(event)[0]
+    inbox = message.inbox
+
+    return unless message.webhook_sendable?
+
+    changed_attributes = extract_changed_attributes(event)
+    payload = message.webhook_data.merge(event: __method__.to_s)
+    payload[:changed_attributes] = changed_attributes if changed_attributes.present?
+
+    if event.data[:skip_api_inbox_webhook]
+      deliver_account_webhooks(payload, inbox.account)
+    else
+      deliver_webhook_payloads(payload, inbox)
+    end
+  end
+
+  def message_deleted(event)
     message = extract_message_and_account(event)[0]
     inbox = message.inbox
 
@@ -207,5 +247,13 @@ class WebhookListener < BaseListener
   def deliver_webhook_payloads(payload, inbox)
     deliver_account_webhooks(payload, inbox.account)
     deliver_api_inbox_webhooks(payload, inbox)
+  end
+
+  def skip_api_inbox_webhook_for_uazapi_outgoing_message?(message)
+    inbox = message.inbox
+    return false unless message.outgoing?
+    return false unless inbox.channel_type == 'Channel::Api'
+
+    inbox.channel.respond_to?(:uazapi_direct_message_delivery?) && inbox.channel.uazapi_direct_message_delivery?(message)
   end
 end

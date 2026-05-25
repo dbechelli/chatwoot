@@ -23,28 +23,7 @@ export default {
 
   methods: {
     maxSizeFor(mime) {
-      // Use default/installation limit for private notes
-      if (this.isOnPrivateNote) {
-        return this.installationLimit;
-      }
-
-      const channelType = this.inbox?.channel_type;
-
-      if (!channelType || channelType === INBOX_TYPES.WEB) {
-        return this.installationLimit;
-      }
-
-      const channelLimit = getMaxUploadSizeByChannel({
-        channelType,
-        medium: this.inbox?.medium, // e.g. 'sms' | 'whatsapp'
-        mime, // e.g. 'image/png'
-      });
-
-      if (channelLimit === DEFAULT_MAXIMUM_FILE_UPLOAD_SIZE) {
-        return this.installationLimit;
-      }
-
-      return Math.min(channelLimit, this.installationLimit);
+      return this.installationLimit;
     },
     alertOverLimit(maxSizeMB) {
       useAlert(

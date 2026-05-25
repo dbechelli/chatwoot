@@ -62,6 +62,23 @@ describe Whatsapp::IncomingMessageService do
         expect(last_conversation.reload.status).to eq('open')
       end
 
+      it 'reopens the existing conversation even when the contact is linked through a different contact inbox' do
+        whatsapp_channel.inbox.update!(lock_to_single_conversation: true)
+        contact = create(:contact, account: whatsapp_channel.account, phone_number: "+#{wa_id}")
+        previous_contact_inbox = create(:contact_inbox, inbox: whatsapp_channel.inbox, contact: contact, source_id: 'old-source-id')
+        last_conversation = create(:conversation,
+                                   inbox: whatsapp_channel.inbox,
+                                   contact: contact,
+                                   contact_inbox: previous_contact_inbox,
+                                   status: :resolved)
+
+        described_class.new(inbox: whatsapp_channel.inbox, params: params).perform
+
+        expect(whatsapp_channel.inbox.conversations.count).to eq(1)
+        expect(last_conversation.reload.status).to eq('open')
+        expect(last_conversation.messages.last.content).to eq(params[:messages].first[:text][:body])
+      end
+
       it 'creates a new conversation if last conversation is resolved and lock to single conversation is disabled' do
         whatsapp_channel.inbox.update!(lock_to_single_conversation: false)
         contact_inbox = create(:contact_inbox, inbox: whatsapp_channel.inbox, source_id: params[:messages].first[:from])

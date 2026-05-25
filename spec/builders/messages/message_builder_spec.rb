@@ -121,6 +121,70 @@ describe Messages::MessageBuilder do
       end
     end
 
+    context 'when content_attributes contains a UAZAPI contact card' do
+      let(:params) do
+        ActionController::Parameters.new({
+                                           content: 'Shared contact: Joao Silva',
+                                           content_attributes: {
+                                             uazapi_contact_card: {
+                                               full_name: 'Joao Silva',
+                                               phone_number: '5511999999999,5511888888888',
+                                               organization: 'Empresa XYZ',
+                                               email: 'joao@empresa.com',
+                                               url: 'https://empresa.com/joao'
+                                             }
+                                           }
+                                         })
+      end
+
+      it 'creates a contact attachment with structured metadata' do
+        message = message_builder
+
+        expect(message.attachments.size).to eq(1)
+        expect(message.attachments.first.file_type).to eq('contact')
+        expect(message.attachments.first.fallback_title).to eq('5511999999999,5511888888888')
+        expect(message.attachments.first.meta).to include(
+          'fullName' => 'Joao Silva',
+          'organization' => 'Empresa XYZ',
+          'email' => 'joao@empresa.com',
+          'url' => 'https://empresa.com/joao'
+        )
+        expect(message.content_attributes).to eq({})
+      end
+    end
+
+    context 'when content_attributes contains a UAZAPI pix button' do
+      let(:params) do
+        ActionController::Parameters.new({
+                                           content: 'PIX sent: Dra. Maria',
+                                           content_attributes: {
+                                             uazapi_pix_button: {
+                                               professional_name: 'Dra. Maria',
+                                               professional_phone: '+55 11 97777-8888',
+                                               pix_type: 'EMAIL',
+                                               pix_key: 'dra.maria@clinica.com',
+                                               pix_name: 'Maria Clinica'
+                                             }
+                                           }
+                                         })
+      end
+
+      it 'keeps the pix button data in message content attributes' do
+        message = message_builder
+
+        expect(message.attachments).to be_empty
+        expect(message.content_attributes).to include(
+          'uazapi_pix_button' => {
+            'professional_name' => 'Dra. Maria',
+            'professional_phone' => '+55 11 97777-8888',
+            'pix_type' => 'EMAIL',
+            'pix_key' => 'dra.maria@clinica.com',
+            'pix_name' => 'Maria Clinica'
+          }
+        )
+      end
+    end
+
     context 'when attachment messages' do
       let(:params) do
         ActionController::Parameters.new({
@@ -277,10 +341,6 @@ describe Messages::MessageBuilder do
       end
 
       context 'when custom email content is provided' do
-        before do
-          account.enable_features('quoted_email_reply')
-        end
-
         it 'creates message with custom HTML email content' do
           params = ActionController::Parameters.new({
                                                       content: 'Regular message content',

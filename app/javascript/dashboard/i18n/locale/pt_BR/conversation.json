@@ -1,5 +1,6 @@
 {
   "CONVERSATION": {
+    "WHATSAPP_GROUP_BADGE": "{count} participantes",
     "SELECT_A_CONVERSATION": "Por favor, selecione uma conversa no painel da esquerda",
     "CSAT_REPLY_MESSAGE": "Por favor, classifique a conversa",
     "404": "Desculpe, não conseguimos encontrar a conversa. Por favor, tente novamente",
@@ -30,6 +31,8 @@
     "CLICK_HERE": "Clique aqui",
     "LOADING_INBOXES": "Carregando caixas de entrada",
     "LOADING_CONVERSATIONS": "Carregando conversas",
+    "LOAD_PREVIOUS_CONVERSATIONS": "Carregar conversas anteriores",
+    "LOADING_PREVIOUS_CONVERSATIONS": "Carregando conversas anteriores...",
     "CANNOT_REPLY": "Você não pode responder porque",
     "24_HOURS_WINDOW": "Restrições de janela de mensagem de 24 horas",
     "48_HOURS_WINDOW": "Restrição da janela de mensagens de 48 horas",
@@ -57,6 +60,13 @@
     "NO_CONTENT": "Nenhum conteúdo a ser exibido",
     "SHARED_ATTACHMENT": {
       "CONTACT": "{sender} compartilhou um contato",
+      "PIX": "{sender} enviou um botão PIX",
+      "PIX_TYPE": "Tipo de PIX",
+      "PIX_NAME": "Nome do recebedor",
+      "PIX_KEY": "Chave PIX",
+      "COPY_PIX_KEY": "Copiar chave PIX",
+      "PIX_KEY_COPIED": "Chave PIX copiada para a área de transferência",
+      "PIX_KEY_COPY_FAILED": "Não foi possível copiar a chave PIX",
       "LOCATION": "{sender} compartilhou uma localização",
       "FILE": "{sender} compartilhou um arquivo",
       "MEETING": "{sender} começou a reunião"
@@ -77,7 +87,8 @@
     "REPLY_MESSAGE_NOT_FOUND": "Mensagem não disponível",
     "CARD": {
       "SHOW_LABELS": "Mostrar etiquetas",
-      "HIDE_LABELS": "Ocultar as etiquetas"
+      "HIDE_LABELS": "Ocultar as etiquetas",
+      "LABELS_COUNT": "{count} etiquetas"
     },
     "VOICE_CALL": {
       "INCOMING_CALL": "Chamada recebida",
@@ -88,7 +99,9 @@
       "CALL_ENDED": "Chamada encerrada",
       "NOT_ANSWERED_YET": "Ainda não respondido",
       "THEY_ANSWERED": "Eles responderam",
-      "YOU_ANSWERED": "Você respondeu"
+      "YOU_ANSWERED": "Você respondeu",
+      "AGENT_ANSWERED": "{agentName} respondeu",
+      "JOIN_CALL": "Entrar na chamada"
     },
     "HEADER": {
       "RESOLVE_ACTION": "Resolver",
@@ -98,6 +111,7 @@
       "OPEN": "Mais",
       "CLOSE": "Fechar",
       "DETAILS": "detalhes",
+      "COPY_ID_SUCCESS": "ID da conversa copiado para área de transferência",
       "SNOOZED_UNTIL": "Adiar até",
       "SNOOZED_UNTIL_TOMORROW": "Adiado até amanhã",
       "SNOOZED_UNTIL_NEXT_WEEK": "Adiada até a próxima semana",
@@ -167,6 +181,9 @@
       "ASSIGN_LABEL": "Atribuir etiqueta",
       "AGENTS_LOADING": "Carregando agentes...",
       "ASSIGN_TEAM": "Atribuir time",
+      "ASSIGN_STAGE": "Atribuir estágio de vendas",
+      "AVAILABLE_FUNNELS": "Funis disponíveis",
+      "FORWARD_MESSAGE": "Encaminhar mensagem",
       "DELETE": "Excluir conversa",
       "OPEN_IN_NEW_TAB": "Abrir em nova aba",
       "COPY_LINK": "Copiar link da conversa",
@@ -221,6 +238,7 @@
       "REPLYING_TO": "Respondendo a:",
       "TIP_EMOJI_ICON": "Mostrar seletor de emoji",
       "TIP_ATTACH_ICON": "Anexar arquivos",
+      "TIP_MORE_ACTIONS_ICON": "Mais ações de envio",
       "TIP_AUDIORECORDER_ICON": "Gravar áudio",
       "TIP_AUDIORECORDER_PERMISSION": "Permitir acesso ao áudio",
       "TIP_AUDIORECORDER_ERROR": "Não foi possível abrir o áudio",
@@ -249,6 +267,47 @@
         "CONFIRM": {
           "YES": "Enviar",
           "CANCEL": "Cancelar"
+        }
+      },
+      "MORE_ACTIONS": {
+        "SHARE_CONTACT": "Compartilhar contato",
+        "SEND_PIX": "Enviar PIX",
+        "CONTACT_MESSAGE_SUMMARY": "Contato compartilhado: {name}",
+        "PIX_MESSAGE_SUMMARY": "PIX enviado: {name}",
+        "CONTACT_MODAL": {
+          "TITLE": "Compartilhar contato",
+          "DESCRIPTION": "Envie um cartão de contato do WhatsApp pela UAZAPI.",
+          "SEARCH_LABEL": "Localizar contato existente",
+          "SEARCH_PLACEHOLDER": "Pesquise por nome ou telefone",
+          "SEARCHING": "Buscando contatos...",
+          "NO_RESULTS": "Nenhum contato encontrado para esta busca.",
+          "NO_CONTACT_INFO": "Sem telefone ou e-mail disponível",
+          "USE_CONTACT": "Usar contato",
+          "FULL_NAME": "Nome completo",
+          "PHONE_NUMBER": "Telefone(s)",
+          "PHONE_HELP": "Use o formato internacional. Você pode adicionar mais de um número separado por vírgulas.",
+          "ORGANIZATION": "Organização",
+          "EMAIL": "E-mail",
+          "URL": "Site",
+          "CANCEL": "Cancelar",
+          "SUBMIT": "Compartilhar contato"
+        },
+        "PIX_MODAL": {
+          "TITLE": "Enviar PIX",
+          "DESCRIPTION": "Localize um contato profissional e envie o botão PIX dele pela UAZAPI.",
+          "SEARCH_LABEL": "Localizar profissional",
+          "SEARCH_PLACEHOLDER": "Pesquise por nome ou telefone",
+          "SEARCHING": "Buscando profissionais...",
+          "NO_RESULTS": "Nenhum contato profissional encontrado para esta busca.",
+          "NO_CONTACT_INFO": "Sem telefone ou e-mail disponível",
+          "USE_PROFESSIONAL": "Usar profissional",
+          "SELECTED_PROFESSIONAL": "Profissional selecionado",
+          "PIX_TYPE": "Tipo de PIX",
+          "PIX_NAME": "Nome do recebedor",
+          "PIX_KEY": "Chave PIX",
+          "MISSING_PIX_DATA": "Este profissional ainda não possui uma configuração PIX completa. Preencha pix_type e pix_key nos atributos customizados do contato.",
+          "CANCEL": "Cancelar",
+          "SUBMIT": "Enviar PIX"
         }
       },
       "QUOTED_REPLY": {
@@ -291,6 +350,7 @@
       "DELETE": "Excluir",
       "CREATE_A_CANNED_RESPONSE": "Adicionar às respostas prontas",
       "TRANSLATE": "Traduzir",
+      "FORWARD": "Encaminhar mensagem",
       "COPY_PERMALINK": "Copiar link para a mensagem",
       "LINK_COPIED": "URL da mensagem copiada para a área de transferência",
       "DELETE_CONFIRMATION": {
@@ -313,6 +373,23 @@
     "SIDEBAR": {
       "CONTACT": "Contatos",
       "COPILOT": "Copiloto"
+    },
+    "REACTIONS": {
+      "ADD_REACTION": "Adicionar reação",
+      "MORE_EMOJIS": "Mais emojis",
+      "FAILED": "Não foi possível atualizar a reação. Tente novamente.",
+      "YOU": "Você",
+      "CLICK_TO_REMOVE": "Clique para remover",
+      "QUICK": {
+        "THUMBS_UP": "Joinha",
+        "HEART": "Coração",
+        "JOY": "Risada",
+        "SURPRISED": "Surpresa",
+        "SAD": "Triste",
+        "PRAY": "Oração",
+        "FIRE": "Fogo",
+        "PARTY": "Festa"
+      }
     },
     "VOICE_WIDGET": {
       "INCOMING_CALL": "Chamada recebida",
@@ -397,7 +474,19 @@
       "PREVIOUS_CONVERSATION": "Conversas anteriores",
       "MACROS": "Macros",
       "LINEAR_ISSUES": "Problemas do Linear vinculados",
-      "SHOPIFY_ORDERS": "Pedidos do Shopify"
+      "SHOPIFY_ORDERS": "Pedidos do Shopify",
+      "SHARED_FILES": "Anexos"
+    },
+    "SHARED_FILES": {
+      "EMPTY": "Nenhum anexo ainda",
+      "DOWNLOAD": "Baixar arquivo",
+      "DOWNLOAD_ERROR": "Não foi possível baixar o arquivo. Por favor, tente novamente.",
+      "MEDIA_HEADING": "Mídia",
+      "FILES_HEADING": "Arquivos",
+      "VIEW_ALL": "Visualizar tudo",
+      "SHOW_LESS": "Mostrar menos",
+      "MORE_COUNT": "+{count}",
+      "UNTITLED_FILE": "Arquivo sem nome"
     },
     "SHOPIFY": {
       "ORDER_ID": "Pedido #{id}",
@@ -650,5 +739,25 @@
   },
   "GALLERY_VIEW": {
     "ERROR_DOWNLOADING": "Não foi possível baixar o anexo. Por favor, tente novamente"
+  },
+  "FORWARD_MESSAGE": {
+    "TITLE": "Encaminhar mensagem",
+    "DESCRIPTION": "Selecione os contatos para encaminhar esta mensagem",
+    "SEARCH_PLACEHOLDER": "Buscar contatos por nome, email ou telefone...",
+    "NO_CONTACTS": "Nenhum contato encontrado",
+    "NO_CONTACTS_FOUND": "Nenhum contato encontrado para esta busca",
+    "SEARCHING": "Buscando contatos...",
+    "NO_SELECTION": "Nenhum contato selecionado",
+    "UNKNOWN_CONTACT": "Contato desconhecido",
+    "SELECTED_COUNT": "{count} selecionado(s)",
+    "INCLUDE_ATTACHMENTS": "Incluir anexos",
+    "FORWARD": "Encaminhar",
+    "CANCEL": "Cancelar",
+    "SUCCESS": "Mensagem encaminhada para {count} contato(s)",
+    "ERROR": "Falha ao encaminhar mensagem",
+    "PARTIAL_ERROR": "Falha ao encaminhar para {count} contato(s)",
+    "NO_MESSAGES": "Nenhuma mensagem para encaminhar",
+    "LOADING_CONTACTS": "Carregando contatos...",
+    "SELECT_AT_LEAST_ONE": "Selecione pelo menos um contato"
   }
 }

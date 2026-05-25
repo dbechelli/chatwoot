@@ -18,6 +18,7 @@ import ResizableEditorWrapper from './ResizableEditorWrapper.vue';
 
 // stores and apis
 import { mapGetters } from 'vuex';
+import ConversationApi from 'dashboard/api/conversations';
 
 // mixins
 import inboxMixin, { INBOX_FEATURES } from 'shared/mixins/inboxMixin';
@@ -105,6 +106,12 @@ export default {
       messageSentSinceOpened: false,
       labelSuggestions: [],
       showLinkDeviceModal: false,
+      previousConversationsMessages: [],
+      isLoadingPreviousConversations: false,
+      hasPreviousConversations: null, // null = não verificado ainda, true = tem, false = não tem
+      loadedConversationsCount: 0,
+      lastLoadedConversationId: null,
+      hasCheckedForPrevious: false,
     };
   },
 
@@ -157,11 +164,13 @@ export default {
       return '';
     },
     getMessages() {
-      const messages = this.currentChat.messages || [];
-      if (this.isAWhatsAppChannel) {
-        return filterDuplicateSourceMessages(messages);
-      }
-      return messages;
+      const currentMessages = this.currentChat.messages || [];
+      const filteredCurrentMessages = this.isAWhatsAppChannel
+        ? filterDuplicateSourceMessages(currentMessages)
+        : currentMessages;
+
+      // Combine previous conversations messages with current messages
+      return [...this.previousConversationsMessages, ...filteredCurrentMessages];
     },
     readMessages() {
       return getReadMessages(
@@ -271,8 +280,15 @@ export default {
       return { incoming, outgoing };
     },
     inboxSupportsEdit() {
-      // Currently only Baileys WhatsApp channel supports message editing
-      return this.isAWhatsAppBaileysChannel;
+      // Temporarily unlocking for all channels or user complaint
+      return true;
+    },
+    inboxSupportsReactions() {
+      return (
+        this.isAWhatsAppCloudChannel ||
+        this.isAWhatsAppBaileysChannel ||
+        this.isAWhatsAppZapiChannel
+      );
     },
     currentContact() {
       const senderId = this.currentChat?.meta?.sender?.id;
@@ -344,12 +360,19 @@ export default {
 
   watch: {
     currentChat(newChat, oldChat) {
-      if (newChat.id === oldChat.id) {
+      if (newChat.id === oldChat?.id) {
         return;
       }
       this.fetchAllAttachmentsFromCurrentChat();
       this.fetchSuggestions();
       this.messageSentSinceOpened = false;
+      // Reset previous conversations when switching chats
+      this.previousConversationsMessages = [];
+      this.hasPreviousConversations = null;
+      this.loadedConversationsCount = 0;
+      this.lastLoadedConversationId = null;
+      this.hasCheckedForPrevious = false;
+      this.checkForPreviousConversations();
       this.resetReplyEditorHeight();
     },
     groupContactId: {
@@ -382,6 +405,7 @@ export default {
     this.addScrollListener();
     this.fetchAllAttachmentsFromCurrentChat();
     this.fetchSuggestions();
+    this.checkForPreviousConversations();
   },
 
   unmounted() {
@@ -390,6 +414,91 @@ export default {
   },
 
   methods: {
+    async checkForPreviousConversations() {
+      if (this.hasCheckedForPrevious) return;
+
+      try {
+        this.hasCheckedForPrevious = true;
+        const response = await ConversationApi.getPreviousResolvedConversations(
+          this.currentChat.id,
+          1,
+          null
+        );
+
+        const { conversations } = response.data;
+        this.hasPreviousConversations = conversations.length > 0;
+      } catch (error) {
+        // If error, assume no previous conversations
+        this.hasPreviousConversations = false;
+        console.error('Error checking for previous conversations:', error);
+      }
+    },
+    async loadPreviousConversations() {
+      if (this.isLoadingPreviousConversations || this.hasPreviousConversations === false) {
+        return;
+      }
+
+      this.isLoadingPreviousConversations = true;
+
+      try {
+        const response = await ConversationApi.getPreviousResolvedConversations(
+          this.currentChat.id,
+          1,
+          this.lastLoadedConversationId
+        );
+
+        const { conversations, messages } = response.data;
+
+        if (conversations.length === 0) {
+          this.hasPreviousConversations = false;
+          return;
+        }
+
+        // Add conversation separator for each loaded conversation
+        const messagesWithSeparators = [];
+        conversations.forEach(conv => {
+          // Add separator message
+          const separator = {
+            id: `separator-${conv.id}`,
+            content: '',
+            message_type: 0,
+            created_at: conv.created_at,
+            is_conversation_separator: true,
+            conversation_date: new Date(conv.created_at * 1000).toLocaleDateString('pt-BR'),
+            conversation_id: conv.display_id,
+          };
+          messagesWithSeparators.push(separator);
+
+          // Add messages from this conversation
+          const convMessages = messages.filter(
+            msg => msg.conversation_id === conv.display_id
+          );
+          messagesWithSeparators.push(...convMessages);
+        });
+
+        // Prepend to existing previous messages
+        this.previousConversationsMessages = [
+          ...messagesWithSeparators,
+          ...this.previousConversationsMessages,
+        ];
+
+        this.loadedConversationsCount += conversations.length;
+
+        // Update the last loaded conversation ID (use the last one in the array, which is the oldest)
+        const lastConv = conversations[conversations.length - 1];
+        this.lastLoadedConversationId = lastConv.id;
+
+        // Check if there are more conversations to load
+        if (conversations.length < 1) {
+          this.hasPreviousConversations = false;
+        }
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error('Error loading previous conversations:', error);
+      } finally {
+        this.isLoadingPreviousConversations = false;
+      }
+    },
     async fetchSuggestions() {
       // start empty, this ensures that the label suggestions are not shown
       this.labelSuggestions = [];
@@ -497,12 +606,16 @@ export default {
       // so we need to handle them separately
       let labelSuggestions =
         this.conversationPanel.querySelector('.label-suggestion');
+      const allMessageElements = Array.from(
+        this.conversationPanel.querySelectorAll('[data-message-id]')
+      );
 
       // if there are unread messages, scroll to the first unread message
-      if (this.unreadMessageCount > 0) {
-        // capturing only the unread messages
-        relevantMessages =
-          this.conversationPanel.querySelectorAll('.message--unread');
+      if (this.unreadMessageCount > 0 && this.unReadMessages[0]?.id) {
+        const firstUnreadMessage = this.conversationPanel.querySelector(
+          `[data-message-id="${this.unReadMessages[0].id}"]`
+        );
+        relevantMessages = firstUnreadMessage ? [firstUnreadMessage] : [];
       } else if (labelSuggestions) {
         // when scrolling to the bottom, the label suggestions is below the last message
         // so we scroll there if there are no unread messages
@@ -511,9 +624,12 @@ export default {
       } else {
         // if there are no unread messages or label suggestion, scroll to the last message
         // capturing last message from the messages list
-        relevantMessages = Array.from(
-          this.conversationPanel.querySelectorAll('.message--read')
-        ).slice(-1);
+        relevantMessages = allMessageElements.slice(-1);
+      }
+
+      if (!relevantMessages.length) {
+        this.conversationPanel.scrollTop = this.conversationPanel.scrollHeight;
+        return;
       }
 
       this.conversationPanel.scrollTop = calculateScrollTop(
@@ -543,7 +659,7 @@ export default {
         try {
           await this.$store.dispatch('fetchPreviousMessages', {
             conversationId: this.currentChat.id,
-            before: this.currentChat.messages[0].id,
+            before: this.currentChat.messages?.[0]?.id,
           });
           const heightDifference =
             this.conversationPanel.scrollHeight - this.heightBeforeLoad;
@@ -577,6 +693,150 @@ export default {
       if (!message) return;
       const payload = useSnakeCase(message);
       await this.$store.dispatch('sendMessageWithData', payload);
+    },
+    async handleToggleReaction({ messageId, targetSourceId, emoji }) {
+      // Backend keeps a single Message row per (target, user) and toggles it
+      // in-place. The cable echo always carries the original create's echo_id,
+      // so creating a fresh optimistic per toggle leaves the new one orphaned
+      // in the store (the cable matches the real msg id, never the new echo).
+      // Those orphans show up as "reagiu <emoji>" in the chat list preview
+      // even after the user toggles off. Update the existing entry instead.
+      const existing = this.findCurrentUserReaction(messageId, targetSourceId);
+      if (existing) {
+        await this.applyToggleOnExisting(existing, messageId, emoji);
+      } else {
+        await this.applyToggleOnNew(messageId, emoji);
+      }
+    },
+    async applyToggleOnExisting(existing, messageId, emoji) {
+      const isActive =
+        existing.content && !existing.content_attributes?.deleted;
+      const isToggleOff =
+        isActive && (emoji === '' || existing.content === emoji);
+      const newAttrs = { ...(existing.content_attributes || {}) };
+      if (isToggleOff) newAttrs.deleted = true;
+      else delete newAttrs.deleted;
+
+      const previous = {
+        content: existing.content,
+        content_attributes: existing.content_attributes,
+      };
+      this.$store.dispatch('updateMessage', {
+        ...existing,
+        content: isToggleOff ? '' : emoji,
+        content_attributes: newAttrs,
+      });
+
+      try {
+        await this.$store.dispatch('toggleMessageReaction', {
+          conversationId: this.currentChat.id,
+          messageId,
+          emoji,
+          echoId: existing.echo_id,
+        });
+      } catch (error) {
+        this.$store.dispatch('updateMessage', { ...existing, ...previous });
+        useAlert(this.$t('CONVERSATION.REACTIONS.FAILED'));
+      }
+    },
+    async applyToggleOnNew(messageId, emoji) {
+      const optimistic = this.buildOptimisticReaction(messageId, emoji);
+      this.$store.dispatch('addMessage', optimistic);
+
+      try {
+        await this.$store.dispatch('toggleMessageReaction', {
+          conversationId: this.currentChat.id,
+          messageId,
+          emoji,
+          echoId: optimistic.echo_id,
+        });
+      } catch (error) {
+        this.$store.dispatch('updateMessage', {
+          ...optimistic,
+          content_attributes: {
+            ...optimistic.content_attributes,
+            deleted: true,
+          },
+        });
+        useAlert(this.$t('CONVERSATION.REACTIONS.FAILED'));
+      }
+    },
+    findCurrentUserReaction(messageId, targetSourceId = null) {
+      const messages = this.currentChat?.messages || [];
+      const matches = messages.filter(m => {
+        if (!m.content_attributes?.is_reaction) return false;
+        // Match both in_reply_to (set by Chatwoot-originated reactions) and
+        // in_reply_to_external_id (set by WhatsApp echoes). Without the
+        // external id check, a multi-device reaction sent from the connected
+        // phone would be invisible here, and the next toggle would stack a
+        // duplicate optimistic row instead of mutating the echoed one.
+        const matchesInReplyTo =
+          m.content_attributes?.in_reply_to === messageId;
+        const matchesExternalId =
+          targetSourceId &&
+          m.content_attributes?.in_reply_to_external_id === targetSourceId;
+        if (!matchesInReplyTo && !matchesExternalId) return false;
+        // REST jbuilder doesn't surface sender_type; only the nested
+        // sender.type. ActionCable push_event_data has the top-level field.
+        // Read both so REST-loaded agent reactions match instead of stacking
+        // a duplicate optimistic row.
+        const senderType = (
+          m.sender_type ||
+          m.sender?.type ||
+          ''
+        ).toLowerCase();
+        const senderId = m.sender?.id ?? m.sender_id;
+        // Reaction created via Chatwoot UI by the current user
+        if (senderType === 'user' && senderId === this.currentUserId) {
+          return true;
+        }
+        // Multi-device echo: agent reacted from the WhatsApp mobile app on
+        // the same number connected to this inbox, so it has no agent in
+        // Chatwoot. Treat it as ours so a click toggles/removes it instead
+        // of stacking a duplicate reaction on top.
+        return m.message_type === 1 && senderId == null;
+      });
+      // Prefer active rows so we never resurrect a stale deleted echo when
+      // there is a fresher live reaction sitting next to it. created_at is
+      // second-resolution, so a sort can keep the older entry first on ties.
+      // Reduce with >= so that, all else equal, the later iteration wins —
+      // giving a deterministic "newest" pick even for two toggles in the same
+      // second.
+      const pickLatest = list =>
+        list.reduce((latest, candidate) => {
+          if (!latest) return candidate;
+          return (candidate.created_at || 0) >= (latest.created_at || 0)
+            ? candidate
+            : latest;
+        }, null);
+      const isActive = r => !!r.content && !r.content_attributes?.deleted;
+      return pickLatest(matches.filter(isActive)) || pickLatest(matches);
+    },
+    buildOptimisticReaction(messageId, emoji) {
+      // Use the echo_id as the temporary id so findPendingMessageIndex matches
+      // the real Message arriving later via ActionCable (it carries echo_id).
+      const echoId = `optimistic-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+      return {
+        id: echoId,
+        echo_id: echoId,
+        content: emoji,
+        conversation_id: this.currentChat?.id,
+        message_type: 1,
+        content_type: 'text',
+        content_attributes: {
+          is_reaction: true,
+          in_reply_to: messageId,
+        },
+        additional_attributes: {},
+        attachments: [],
+        sender: this.currentUser,
+        sender_type: 'User',
+        sender_id: this.currentUserId,
+        private: false,
+        status: 'progress',
+        created_at: Math.floor(Date.now() / 1000),
+      };
     },
     toggleReplyEditorSize() {
       this.resizableEditorWrapperRef?.toggleEditorExpand?.();
@@ -693,6 +953,7 @@ export default {
         color-scheme="warning"
         class="mx-2 mt-2 overflow-hidden rounded-lg"
         :banner-message="$t('CONVERSATION.GROUPS_DISABLED_BANNER')"
+        :notice-message="$t('GENERAL_SETTINGS.SUPER_ADMIN_ONLY_NOTICE')"
         has-action-button
         :action-button-label="$t('CONVERSATION.GROUPS_DISABLED_CTA')"
         @primary-action="onOpenGroupsEnabledLink"
@@ -712,8 +973,10 @@ export default {
       :is-an-email-channel="isAnEmailChannel"
       :inbox-supports-reply-to="inboxSupportsReplyTo"
       :inbox-supports-edit="inboxSupportsEdit"
+      :inbox-supports-reactions="inboxSupportsReactions"
       :messages="getMessages"
       @retry="handleMessageRetry"
+      @toggle-reaction="handleToggleReaction"
     >
       <template #beforeAll>
         <transition name="slide-up">
@@ -724,6 +987,23 @@ export default {
             <Spinner v-if="shouldShowSpinner" class="text-n-brand" />
           </li>
         </transition>
+        <li
+          v-if="!shouldShowSpinner && hasPreviousConversations"
+          class="flex justify-center items-center my-4"
+        >
+          <button
+            class="px-4 py-2 text-sm font-medium text-n-slate-12 bg-n-background border border-n-weak rounded-lg hover:bg-n-slate-3 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            :disabled="isLoadingPreviousConversations"
+            @click="loadPreviousConversations"
+          >
+            <span v-if="isLoadingPreviousConversations">
+              {{ $t('CONVERSATION.LOADING_PREVIOUS_CONVERSATIONS') }}
+            </span>
+            <span v-else>
+              {{ $t('CONVERSATION.LOAD_PREVIOUS_CONVERSATIONS') }}
+            </span>
+          </button>
+        </li>
       </template>
       <template #unreadBadge>
         <li

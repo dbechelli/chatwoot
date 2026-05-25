@@ -199,42 +199,22 @@ describe Whatsapp::IncomingMessageBaileysService do
       end
 
       context 'when updating contact avatar' do
-        it 'enqueues avatar job when profile picture is available' do
-          stub_profile_pic_fetch('https://example.com/avatar.jpg')
-
+        it 'enqueues the contact avatar update job for new contacts' do
           described_class.new(inbox: inbox, params: params).perform
 
           conversation = inbox.conversations.last
           contact = conversation.contact
 
-          expect(Avatar::AvatarFromUrlJob).to have_been_enqueued.with(contact, 'https://example.com/avatar.jpg')
+          expect(Channels::Whatsapp::BaileysUpdateContactAvatarJob).to have_been_enqueued.with(contact, inbox, '5511912345678')
         end
 
-        it 'does not enqueue avatar job when contact already has avatar attached' do
-          stub_profile_pic_fetch('https://example.com/avatar.jpg')
+        it 'does not enqueue the contact avatar update job when contact already has avatar attached' do
           contact = create(:contact, account: inbox.account, name: 'John Doe', phone_number: '+5511912345678')
           contact.avatar.attach(io: Rails.root.join('spec/assets/avatar.png').open, filename: 'avatar.png', content_type: 'image/png')
 
           described_class.new(inbox: inbox, params: params).perform
 
-          expect(Avatar::AvatarFromUrlJob).not_to have_been_enqueued
-        end
-
-        it 'does not enqueue avatar job when profile picture is not available' do
-          described_class.new(inbox: inbox, params: params).perform
-
-          expect(Avatar::AvatarFromUrlJob).not_to have_been_enqueued
-        end
-
-        it 'logs error and does not enqueue avatar job when profile picture request fails' do
-          allow(Rails.logger).to receive(:error)
-          stub_request(:get, /profile-picture-url/)
-            .to_raise(StandardError.new('Profile picture request failed'))
-
-          described_class.new(inbox: inbox, params: params).perform
-
-          expect(Avatar::AvatarFromUrlJob).not_to have_been_enqueued
-          expect(Rails.logger).to have_received(:error).with('Failed to fetch profile picture for 5511912345678: Profile picture request failed')
+          expect(Channels::Whatsapp::BaileysUpdateContactAvatarJob).not_to have_been_enqueued
         end
       end
 
@@ -587,6 +567,79 @@ describe Whatsapp::IncomingMessageBaileysService do
           described_class.new(inbox: inbox, params: params).perform
 
           expect(message.conversation.messages.count).to eq(1)
+        end
+
+        it 'marks an existing incoming reaction as removed when webhook arrives with empty text' do
+          existing_reaction = create(:message,
+                                     conversation: message.conversation,
+                                     sender: message.conversation.contact_inbox.contact,
+                                     message_type: :incoming,
+                                     content: '👍',
+                                     content_attributes: { is_reaction: true, in_reply_to_external_id: message.source_id })
+          raw_message[:key][:id] = 'reaction_removal_456'
+          raw_message[:message] = {
+            reactionMessage: {
+              key: { remoteJid: '12345678@lid', fromMe: true, id: 'msg_123' },
+              text: ''
+            }
+          }
+
+          expect do
+            described_class.new(inbox: inbox, params: params).perform
+          end.not_to(change { message.conversation.messages.count })
+
+          existing_reaction.reload
+          expect(existing_reaction.content).to eq('')
+          expect(existing_reaction.content_attributes['deleted']).to be true
+        end
+
+        it 'dispatches conversation.updated after marking a reaction as removed' do
+          create(:message,
+                 conversation: message.conversation,
+                 sender: message.conversation.contact_inbox.contact,
+                 message_type: :incoming,
+                 content: '👍',
+                 content_attributes: { is_reaction: true, in_reply_to_external_id: message.source_id })
+          dispatched = []
+          allow_any_instance_of(Conversation).to receive(:dispatch_conversation_updated_event) do |conv| # rubocop:disable RSpec/AnyInstance
+            dispatched << conv.id
+          end
+          raw_message[:key][:id] = 'reaction_removal_789'
+          raw_message[:message] = {
+            reactionMessage: {
+              key: { remoteJid: '12345678@lid', fromMe: true, id: 'msg_123' },
+              text: ''
+            }
+          }
+
+          described_class.new(inbox: inbox, params: params).perform
+
+          expect(dispatched).to include(message.conversation.id)
+        end
+
+        it 'skips reaction removal for outgoing echoes so the local controller update is not clobbered' do
+          # Mirror the post-controller state: the Chatwoot reactions controller
+          # already toggled the senderless outgoing row to deleted, so the
+          # echoed fromMe webhook should hit the active-only filter and no-op.
+          existing_reaction = create(:message,
+                                     conversation: message.conversation,
+                                     sender: nil,
+                                     message_type: :outgoing,
+                                     content: '',
+                                     content_attributes: { is_reaction: true, in_reply_to_external_id: message.source_id, deleted: true })
+          raw_message[:key][:id] = 'outgoing_echo_removal'
+          raw_message[:key][:fromMe] = true
+          raw_message[:message] = {
+            reactionMessage: {
+              key: { remoteJid: '12345678@lid', fromMe: true, id: 'msg_123' },
+              text: ''
+            }
+          }
+          described_class.new(inbox: inbox, params: params).perform
+
+          existing_reaction.reload
+          expect(existing_reaction.content).to eq('')
+          expect(existing_reaction.content_attributes['deleted']).to be(true)
         end
       end
 
@@ -1030,6 +1083,35 @@ describe Whatsapp::IncomingMessageBaileysService do
           end.not_to raise_error
 
           expect(Rails.logger).to have_received(:warn)
+        end
+
+        it 'marks the message as failed and stores the stub description with code' do
+          update_payload[:update][:status] = 0
+          update_payload[:update][:messageStubParameters] = ['463', 'Your account has been restricted']
+
+          described_class.new(inbox: inbox, params: params).perform
+
+          expect(message.reload.status).to eq('failed')
+          expect(message.external_error).to eq('Your account has been restricted (463)')
+        end
+
+        it 'falls back to a generic message when only the error code is present on failure' do
+          update_payload[:update][:status] = 0
+          update_payload[:update][:messageStubParameters] = ['429']
+
+          described_class.new(inbox: inbox, params: params).perform
+
+          expect(message.reload.status).to eq('failed')
+          expect(message.external_error).to eq('WhatsApp error 429')
+        end
+
+        it 'leaves external_error blank on failure when stub parameters are absent' do
+          update_payload[:update][:status] = 0
+
+          described_class.new(inbox: inbox, params: params).perform
+
+          expect(message.reload.status).to eq('failed')
+          expect(message.external_error).to be_blank
         end
       end
 

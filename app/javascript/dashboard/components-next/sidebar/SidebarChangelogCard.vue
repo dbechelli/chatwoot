@@ -4,10 +4,6 @@ import GroupedStackedChangelogCard from 'dashboard/components-next/changelog-car
 import { useUISettings } from 'dashboard/composables/useUISettings';
 import changelogAPI from 'dashboard/api/changelog';
 
-defineOptions({
-  inheritAttrs: false,
-});
-
 const MAX_DISMISSED_SLUGS = 5;
 
 const { uiSettings, updateUISettings } = useUISettings();
@@ -94,11 +90,6 @@ const handleImgClick = ({ index }) => {
   handleReadMore();
 };
 
-defineExpose({
-  isLoading,
-  unDismissedPosts,
-});
-
 onMounted(() => {
   fetchChangelog();
 });
@@ -107,7 +98,6 @@ onMounted(() => {
 <template>
   <GroupedStackedChangelogCard
     v-if="unDismissedPosts.length > 0"
-    v-bind="$attrs"
     :posts="unDismissedPosts"
     :current-index="currentIndex"
     :dismissing-slugs="dismissingCards"

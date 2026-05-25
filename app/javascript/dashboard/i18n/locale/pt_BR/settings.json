@@ -66,13 +66,6 @@
         "BTN_TEXT": "Salvar assinatura da mensagem",
         "API_ERROR": "Não foi possível salvar a assinatura! Tente novamente",
         "API_SUCCESS": "Assinatura salva com sucesso",
-        "RESET_TO_DEFAULT": "Restaurar para padrão",
-        "RESET_SUCCESS": "Assinatura da caixa de entrada removida, usando assinatura padrão",
-        "INBOX_SELECTOR": {
-          "LABEL": "Caixa de entrada",
-          "DEFAULT": "Padrão (todas as caixas de entrada)",
-          "CUSTOM": "Personalizada"
-        },
         "IMAGE_UPLOAD_ERROR": "Não foi possível fazer o upload da imagem! Tente novamente",
         "IMAGE_UPLOAD_SUCCESS": "Imagem adicionada com sucesso. Por favor clique em salvar para salvar a assinatura",
         "IMAGE_UPLOAD_SIZE_ERROR": "O tamanho da imagem deve ser menor que {size}MB",
@@ -110,7 +103,7 @@
       },
       "SECURITY_SECTION": {
         "TITLE": "Segurança",
-        "NOTE": "Gerencie recursos adicionais de segurança para sua conta.",
+        "NOTE": "Manage additional security features for your account.",
         "MFA_BUTTON": "Gerenciar autenticação de dois fatores "
       },
       "ACCESS_TOKEN": {
@@ -160,7 +153,7 @@
           "CONDITION_TWO": "Enviar alertas a cada 30 segundos até que todas as conversas atribuídas sejam lidas"
         },
         "SOUND_PERMISSION_ERROR": "A reprodução automática está desativada no seu navegador. Para ouvir alertas automaticamente, habilite a permissão de som nas configurações do seu navegador ou interaja com a página.",
-        "READ_MORE": "Ler mais"
+        "READ_MORE": "Saiba mais"
       },
       "EMAIL_NOTIFICATIONS_SECTION": {
         "TITLE": "Notificações por e-mail",
@@ -177,7 +170,7 @@
       "NOTIFICATIONS": {
         "TITLE": "Preferências de notificação",
         "TYPE_TITLE": "Tipo de notificação",
-        "EMAIL": "E-mail",
+        "EMAIL": "e-mail",
         "PUSH": "Notificação ",
         "TYPES": {
           "CONVERSATION_CREATED": "Uma nova conversa foi criada",
@@ -282,9 +275,9 @@
       "MESSAGE": "Sua conta está suspensa. Entre em contato com a equipe de suporte para obter mais informações."
     },
     "NO_ACCOUNTS": {
-      "TITLE": "Nenhuma conta encontrada",
-      "MESSAGE_CLOUD": "Você não faz parte de nenhuma conta no momento. Se acreditar que isso é um engano, entre em contato com nossa equipe de suporte.",
-      "MESSAGE_SELF_HOSTED": "Você não faz parte de nenhuma conta no momento. Entre em contato com o seu administrador.",
+      "TITLE": "No account found",
+      "MESSAGE_CLOUD": "You are not part of any accounts right now. If you think this is a mistake, please reach out to our support team.",
+      "MESSAGE_SELF_HOSTED": "You are not part of any accounts right now. Please reach out to your administrator.",
       "LOGOUT": "Encerrar sessão"
     }
   },
@@ -301,8 +294,7 @@
     "FILE_BUBBLE": {
       "DOWNLOAD": "Baixar",
       "UPLOADING": "Enviando...",
-      "INSTAGRAM_STORY_UNAVAILABLE": "Este story não está mais disponível.",
-      "INSTAGRAM_STORY_REPLY": "Respondido ao seu story:"
+      "INSTAGRAM_STORY_UNAVAILABLE": "Este story não está mais disponível."
     },
     "LOCATION_BUBBLE": {
       "SEE_ON_MAP": "Ver Localização"
@@ -328,6 +320,7 @@
     "SWITCH": "Trocar",
     "INBOX_VIEW": "Caixa de entrada",
     "CONVERSATIONS": "Conversas",
+    "KANBAN": "Kanban",
     "INBOX": "Caixa de Entrada",
     "ALL_CONVERSATIONS": "Todas as conversas",
     "MENTIONED_CONVERSATIONS": "Menções",
@@ -380,6 +373,11 @@
     "LIVE_CHAT": "Chat ao vivo",
     "SMS": "SMS",
     "WHATSAPP": "WhatsApp",
+    "WHATSAPP_GROUPS": "Grupos",
+    "WHATSAPP_GROUPS_SYNC": "Sincronizar grupos",
+    "WHATSAPP_GROUPS_SYNC_SUCCESS": "Grupos sincronizados com sucesso!",
+    "WHATSAPP_GROUPS_SYNC_FAILURE": "Falha ao sincronizar grupos.",
+    "WHATSAPP_GROUPS_SYNC_EMPTY": "Nenhuma caixa de entrada do WhatsApp encontrada.",
     "CAMPAIGNS": "Campanhas",
     "ONGOING": "Em andamento",
     "ONE_OFF": "Única",
@@ -389,7 +387,7 @@
     "REPORTS_LABEL": "Etiquetas",
     "REPORTS_INBOX": "Caixa de Entrada",
     "REPORTS_TEAM": "Time",
-    "AGENT_ASSIGNMENT": "Atribuição de Agentes",
+    "AGENT_ASSIGNMENT": "Agent Assignment",
     "SET_AVAILABILITY_TITLE": "Defina como",
     "SET_YOUR_AVAILABILITY": "Disponibilidade",
     "SLA": "SLA",
@@ -412,55 +410,151 @@
     },
     "DOCS": "Ler documentos",
     "SECURITY": "Segurança",
-    "CAPTAIN_AI": "Capitão",
-    "CONVERSATION_WORKFLOW": "Fluxo de Conversa"
-  },
-  "CAPTAIN_SETTINGS": {
-    "TITLE": "Configurações do Capitão",
-    "DESCRIPTION": "Configure seus modelos e recursos de IA para o Capitão. O Capitão utiliza um modelo de cobrança baseado em créditos; você será cobrado em créditos por cada ação que o Capitão realizar, dependendo do modelo selecionado.",
-    "LOADING": "Carregando configurações do Capitão...",
-    "LINK_TEXT": "Saiba mais sobre os Créditos do Capitão",
-    "NOT_ENABLED": "O Capitão não está habilitado para a sua conta. Atualize seu plano para acessar os recursos do Capitão.",
-    "MODEL_CONFIG": {
-      "TITLE": "Configuração do Modelo",
-      "DESCRIPTION": "Selecione modelos de IA para diferentes recursos.",
-      "SELECT_MODEL": "Selecionar modelo",
-      "CREDITS_PER_MESSAGE": "{credits} crédito/mensagem",
-      "COMING_SOON": "Em breve",
-      "EDITOR": {
-        "TITLE": "Recursos do Editor",
-        "DESCRIPTION": "Potencializa a escrita inteligente, correções gramaticais, ajustes de tom e aprimoramento de conteúdo no editor de mensagens."
-      },
-      "ASSISTANT": {
-        "TITLE": "Assistente",
-        "DESCRIPTION": "Gerencia respostas automatizadas, resumos de conversas e sugestões inteligentes de resposta para interações com clientes."
-      },
-      "COPILOT": {
-        "TITLE": "Copiloto",
-        "DESCRIPTION": "Fornece sugestões contextuais em tempo real, recomendações da base de conhecimento e insights proativos durante as conversas."
+    "KANBAN_SETTINGS": {
+      "TITLE": "Configurações do Kanban",
+      "DESCRIPTION": "Gerencie seus quadros Kanban e fluxos de trabalho",
+      "BOARDS_TITLE": "Quadros Kanban",
+      "BOARDS_DESCRIPTION": "Crie e gerencie quadros visuais para acompanhar suas conversas e negociações",
+      "NEW_BOARD": "Novo Quadro",
+      "EDIT_BOARD": "Editar Quadro",
+      "CREATE_BOARD": "Criar Quadro",
+      "CREATE": "Criar",
+      "CREATE_FIRST_BOARD": "Criar meu primeiro quadro",
+      "BOARD_CREATED": "Quadro criado com sucesso",
+      "BOARD_UPDATED": "Quadro atualizado com sucesso",
+      "DUPLICATE_SUCCESS": "Quadro duplicado com sucesso",
+      "DUPLICATE_ERROR": "Erro ao duplicar quadro",
+      "DEFAULT": "Padrão",
+      "NO_BOARDS": "Nenhum quadro ainda",
+      "NO_BOARDS_DESCRIPTION": "Comece criando seu primeiro quadro Kanban",
+      "EDIT": "Editar",
+      "DUPLICATE": "Duplicar",
+      "DELETE": "Excluir",
+      "BOARD_EDITOR_DESCRIPTION": "Configure as opções do quadro e seus estágios",
+      "BASIC_CONFIG": "Configuração Básica",
+      "BOARD_NAME": "Nome do Quadro",
+      "BOARD_NAME_PLACEHOLDER": "Nome do Quadro (ex: Vendas)",
+      "REQUIRED": "*",
+      "CUSTOM_ATTRIBUTE_KEY": "Chave do Atributo Personalizado",
+      "CUSTOM_ATTRIBUTE_PLACEHOLDER": "sales_stage",
+      "CUSTOM_ATTRIBUTE_HELP": "Nome do atributo que armazenará o estágio (ex: sales_stage)",
+      "BOARD_DESCRIPTION": "Descrição",
+      "BOARD_DESCRIPTION_PLACEHOLDER": "Descreva o objetivo deste quadro",
+      "VALUE_ATTRIBUTE_KEY": "Chave do Valor",
+      "VALUE_ATTRIBUTE_PLACEHOLDER": "deal_value",
+      "VALUE_ATTRIBUTE_HELP": "Nome do atributo que armazenará o valor (ex: deal_value)",
+      "VISIBLE_ATTRIBUTES": "Atributos Visíveis",
+      "VISIBLE_ATTRIBUTES_HELP": "Escolha quais atributos da conversa aparecem nos cartões",
+      "ENABLE_VALUE": "Habilitar controle de valor",
+      "ENABLE_VALUE_HELP": "Acompanhe valores monetários das negociações neste quadro",
+      "ADVANCED_CONFIG": "Configurações Avançadas",
+      "WEBHOOK_AUTOMATION": "Automação (Webhook)",
+      "WEBHOOK_URL": "URL do Webhook",
+      "WEBHOOK_PLACEHOLDER": "https://seu-dominio.com/webhook/...",
+      "WEBHOOK_HELP": "Quando um cartão mudar de estágio, enviaremos um POST para esta URL com os dados do item",
+      "AUTO_ASSIGN": "Atribuição Automática",
+      "AUTO_ASSIGN_DESCRIPTION": "Adiciona automaticamente novas conversas das caixas selecionadas a este quadro",
+      "INBOXES": "Caixas de Entrada",
+      "INITIAL_STAGE": "Estágio Inicial",
+      "SELECT_STAGE": "Selecione...",
+      "ROUND_ROBIN": "Distribuição Round-Robin",
+      "ROUND_ROBIN_HELP": "Distribua conversas em rodízio entre os agentes do quadro",
+      "SET_AS_DEFAULT": "Definir como quadro padrão",
+      "STAGES": "Estágios",
+      "ADD_STAGE": "Adicionar Estágio",
+      "NEW_STAGE": "Novo Estágio",
+      "STAGE_NAME": "Nome do Estágio",
+      "STAGE_NAME_PLACEHOLDER": "Ex: Qualificado",
+      "COLOR": "Cor",
+      "WIP_LIMIT": "Limite WIP",
+      "NO_LIMIT": "Sem limite",
+      "NO_STAGES": "Adicione estágios para organizar seu fluxo",
+      "CANCEL": "Cancelar",
+      "SAVE": "Salvar",
+      "AGENTS": "Agentes Permitidos",
+      "AGENTS_HELP": "Selecione os agentes que podem ver este quadro. Se vazio, todos podem ver.",
+      "LOAD_ERROR": "Erro ao carregar configurações",
+      "SAVE_ERROR": "Erro ao salvar configurações",
+      "DELETE_SUCCESS": "Quadro excluído com sucesso",
+      "DELETE_ERROR": "Erro ao excluir quadro",
+      "CONFIRM_DELETE": "Tem certeza que deseja excluir este quadro? Esta ação não pode ser desfeita.",
+      "TEMPLATES_TITLE": "Modelos de Quadros Kanban",
+      "TEMPLATES_DESCRIPTION": "Comece rapidamente com modelos pré-configurados",
+      "USE_TEMPLATE": "Usar este Modelo",
+      "CUSTOMIZE_AFTER_CREATE": "Você poderá personalizar os estágios depois de criar o quadro",
+      "CREATE_BLANK_BOARD": "Criar Quadro em Branco",
+      "TEMPLATES": {
+        "SALES_PIPELINE": {
+          "NAME": "Pipeline de Vendas",
+          "DESCRIPTION": "Gerencie oportunidades do primeiro contato ao fechamento",
+          "STAGES": {
+            "LEAD": "Novo Lead",
+            "CONTACTED": "Contactado",
+            "QUALIFIED": "Qualificado",
+            "PROPOSAL": "Proposta Enviada",
+            "NEGOTIATION": "Negociação",
+            "WON": "Ganho",
+            "LOST": "Perdido"
+          }
+        },
+        "CUSTOMER_SUPPORT": {
+          "NAME": "Suporte ao Cliente",
+          "DESCRIPTION": "Acompanhe tickets do início até a resolução",
+          "STAGES": {
+            "NEW": "Novo Ticket",
+            "IN_PROGRESS": "Em Atendimento",
+            "WAITING_CUSTOMER": "Aguardando Cliente",
+            "RESOLVED": "Resolvido",
+            "CLOSED": "Fechado"
+          }
+        },
+        "RECRUITMENT": {
+          "NAME": "Recrutamento",
+          "DESCRIPTION": "Gerencie candidatos durante o processo seletivo",
+          "STAGES": {
+            "APPLIED": "Inscrito",
+            "SCREENING": "Triagem",
+            "INTERVIEW": "Entrevista",
+            "TECHNICAL": "Teste Técnico",
+            "OFFER": "Proposta",
+            "HIRED": "Contratado",
+            "REJECTED": "Rejeitado"
+          }
+        },
+        "ONBOARDING": {
+          "NAME": "Onboarding de Clientes",
+          "DESCRIPTION": "Guie novos clientes no processo de implantação",
+          "STAGES": {
+            "WELCOME": "Boas-vindas",
+            "DOCUMENTATION": "Documentação",
+            "SETUP": "Configuração",
+            "TRAINING": "Treinamento",
+            "ACTIVE": "Ativo"
+          }
+        },
+        "PROJECT_MANAGEMENT": {
+          "NAME": "Gestão de Projetos",
+          "DESCRIPTION": "Acompanhe tarefas e projetos da equipe",
+          "STAGES": {
+            "BACKLOG": "Backlog",
+            "TODO": "A Fazer",
+            "IN_PROGRESS": "Em Progresso",
+            "REVIEW": "Em Revisão",
+            "DONE": "Concluído"
+          }
+        },
+        "LEAD_QUALIFICATION": {
+          "NAME": "Qualificação de Leads",
+          "DESCRIPTION": "Filtre e qualifique leads antes de enviar para vendas",
+          "STAGES": {
+            "NEW_LEAD": "Novo Lead",
+            "CONTACT_ATTEMPT": "Tentativa de Contato",
+            "QUALIFIED": "Qualificado",
+            "DISQUALIFIED": "Desqualificado",
+            "PASSED_TO_SALES": "Enviado para Vendas"
+          }
+        }
       }
-    },
-    "FEATURES": {
-      "TITLE": "Funcionalidades",
-      "DESCRIPTION": "Ative ou desative recursos com tecnologia de IA.",
-      "AUDIO_TRANSCRIPTION": {
-        "TITLE": "Transcrição de Áudio",
-        "DESCRIPTION": "Converte automaticamente mensagens de voz e gravações de chamadas em transcrições de texto pesquisáveis."
-      },
-      "HELP_CENTER_SEARCH": {
-        "TITLE": "Indexação de Pesquisa da Central de Ajuda",
-        "DESCRIPTION": "Use IA para realizar buscas com reconhecimento de contexto nos artigos da sua central de ajuda."
-      },
-      "LABEL_SUGGESTION": {
-        "TITLE": "Sugestão de Etiquetas",
-        "DESCRIPTION": "Sugere automaticamente rótulos e etiquetas relevantes para as conversas, com base na análise de conteúdo e no contexto.",
-        "MODEL_TITLE": "Modelo de Sugestão de Etiquetas",
-        "MODEL_DESCRIPTION": "Selecione o modelo de IA a ser utilizado para analisar as conversas e sugerir etiquetas apropriadas"
-      }
-    },
-    "API": {
-      "SUCCESS": "Configurações do Capitão atualizadas com sucesso.",
-      "ERROR": "Falha ao atualizar as configurações do Capitão. Por favor, tente novamente."
     }
   },
   "BILLING_SETTINGS": {
@@ -496,9 +590,9 @@
     "TOPUP": {
       "BUY_CREDITS": "Comprar mais créditos",
       "MODAL_TITLE": "Comprar Créditos de IA",
-      "MODAL_DESCRIPTION": "Comprar créditos adicionais para o Capitão IA.",
+      "MODAL_DESCRIPTION": "Comprar créditos adicionais para o Capitão AI.",
       "CREDITS": "CRÉDITOS",
-      "ONE_TIME": "único",
+      "ONE_TIME": "única vez",
       "POPULAR": "Mais populares",
       "NOTE_TITLE": "Nota:",
       "NOTE_DESCRIPTION": "Créditos são adicionados imediatamente e expiram em 6 meses. Uma assinatura ativa é necessária para usar créditos. Créditos adquiridos são consumidos após seus créditos do plano mensal.",
@@ -509,11 +603,11 @@
       "PURCHASE_ERROR": "Falha ao processar a compra. Por favor, tente novamente.",
       "PURCHASE_SUCCESS": "Foram adicionados {credits} créditos com sucesso à sua conta",
       "CONFIRM": {
-        "TITLE": "Confirmar Compra",
+        "TITLE": "Confirmar compra",
         "DESCRIPTION": "Você está prestes a comprar {credits} créditos por {amount}.",
         "INSTANT_DEDUCTION_NOTE": "Seu cartão salvo será cobrado imediatamente após a confirmação.",
         "GO_BACK": "Voltar",
-        "CONFIRM_PURCHASE": "Confirmar Compra"
+        "CONFIRM_PURCHASE": "Confirmar compra"
       }
     }
   },
@@ -524,120 +618,68 @@
     "SAML_DISABLED_MESSAGE": "O SSO via SAML está desativado no momento. Entre em contato com o administrador para habilitar esse recurso.",
     "SAML": {
       "TITLE": "SAML SSO",
-      "NOTE": "Configure o login único via SAML para sua conta. Os usuários se autenticarão por meio do seu provedor de identidade em vez de usar e-mail e senha.",
+      "NOTE": "Configure SAML single sign-on for your account. Users will authenticate through your identity provider instead of using email/password.",
       "ACS_URL": {
         "LABEL": "ACS URL",
-        "TOOLTIP": "URL do Assertion Consumer Service - Configure esta URL no seu IdP como o destino para as respostas SAML"
+        "TOOLTIP": "Assertion Consumer Service URL - Configure this URL in your IdP as the destination for SAML responses"
       },
       "SSO_URL": {
         "LABEL": "SSO URL",
-        "HELP": "A URL para onde as solicitações de autenticação SAML serão enviadas",
+        "HELP": "The URL where SAML authentication requests will be sent",
         "PLACEHOLDER": "https://your-idp.com/saml/sso"
       },
       "CERTIFICATE": {
-        "LABEL": "Certificado de assinatura no formato PEM",
-        "HELP": "O certificado público do seu provedor de identidade, usado para verificar as respostas SAML",
+        "LABEL": "Signing certificate in PEM format",
+        "HELP": "The public certificate from your identity provider used to verify SAML responses",
         "PLACEHOLDER": "-----BEGIN CERTIFICATE-----\nMIIC..."
       },
       "FINGERPRINT": {
-        "LABEL": "Impressão digital",
-        "TOOLTIP": "Impressão digital SHA-1 do certificado - use-a para verificar o certificado na configuração do seu IdP"
+        "LABEL": "Fingerprint",
+        "TOOLTIP": "SHA-1 fingerprint of the certificate - Use this to verify the certificate in your IdP configuration"
       },
       "COPY_SUCCESS": "Código copiado para área de transferência com sucesso",
       "SP_ENTITY_ID": {
         "LABEL": "SP Entity ID",
-        "HELP": "Identificador exclusivo desta aplicação como provedor de serviço (gerado automaticamente).",
-        "TOOLTIP": "Identificador exclusivo do Chatwoot como Provedor de Serviço - configure-o nas configurações do seu IdP"
+        "HELP": "Unique identifier for this application as a service provider (auto-generated).",
+        "TOOLTIP": "Unique identifier for Chatwoot as the Service Provider - Configure this in your IdP settings"
       },
       "IDP_ENTITY_ID": {
-        "LABEL": "ID da Entidade do Provedor de Identidade",
-        "HELP": "Identificador exclusivo do seu provedor de identidade (geralmente encontrado na configuração do IdP)",
-        "PLACEHOLDER": "https://seu-idp.com/saml"
+        "LABEL": "Identity Provider Entity ID",
+        "HELP": "Unique identifier for your identity provider (usually found in IdP configuration)",
+        "PLACEHOLDER": "https://your-idp.com/saml"
       },
-      "UPDATE_BUTTON": "Atualizar configurações de SAML",
+      "UPDATE_BUTTON": "Update SAML Settings",
       "API": {
-        "SUCCESS": "Configurações de SAML atualizadas com sucesso",
-        "ERROR": "Falha ao atualizar as configurações de SAML",
-        "ERROR_LOADING": "Falha ao carregar as configurações de SAML",
-        "DISABLED": "Configurações de SAML desativadas com sucesso"
+        "SUCCESS": "SAML settings updated successfully",
+        "ERROR": "Failed to update SAML settings",
+        "ERROR_LOADING": "Failed to load SAML settings",
+        "DISABLED": "SAML settings disabled successfully"
       },
       "VALIDATION": {
-        "REQUIRED_FIELDS": "A URL de SSO, o ID da Entidade do Provedor de Identidade e o Certificado são campos obrigatórios",
-        "SSO_URL_ERROR": "Por favor, insira uma URL de SSO válida",
+        "REQUIRED_FIELDS": "SSO URL, Identity Provider Entity ID, and Certificate are required fields",
+        "SSO_URL_ERROR": "Please enter a valid SSO URL",
         "CERTIFICATE_ERROR": "O certificado é necessário",
-        "IDP_ENTITY_ID_ERROR": "O ID da Entidade do Provedor de Identidade é obrigatório"
+        "IDP_ENTITY_ID_ERROR": "Identity Provider Entity ID is required"
       },
       "ENTERPRISE_PAYWALL": {
-        "AVAILABLE_ON": "O recurso de SSO via SAML está disponível apenas nos planos Enterprise.",
-        "UPGRADE_PROMPT": "Atualize para um plano Enterprise para ter acesso ao login único via SAML e outros recursos avançados de segurança.",
+        "AVAILABLE_ON": "The SAML SSO feature is only available in the Enterprise plans.",
+        "UPGRADE_PROMPT": "Upgrade to an Enterprise plan to access SAML single sign-on and other advanced security features.",
         "ASK_ADMIN": "Entre em contato com seu administrador para fazer a atualização."
       },
       "PAYWALL": {
-        "TITLE": "Atualizar para habilitar o SSO via SAML",
-        "AVAILABLE_ON": "O recurso de SSO via SAML está disponível apenas nos planos Enterprise.",
-        "UPGRADE_PROMPT": "Atualize seu plano para ter acesso ao login único via SAML e outros recursos avançados.",
+        "TITLE": "Upgrade to enable SAML SSO",
+        "AVAILABLE_ON": "The SAML SSO feature is only available in the Enterprise plans.",
+        "UPGRADE_PROMPT": "Upgrade your plan to get access to SAML single sign-on and other advanced features.",
         "UPGRADE_NOW": "Atualizar agora",
         "CANCEL_ANYTIME": "Você pode alterar ou cancelar seu plano a qualquer momento"
       },
       "ATTRIBUTE_MAPPING": {
-        "TITLE": "Configuração de Atributos SAML",
-        "DESCRIPTION": "Os seguintes mapeamentos de atributos devem ser configurados no seu provedor de identidade"
+        "TITLE": "SAML Attribute Setup",
+        "DESCRIPTION": "The following attribute mappings must be configured in your identity provider"
       },
       "INFO_SECTION": {
-        "TITLE": "Informações do Provedor de Serviço",
-        "TOOLTIP": "Copie esses valores e configure-os no seu Provedor de Identidade para estabelecer a conexão SAML"
-      }
-    }
-  },
-  "CONVERSATION_WORKFLOW": {
-    "INDEX": {
-      "HEADER": {
-        "TITLE": "Fluxos de Conversa",
-        "DESCRIPTION": "Configure regras e campos obrigatórios para a resolução de conversas."
-      }
-    },
-    "REQUIRED_ATTRIBUTES": {
-      "TITLE": "Atributos obrigatórios para resolução",
-      "DESCRIPTION": "Ao resolver uma conversa, os agentes serão solicitados a preencher esses atributos caso ainda não o tenham feito.",
-      "NO_ATTRIBUTES": "Nenhum atributo adicionado ainda",
-      "ADD": {
-        "TITLE": "Adicionar Atributos",
-        "SEARCH_PLACEHOLDER": "Pesquisar atributos"
-      },
-      "SAVE": {
-        "SUCCESS": "Atributos obrigatórios atualizados",
-        "ERROR": "Não foi possível atualizar os atributos obrigatórios. Por favor, tente novamente"
-      },
-      "MODAL": {
-        "TITLE": "Resolver conversa",
-        "DESCRIPTION": "Por favor, preencha os seguintes atributos personalizados antes de resolver esta conversa",
-        "ACTIONS": {
-          "RESOLVE": "Resolver conversa",
-          "CANCEL": "Cancelar"
-        },
-        "PLACEHOLDERS": {
-          "TEXT": "Escreva uma nota...",
-          "NUMBER": "Insira um número",
-          "LINK": "Adicione um link",
-          "DATE": "Selecione uma data",
-          "LIST": "Selecione uma opção"
-        },
-        "CHECKBOX": {
-          "YES": "Sim",
-          "NO": "Não"
-        }
-      },
-      "PAYWALL": {
-        "TITLE": "Atualize para usar os atributos obrigatórios",
-        "AVAILABLE_ON": "O recurso de atributos obrigatórios da conversa está disponível nos planos Business e Enterprise.",
-        "UPGRADE_PROMPT": "Atualize seu plano para solicitar que os agentes preencham os atributos obrigatórios antes da resolução da conversa.",
-        "UPGRADE_NOW": "Atualizar agora",
-        "CANCEL_ANYTIME": "Você pode alterar ou cancelar seu plano a qualquer momento"
-      },
-      "ENTERPRISE_PAYWALL": {
-        "AVAILABLE_ON": "O recurso de atributos obrigatórios de conversa está disponível nos planos pagos.",
-        "UPGRADE_PROMPT": "Atualize para um plano pago para exigir atributos obrigatórios antes da resolução da conversa.",
-        "ASK_ADMIN": "Entre em contato com seu administrador para fazer a atualização."
+        "TITLE": "Service Provider Information",
+        "TOOLTIP": "Copy these values and configure them in your Identity Provider to establish the SAML connection"
       }
     }
   },
@@ -681,91 +723,84 @@
   "ASSIGNMENT_POLICY": {
     "INDEX": {
       "HEADER": {
-        "TITLE": "Atribuição de agentes",
-        "DESCRIPTION": "Defina políticas para gerenciar a carga de trabalho de forma eficaz e encaminhar conversas com base nas necessidades das caixas de entrada e dos agentes. Saiba mais aqui"
+        "TITLE": "Agent assignment",
+        "DESCRIPTION": "Define policies to effectively manage workload and route conversations based on the needs of inboxes and agents. Learn more here"
       },
       "ASSIGNMENT_POLICY": {
-        "TITLE": "Política de atribuição",
-        "DESCRIPTION": "Gerencie como as conversas são atribuídas nas caixas de entrada.",
+        "TITLE": "Assignment policy",
+        "DESCRIPTION": "Manage how conversations get assigned in inboxes.",
         "FEATURES": [
-          "Atribuir conversas de forma uniforme ou com base na capacidade disponível",
-          "Adicione regras de distribuição justa para evitar sobrecarregar qualquer agente",
-          "Adicione caixas de entrada a uma política - uma política por caixa de entrada"
+          "Assign by conversations evenly or by available capacity",
+          "Add fair distribution rules to avoid overloading any agent",
+          "Add inboxes to a policy - one policy per inbox"
         ]
       },
       "AGENT_CAPACITY_POLICY": {
-        "TITLE": "Política de capacidade dos agentes",
-        "DESCRIPTION": "Gerencie a carga de trabalho dos agentes.",
+        "TITLE": "Agent capacity policy",
+        "DESCRIPTION": "Manage workload for agents.",
         "FEATURES": [
-          "Defina o número máximo de conversas por caixa de entrada",
-          "Criar exceções com base em rótulos e tempo",
-          "Adicione agentes a uma política - uma política por agente"
+          "Define maximum conversations per inbox",
+          "Create exceptions based on labels and time",
+          "Add agents to a policy - one policy per agent"
         ]
       }
     },
     "AGENT_ASSIGNMENT_POLICY": {
       "INDEX": {
         "HEADER": {
-          "TITLE": "Política de atribuição",
-          "CREATE_POLICY": "Nova política"
+          "TITLE": "Assignment policy",
+          "CREATE_POLICY": "New policy"
         },
         "CARD": {
-          "ORDER": "Ordem",
+          "ORDER": "Order",
           "PRIORITY": "Prioridade",
           "ACTIVE": "Ativo",
-          "INACTIVE": "Inativa",
-          "POPOVER": "Caixas de entrada adicionadas",
+          "INACTIVE": "Inactive",
+          "POPOVER": "Added inboxes",
           "EDIT": "Alterar"
         },
-        "NO_RECORDS_FOUND": "Nenhuma política de atribuição encontrada"
+        "NO_RECORDS_FOUND": "No assignment policies found"
       },
       "CREATE": {
         "HEADER": {
-          "TITLE": "Criar política de atribuição"
+          "TITLE": "Create assignment policy"
         },
-        "CREATE_BUTTON": "Criar política",
+        "CREATE_BUTTON": "Create policy",
         "API": {
-          "SUCCESS_MESSAGE": "Política de atribuição criada com sucesso",
-          "ERROR_MESSAGE": "Falha ao criar a política de atribuição",
-          "INBOX_LINKED": "A caixa de entrada foi vinculada à política"
+          "SUCCESS_MESSAGE": "Assignment policy created successfully",
+          "ERROR_MESSAGE": "Failed to create assignment policy"
         }
       },
       "EDIT": {
         "HEADER": {
-          "TITLE": "Editar política de atribuição"
+          "TITLE": "Edit assignment policy"
         },
-        "EDIT_BUTTON": "Atualizar política",
+        "EDIT_BUTTON": "Update policy",
         "CONFIRM_ADD_INBOX_DIALOG": {
-          "TITLE": "Adicionar caixa de entrada",
-          "DESCRIPTION": "A caixa de entrada {inboxName} já está vinculada a outra política. Tem certeza de que deseja vinculá-la a esta política? Ela será desvinculada da outra.",
-          "CONFIRM_BUTTON_LABEL": "Continuar",
+          "TITLE": "Add inbox",
+          "DESCRIPTION": "{inboxName} inbox is already linked to another policy. Are you sure you want to link it to this policy? It will be unlinked from the other policy.",
+          "CONFIRM_BUTTON_LABEL": "Continue",
           "CANCEL_BUTTON_LABEL": "Cancelar"
         },
-        "INBOX_LINK_PROMPT": {
-          "TITLE": "Vincular caixa de entrada à política",
-          "DESCRIPTION": "Deseja vincular esta caixa de entrada à política de atribuição?",
-          "LINK_BUTTON": "Vincular caixa de entrada",
-          "CANCEL_BUTTON": "Pular"
-        },
         "API": {
-          "SUCCESS_MESSAGE": "Política de atribuição atualizada com sucesso",
-          "ERROR_MESSAGE": "Falha ao atualizar a política de atribuição"
+          "SUCCESS_MESSAGE": "Assignment policy updated successfully",
+          "ERROR_MESSAGE": "Failed to update assignment policy"
         },
         "INBOX_API": {
           "ADD": {
-            "SUCCESS_MESSAGE": "Caixa de entrada adicionada à política com sucesso",
-            "ERROR_MESSAGE": "Falha ao adicionar a caixa de entrada à política"
+            "SUCCESS_MESSAGE": "Inbox added to policy successfully",
+            "ERROR_MESSAGE": "Failed to add inbox to policy"
           },
           "REMOVE": {
-            "SUCCESS_MESSAGE": "Caixa de entrada removida da política com sucesso",
-            "ERROR_MESSAGE": "Caixa de entrada removida da política com sucesso"
+            "SUCCESS_MESSAGE": "Inbox removed from policy successfully",
+            "ERROR_MESSAGE": "Failed to remove inbox from policy"
           }
         }
       },
       "FORM": {
         "NAME": {
-          "LABEL": "Nome da política:",
-          "PLACEHOLDER": "Informe o nome da política"
+          "LABEL": "Policy name:",
+          "PLACEHOLDER": "Enter policy name"
         },
         "DESCRIPTION": {
           "LABEL": "Descrição:",
@@ -773,234 +808,166 @@
         },
         "STATUS": {
           "LABEL": "Status:",
-          "PLACEHOLDER": "Selecionar status",
-          "ACTIVE": "Política ativa",
-          "INACTIVE": "Política inativa"
+          "PLACEHOLDER": "Selecione Status",
+          "ACTIVE": "Policy is active",
+          "INACTIVE": "Policy is inactive"
         },
         "ASSIGNMENT_ORDER": {
-          "LABEL": "Ordem de atribuição",
+          "LABEL": "Assignment order",
           "ROUND_ROBIN": {
-            "LABEL": "Rodízio",
-            "DESCRIPTION": "Distribuir as conversas de forma uniforme entre os agentes."
+            "LABEL": "Round robin",
+            "DESCRIPTION": "Assign conversations evenly among agents."
           },
           "BALANCED": {
-            "LABEL": "Equilibrado",
-            "DESCRIPTION": "Atribuir conversas com base na capacidade disponível.",
-            "PREMIUM_MESSAGE": "Atualize o plano para acessar a atribuição equilibrada e o gerenciamento de capacidade dos agentes.",
-            "PREMIUM_BADGE": "Premium"
+            "LABEL": "Balanced",
+            "DESCRIPTION": "Assign conversations based on available capacity."
           }
         },
         "ASSIGNMENT_PRIORITY": {
-          "LABEL": "Prioridade de atribuição",
+          "LABEL": "Assignment priority",
           "EARLIEST_CREATED": {
-            "LABEL": "Criado recentemente",
-            "DESCRIPTION": "A conversa criada primeiro será atribuída primeiro."
+            "LABEL": "Earliest created",
+            "DESCRIPTION": "The conversation that was created first gets assigned first."
           },
           "LONGEST_WAITING": {
-            "LABEL": "Maior tempo de espera",
-            "DESCRIPTION": "A conversa que está aguardando há mais tempo é atribuída primeiro."
+            "LABEL": "Longest waiting",
+            "DESCRIPTION": "The conversation waiting the longest gets assigned first."
           }
         },
         "FAIR_DISTRIBUTION": {
-          "LABEL": "Política de distribuição justa",
-          "DESCRIPTION": "Defina o número máximo de conversas que podem ser atribuídas por agente dentro de um período, para evitar sobrecarregar qualquer agente. Este campo obrigatório tem como padrão 100 conversas por hora.",
-          "INPUT_MAX": "Máximo de atribuições",
-          "DURATION": "Conversas por agente a cada"
+          "LABEL": "Fair distribution policy",
+          "DESCRIPTION": "Set the maximum number of conversations that can be assigned per agent within a time window to avoid overloading any one agent. This required field defaults to 100 conversations per hour.",
+          "INPUT_MAX": "Assign max",
+          "DURATION": "Conversations per agent in every"
         },
         "INBOXES": {
-          "LABEL": "Caixas de entrada adicionadas",
-          "DESCRIPTION": "Adicionar caixas de entrada às quais esta política será aplicada.",
-          "ADD_BUTTON": "Adicionar caixa de entrada",
+          "LABEL": "Added inboxes",
+          "DESCRIPTION": "Add inboxes for which this policy will be applicable.",
+          "ADD_BUTTON": "Add inbox",
           "DROPDOWN": {
-            "SEARCH_PLACEHOLDER": "Pesquisar e selecionar caixas de entrada para adicionar",
+            "SEARCH_PLACEHOLDER": "Search and select inboxes to add",
             "ADD_BUTTON": "Adicionar"
           },
-          "EMPTY_STATE": "Nenhuma caixa de entrada adicionada a esta política. Adicione uma caixa de entrada para começar",
+          "EMPTY_STATE": "No inboxes added to this policy, add an inbox to get started",
           "API": {
-            "SUCCESS_MESSAGE": "Caixa de entrada adicionada à política com sucesso",
-            "ERROR_MESSAGE": "Falha ao adicionar a caixa de entrada à política"
+            "SUCCESS_MESSAGE": "Inbox successfully added to policy",
+            "ERROR_MESSAGE": "Failed to add inbox to policy"
           }
         }
       },
       "DELETE_POLICY": {
-        "SUCCESS_MESSAGE": "Política de atribuição excluída com sucesso",
-        "ERROR_MESSAGE": "Falha ao excluir a política de atribuição"
+        "SUCCESS_MESSAGE": "Assignment policy deleted successfully",
+        "ERROR_MESSAGE": "Failed to delete assignment policy"
       }
     },
     "AGENT_CAPACITY_POLICY": {
       "INDEX": {
         "HEADER": {
-          "TITLE": "Capacidade do agente",
-          "CREATE_POLICY": "Nova política"
+          "TITLE": "Agent capacity",
+          "CREATE_POLICY": "New policy"
         },
         "CARD": {
-          "POPOVER": "Agentes adicionados",
+          "POPOVER": "Added agents",
           "EDIT": "Alterar"
         },
-        "NO_RECORDS_FOUND": "Nenhuma política de capacidade dos agentes encontrada"
+        "NO_RECORDS_FOUND": "No agent capacity policies found"
       },
       "CREATE": {
         "HEADER": {
-          "TITLE": "Criar política de capacidade dos agentes"
+          "TITLE": "Create agent capacity policy"
         },
-        "CREATE_BUTTON": "Criar política",
+        "CREATE_BUTTON": "Create policy",
         "API": {
-          "SUCCESS_MESSAGE": "Política de capacidade dos agentes criada com sucesso",
-          "ERROR_MESSAGE": "Falha ao criar a política de capacidade dos agentes"
+          "SUCCESS_MESSAGE": "Agent capacity policy created successfully",
+          "ERROR_MESSAGE": "Failed to create agent capacity policy"
         }
       },
       "EDIT": {
         "HEADER": {
-          "TITLE": "Editar política de capacidade dos agentes"
+          "TITLE": "Edit agent capacity policy"
         },
-        "EDIT_BUTTON": "Atualizar política",
+        "EDIT_BUTTON": "Update policy",
         "CONFIRM_ADD_AGENT_DIALOG": {
-          "TITLE": "Adicionar agente",
-          "DESCRIPTION": "{agentName} já está vinculado a outra política. Tem certeza de que deseja vinculá-lo a esta política? Ele será desvinculado da outra.",
-          "CONFIRM_BUTTON_LABEL": "Continuar",
+          "TITLE": "Add agent",
+          "DESCRIPTION": "{agentName} is already linked to another policy. Are you sure you want to link it to this policy? It will be unlinked from the other policy.",
+          "CONFIRM_BUTTON_LABEL": "Continue",
           "CANCEL_BUTTON_LABEL": "Cancelar"
         },
         "API": {
-          "SUCCESS_MESSAGE": "Política de capacidade dos agentes atualizada com sucesso",
-          "ERROR_MESSAGE": "Falha ao atualizar a política de capacidade dos agentes"
+          "SUCCESS_MESSAGE": "Agent capacity policy updated successfully",
+          "ERROR_MESSAGE": "Failed to update agent capacity policy"
         },
         "AGENT_API": {
           "ADD": {
-            "SUCCESS_MESSAGE": "Agente adicionado à política com sucesso",
-            "ERROR_MESSAGE": "Falha ao adicionar o agente à política"
+            "SUCCESS_MESSAGE": "Agent added to policy successfully",
+            "ERROR_MESSAGE": "Failed to add agent to policy"
           },
           "REMOVE": {
-            "SUCCESS_MESSAGE": "Agente removido da política com sucesso",
-            "ERROR_MESSAGE": "Falha ao remover o agente da política"
-          }
-        },
-        "INBOX_LIMIT_API": {
-          "ADD": {
-            "SUCCESS_MESSAGE": "Limite de caixa de entrada adicionado com sucesso",
-            "ERROR_MESSAGE": "Falha ao adicionar limite de caixa de entrada"
-          },
-          "UPDATE": {
-            "SUCCESS_MESSAGE": "Limite de caixa de entrada atualizado com sucesso",
-            "ERROR_MESSAGE": "Falha ao atualizar limite da caixa de entrada"
-          },
-          "DELETE": {
-            "SUCCESS_MESSAGE": "Limite da caixa de entrada excluído com sucesso",
-            "ERROR_MESSAGE": "Falha ao excluir o limite da caixa de entrada"
+            "SUCCESS_MESSAGE": "Agent removed from policy successfully",
+            "ERROR_MESSAGE": "Failed to remove agent from policy"
           }
         }
       },
       "FORM": {
         "NAME": {
-          "LABEL": "Nome da política:",
-          "PLACEHOLDER": "Informe o nome da política"
+          "LABEL": "Policy name:",
+          "PLACEHOLDER": "Enter policy name"
         },
         "DESCRIPTION": {
           "LABEL": "Descrição:",
           "PLACEHOLDER": "Insira a descrição"
         },
         "INBOX_CAPACITY_LIMIT": {
-          "LABEL": "Limites de capacidade da caixa de entrada",
-          "ADD_BUTTON": "Adicionar caixa de entrada",
+          "LABEL": "Inbox capacity limits",
+          "ADD_BUTTON": "Add inbox",
           "FIELD": {
-            "SELECT_INBOX": "Selecionar caixa de entrada",
-            "MAX_CONVERSATIONS": "Máximo de conversas",
-            "SET_LIMIT": "Definir limite"
+            "SELECT_INBOX": "Select inbox",
+            "MAX_CONVERSATIONS": "Max conversations",
+            "SET_LIMIT": "Set limit"
           },
-          "EMPTY_STATE": "Nenhum limite de caixa de entrada definido"
+          "EMPTY_STATE": "No inbox limit set"
         },
         "EXCLUSION_RULES": {
-          "LABEL": "Regras de exclusão",
-          "DESCRIPTION": "Conversas que atendam às seguintes condições não serão contabilizadas na capacidade do agente",
+          "LABEL": "Exclusion rules",
+          "DESCRIPTION": "Conversations that satisfy the following conditions would not count towards agent capacity",
           "TAGS": {
-            "LABEL": "Excluir conversas marcadas com rótulos específicos",
-            "ADD_TAG": "adicionar etiqueta",
+            "LABEL": "Exclude conversations tagged with specific labels",
+            "ADD_TAG": "add tag",
             "DROPDOWN": {
-              "SEARCH_PLACEHOLDER": "Pesquise e selecione etiquetas para adicionar"
+              "SEARCH_PLACEHOLDER": "Search and select tags to add"
             },
-            "EMPTY_STATE": "Nenhuma etiqueta adicionada a esta política."
+            "EMPTY_STATE": "No tags added to this policy."
           },
           "DURATION": {
-            "LABEL": "Excluir conversas mais antigas que um período especificado",
-            "PLACEHOLDER": "Definir duração"
+            "LABEL": "Exclude conversations older than a specified duration",
+            "PLACEHOLDER": "Set time"
           }
         },
         "USERS": {
-          "LABEL": "Agentes atribuídos",
-          "DESCRIPTION": "Adicione os agentes aos quais esta política será aplicada.",
-          "ADD_BUTTON": "Adicionar agente",
+          "LABEL": "Assigned agents",
+          "DESCRIPTION": "Add agents for which this policy will be applicable.",
+          "ADD_BUTTON": "Add agent",
           "DROPDOWN": {
-            "SEARCH_PLACEHOLDER": "Pesquise e selecione agentes para adicionar",
+            "SEARCH_PLACEHOLDER": "Search and select agents to add",
             "ADD_BUTTON": "Adicionar"
           },
-          "EMPTY_STATE": "Nenhum agente adicionado",
+          "EMPTY_STATE": "No agents added",
           "API": {
-            "SUCCESS_MESSAGE": "Agente adicionado à política com sucesso",
-            "ERROR_MESSAGE": "Falha ao adicionar o agente à política"
+            "SUCCESS_MESSAGE": "Agent successfully added to policy",
+            "ERROR_MESSAGE": "Failed to add agent to policy"
           }
         }
       },
       "DELETE_POLICY": {
-        "SUCCESS_MESSAGE": "Política de capacidade de agentes excluída com sucesso",
-        "ERROR_MESSAGE": "Falha ao excluir a política de capacidade de agentes"
+        "SUCCESS_MESSAGE": "Agent capacity policy deleted successfully",
+        "ERROR_MESSAGE": "Failed to delete agent capacity policy"
       }
     },
     "DELETE_POLICY": {
-      "TITLE": "Excluir política",
-      "DESCRIPTION": "Tem certeza de que deseja excluir esta política? Essa ação não pode ser desfeita.",
+      "TITLE": "Delete policy",
+      "DESCRIPTION": "Are you sure you want to delete this policy? This action cannot be undone.",
       "CONFIRM_BUTTON_LABEL": "Excluir",
       "CANCEL_BUTTON_LABEL": "Cancelar"
-    }
-  },
-  "CONVERSATION_WORKFLOW": {
-    "INDEX": {
-      "HEADER": {
-        "TITLE": "Fluxos de Conversa",
-        "DESCRIPTION": "Configure regras e campos obrigatórios para resolução de conversas."
-      }
-    },
-    "REQUIRED_ATTRIBUTES": {
-      "TITLE": "Atributos obrigatórios na resolução",
-      "DESCRIPTION": "Ao resolver uma conversa, os agentes serão solicitados a preencher esses atributos se ainda não o fizeram.",
-      "NO_ATTRIBUTES": "Nenhum atributo adicionado ainda",
-      "ADD": {
-        "TITLE": "Adicionar Atributos",
-        "SEARCH_PLACEHOLDER": "Buscar atributos"
-      },
-      "SAVE": {
-        "SUCCESS": "Atributos obrigatórios atualizados",
-        "ERROR": "Não foi possível atualizar os atributos obrigatórios, tente novamente"
-      },
-      "MODAL": {
-        "TITLE": "Resolver conversa",
-        "DESCRIPTION": "Por favor, preencha os seguintes atributos personalizados antes de resolver esta conversa",
-        "ACTIONS": {
-          "RESOLVE": "Resolver conversa",
-          "CANCEL": "Cancelar"
-        },
-        "PLACEHOLDERS": {
-          "TEXT": "Escreva uma nota...",
-          "NUMBER": "Insira um número",
-          "LINK": "Adicione um link",
-          "DATE": "Escolha uma data",
-          "LIST": "Selecione uma opção"
-        },
-        "CHECKBOX": {
-          "YES": "Sim",
-          "NO": "Não"
-        }
-      },
-      "PAYWALL": {
-        "TITLE": "Faça upgrade para usar atributos obrigatórios",
-        "AVAILABLE_ON": "O recurso de atributos obrigatórios de conversa está disponível nos planos Business e Enterprise.",
-        "UPGRADE_PROMPT": "Faça upgrade do seu plano para solicitar que os agentes preencham atributos obrigatórios antes da resolução da conversa.",
-        "UPGRADE_NOW": "Fazer upgrade agora",
-        "CANCEL_ANYTIME": "Você pode alterar ou cancelar seu plano a qualquer momento"
-      },
-      "ENTERPRISE_PAYWALL": {
-        "AVAILABLE_ON": "O recurso de atributos obrigatórios de conversa está disponível nos planos pagos.",
-        "UPGRADE_PROMPT": "Faça upgrade para um plano pago para exigir atributos obrigatórios antes da resolução da conversa.",
-        "ASK_ADMIN": "Entre em contato com seu administrador para o upgrade."
-      }
     }
   }
 }

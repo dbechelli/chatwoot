@@ -97,11 +97,15 @@ class Twilio::IncomingMessageService
 
   def set_conversation
     # if lock to single conversation is disabled, we will create a new conversation if previous conversation is resolved
+    
+    # Use contact to find conversation to handle cases where contact_inbox might be recreated/duplicated
+    # due to phone number format changes
+    conversation_scope = @contact.conversations.where(inbox_id: @inbox.id)
+    
     @conversation = if @inbox.lock_to_single_conversation
-                      @contact_inbox.conversations.last
+                      conversation_scope.last
                     else
-                      @contact_inbox.conversations.where
-                                    .not(status: :resolved).last
+                      conversation_scope.where.not(status: :resolved).last
                     end
     return if @conversation
 

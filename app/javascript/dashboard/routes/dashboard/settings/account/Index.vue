@@ -7,6 +7,7 @@ import { useUISettings } from 'dashboard/composables/useUISettings';
 import { useConfig } from 'dashboard/composables/useConfig';
 import { useAccount } from 'dashboard/composables/useAccount';
 import { FEATURE_FLAGS } from '../../../../featureFlags';
+import { useI18n } from 'vue-i18n';
 import WithLabel from 'v3/components/Form/WithLabel.vue';
 import NextInput from 'next/input/Input.vue';
 import BaseSettingsHeader from '../components/BaseSettingsHeader.vue';
@@ -34,8 +35,9 @@ export default {
     const { enabledLanguages } = useConfig();
     const { accountId } = useAccount();
     const v$ = useVuelidate();
+    const { locale } = useI18n();
 
-    return { updateUISettings, uiSettings, v$, enabledLanguages, accountId };
+    return { updateUISettings, uiSettings, v$, enabledLanguages, accountId, i18nLocale: locale };
   },
   data() {
     return {

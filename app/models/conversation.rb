@@ -75,6 +75,10 @@ class Conversation < ApplicationRecord
   validates :uuid, uniqueness: true
   validate :validate_referer_url
 
+  after_create_commit :apply_kanban_automation
+
+  after_update_commit :dispatch_kanban_events
+
   enum status: { open: 0, resolved: 1, pending: 2, snoozed: 3 }
   enum priority: { low: 0, medium: 1, high: 2, urgent: 3 }
   enum group_type: { individual: 0, group: 1 }, _prefix: true
@@ -218,8 +222,33 @@ class Conversation < ApplicationRecord
     "#{ENV.fetch('FRONTEND_URL', nil)}/survey/responses/#{uuid}"
   end
 
-  def dispatch_conversation_updated_event(previous_changes = nil)
-    dispatcher_dispatch(CONVERSATION_UPDATED, previous_changes)
+  def dispatch_conversation_updated_event(previous_changes = nil, broadcast_metadata: nil)
+    dispatcher_dispatch(CONVERSATION_UPDATED, previous_changes, broadcast_metadata: broadcast_metadata)
+  end
+
+  def dispatch_kanban_events
+    return unless saved_change_to_custom_attributes?
+
+    changes = saved_changes['custom_attributes']
+    old_attrs = changes[0] || {}
+    new_attrs = changes[1] || {}
+
+    kanban_keys = new_attrs.keys.select { |k| k.to_s.start_with?('kanban_') } + ['sales_stage']
+    changed_keys = kanban_keys.select { |k| new_attrs[k] != old_attrs[k] }
+    
+    return unless changed_keys.any?
+
+    if new_attrs['sales_stage'] != old_attrs['sales_stage']
+       if old_attrs['sales_stage'].blank? && new_attrs['sales_stage'].present?
+          dispatcher_dispatch(Events::Types::KANBAN_CARD_CREATED, saved_changes)
+       elsif old_attrs['sales_stage'].present? && new_attrs['sales_stage'].blank?
+          dispatcher_dispatch(Events::Types::KANBAN_CARD_DELETED, saved_changes)
+       else
+          dispatcher_dispatch(Events::Types::KANBAN_CARD_UPDATED, saved_changes)
+       end
+    else
+       dispatcher_dispatch(Events::Types::KANBAN_CARD_UPDATED, saved_changes)
+    end
   end
 
   private
@@ -308,17 +337,18 @@ class Conversation < ApplicationRecord
       CONVERSATION_OPENED => -> { saved_change_to_status? && open? },
       CONVERSATION_RESOLVED => -> { saved_change_to_status? && resolved? },
       CONVERSATION_STATUS_CHANGED => -> { saved_change_to_status? },
-      CONVERSATION_READ => -> { saved_change_to_contact_last_seen_at? },
-      CONVERSATION_CONTACT_CHANGED => -> { saved_change_to_contact_id? }
+      CONVERSATION_RESOLUTION_REQUIRED => -> { pending? || snoozed? || open? },
+      CONVERSATION_UPDATED => -> { saved_change_to_custom_attributes? }
     }.each do |event, condition|
       condition.call && dispatcher_dispatch(event, status_change)
     end
   end
 
-  def dispatcher_dispatch(event_name, changed_attributes = nil)
-    Rails.configuration.dispatcher.dispatch(event_name, Time.zone.now, conversation: self, notifiable_assignee_change: notifiable_assignee_change?,
-                                                                       changed_attributes: changed_attributes,
-                                                                       performed_by: Current.executed_by)
+  def dispatcher_dispatch(event_name, changed_attributes = nil, broadcast_metadata: nil)
+    payload = { conversation: self, notifiable_assignee_change: notifiable_assignee_change?,
+                changed_attributes: changed_attributes, performed_by: Current.executed_by }
+    payload[:broadcast_metadata] = broadcast_metadata unless broadcast_metadata.nil?
+    Rails.configuration.dispatcher.dispatch(event_name, Time.zone.now, **payload)
   end
 
   def conversation_status_changed_to_open?
@@ -342,6 +372,110 @@ class Conversation < ApplicationRecord
     return unless additional_attributes['referer']
 
     self['additional_attributes']['referer'] = nil unless url_valid?(additional_attributes['referer'])
+  end
+
+  # WhatsApp Group support
+  has_many :whatsapp_group_members, dependent: :destroy
+
+  def whatsapp_group?
+    return true if additional_attributes&.dig('is_whatsapp_group') == true
+    return true if additional_attributes&.dig('type') == 'group'
+
+    # Fallback: Check contact identifier
+    if contact&.identifier&.to_s&.include?('@g.us')
+      # Auto-fix: Set the attribute if it's missing but clearly a group
+      self.additional_attributes ||= {}
+      self.additional_attributes['is_whatsapp_group'] = true
+      save(validate: false) if persisted?
+      return true
+    end
+
+    false
+  end
+
+  def whatsapp_group_id
+    return additional_attributes['whatsapp_group_id'] if additional_attributes&.dig('whatsapp_group_id').present?
+    return contact.identifier if contact&.identifier&.ends_with?('@g.us')
+
+    nil
+  end
+
+  def whatsapp_group_name
+    additional_attributes&.dig('whatsapp_group_name')
+  end
+
+  def whatsapp_group_participants_count
+    additional_attributes&.dig('whatsapp_group_participants_count')
+  end
+
+  def update_whatsapp_group_info(group_data)
+    self.additional_attributes ||= {}
+    self.additional_attributes['is_whatsapp_group'] = true
+    self.additional_attributes['whatsapp_group_id'] = group_data[:id]
+    self.additional_attributes['whatsapp_group_name'] = group_data[:name]
+    self.additional_attributes['whatsapp_group_description'] = group_data[:description]
+    self.additional_attributes['whatsapp_group_participants_count'] = group_data[:participants]&.length || 0
+    save!
+  end
+
+  def add_whatsapp_group_member(phone_number, name: nil, is_admin: false)
+    member = whatsapp_group_members.find_or_initialize_by(phone_number: phone_number)
+    member.name = name if name.present?
+    member.is_admin = is_admin
+    member.joined_at ||= Time.current
+    member.save!
+    member
+  end
+
+  def apply_kanban_automation
+    return unless account.respond_to?(:kanban_config)
+    config = account.kanban_config
+    return unless config && config['boards']
+
+    config['boards'].each do |board|
+      inbox_ids = board['auto_assign_inboxes'] || []
+      # Handle string/integer mismatch by converting everything to integers
+      if inbox_ids.map(&:to_i).include?(inbox_id)
+        initial_stage = board['auto_assign_stage_id'] || (board['stages']&.first || {})['id']
+        key = board['customAttributeKey'] || 'sales_stage'
+        
+        # Avoid overwriting if somehow already set
+        next if custom_attributes&.key?(key)
+
+        updates = {}
+        updates[key] = initial_stage
+        # Set default title if not present
+        updates['kanban_title'] = "Ticket ##{display_id}" unless custom_attributes&.key?('kanban_title')
+
+        # Round Robin Logic
+        if board['enable_round_robin'] && board['agent_ids'].present?
+          eligible_ids = board['agent_ids'].map(&:to_i)
+          # Find last assigned agent for this board
+          last_conv = Conversation.where(account_id: account_id)
+                                  .where("custom_attributes ? :key", key: key)
+                                  .where(assignee_id: eligible_ids)
+                                  .order(created_at: :desc)
+                                  .first
+          
+          last_assignee_id = last_conv&.assignee_id
+          
+          next_agent_id = if last_assignee_id && (idx = eligible_ids.index(last_assignee_id))
+                            eligible_ids[(idx + 1) % eligible_ids.length]
+                          else
+                            eligible_ids.first
+                          end
+          
+          self.assignee_id = next_agent_id
+        end
+        
+        # Use update_columns to avoid callback loops if we were using save!, 
+        # but here we want to trigger update callbacks so UI refreshes?
+        # Using update! is safer to trigger broadcasts
+        self.custom_attributes = (custom_attributes || {}).merge(updates)
+        save!
+        break # Only assign to one board for now to avoid conflicts
+      end
+    end
   end
 
   # creating db triggers

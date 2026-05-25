@@ -17,8 +17,6 @@
     // GitLens
     "eamodio.gitlens",
     // Ruby
-    "rebornix.ruby",
-    // Vue
     "octref.vetur",
     // Prettier
     "esbenp.prettier-vscode",

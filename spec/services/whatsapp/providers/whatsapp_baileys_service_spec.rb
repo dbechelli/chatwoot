@@ -3,9 +3,16 @@ require 'rails_helper'
 describe Whatsapp::Providers::WhatsappBaileysService do
   subject(:service) { described_class.new(whatsapp_channel: whatsapp_channel) }
 
+  # `cache_classes = false` in the test env lets Zeitwerk reload constants
+  # between specs (controller specs commonly trigger this). After a reload,
+  # the `described_class` captured when this file was loaded points at a
+  # stale copy whose `::ProviderUnavailableError` constant no longer matches
+  # the one raised by the real (currently-loaded) class, breaking
+  # `raise_error(ProviderUnavailableError, ...)` matchers. Re-resolving the
+  # constant on every example keeps the reference fresh.
+  let(:described_class) { Whatsapp::Providers::WhatsappBaileysService } # rubocop:disable RSpec/DescribedClass
   let(:whatsapp_channel) { create(:channel_whatsapp, provider: 'baileys', validate_provider_config: false) }
   let(:message) { create(:message, inbox: whatsapp_channel.inbox, source_id: 'msg_123', content_attributes: { external_created_at: 123 }) }
-
   let(:test_send_phone_number) { '551187654321' }
   let(:test_send_jid) { '551187654321@s.whatsapp.net' }
 
@@ -101,8 +108,7 @@ describe Whatsapp::Providers::WhatsappBaileysService do
               webhookUrl: whatsapp_channel.inbox.callback_webhook_url,
               webhookVerifyToken: whatsapp_channel.provider_config['webhook_verify_token'],
               includeMedia: false,
-              groupsEnabled: described_class.groups_enabled?,
-              autoPresenceSubscribe: whatsapp_channel.provider_config['presence_subscribe'] || false
+              groupsEnabled: described_class.groups_enabled?
             }.to_json
           )
           .to_return(status: 200)
@@ -123,8 +129,7 @@ describe Whatsapp::Providers::WhatsappBaileysService do
               webhookUrl: whatsapp_channel.inbox.callback_webhook_url,
               webhookVerifyToken: whatsapp_channel.provider_config['webhook_verify_token'],
               includeMedia: false,
-              groupsEnabled: described_class.groups_enabled?,
-              autoPresenceSubscribe: whatsapp_channel.provider_config['presence_subscribe'] || false
+              groupsEnabled: described_class.groups_enabled?
             }.to_json
           )
           .to_return(
@@ -145,40 +150,58 @@ describe Whatsapp::Providers::WhatsappBaileysService do
   end
 
   describe '#disconnect_channel_provider' do
-    context 'when response is successful' do
-      it 'disconnects the whatsapp connection' do
-        stub_request(:delete, "#{whatsapp_channel.provider_config['provider_url']}/connections/#{whatsapp_channel.phone_number}")
+    let(:disconnect_url) { "#{whatsapp_channel.provider_config['provider_url']}/connections/#{whatsapp_channel.phone_number}" }
+
+    context 'when the Baileys API responds successfully' do
+      it 'returns true' do
+        stub_request(:delete, disconnect_url)
           .with(headers: stub_headers(whatsapp_channel))
           .to_return(status: 200)
 
-        response = service.disconnect_channel_provider
-
-        expect(response).to be(true)
+        expect(service.disconnect_channel_provider).to be(true)
       end
     end
 
-    context 'when response is unsuccessful' do
-      it 'raises ProviderUnavailableError and logs the error' do
-        # Stub the failing request
-        stub_request(:delete, "#{whatsapp_channel.provider_config['provider_url']}/connections/#{whatsapp_channel.phone_number}")
+    # disconnect is best-effort: a missing session (404), a Baileys API error
+    # (5xx), or a transport failure shouldn't propagate. The caller (e.g.
+    # convert_provider!) just needs the cleanup attempt to be made, not to
+    # succeed.
+    context 'when the Baileys API responds with an error status' do
+      [404, 500].each do |status|
+        it "returns true, logs a warning, and does not raise for HTTP #{status}" do
+          stub_request(:delete, disconnect_url)
+            .with(headers: stub_headers(whatsapp_channel))
+            .to_return(status: status, body: 'baileys error')
+
+          allow(Rails.logger).to receive(:warn)
+
+          expect(service.disconnect_channel_provider).to be(true)
+          expect(Rails.logger).to have_received(:warn).with(/disconnect_channel_provider non-success status=#{status}/)
+        end
+      end
+    end
+
+    context 'when the request itself fails' do
+      it 'returns true, logs a warning, and does not raise' do
+        stub_request(:delete, disconnect_url)
           .with(headers: stub_headers(whatsapp_channel))
-          .to_return(
-            status: 400,
-            body: 'error message',
-            headers: {}
-          )
+          .to_raise(Net::OpenTimeout)
 
-        # Stub the reconnection attempt
-        stub_request(:post, "#{whatsapp_channel.provider_config['provider_url']}/connections/#{whatsapp_channel.phone_number}")
-          .to_return(status: 200)
+        allow(Rails.logger).to receive(:warn)
 
-        allow(Rails.logger).to receive(:error)
+        expect(service.disconnect_channel_provider).to be(true)
+        expect(Rails.logger).to have_received(:warn).with(/disconnect_channel_provider failed/)
+      end
 
-        expect do
-          service.disconnect_channel_provider
-        end.to raise_error(Whatsapp::Providers::WhatsappBaileysService::ProviderUnavailableError)
+      it 'does not trigger the error recovery flow' do
+        stub_request(:delete, disconnect_url)
+          .with(headers: stub_headers(whatsapp_channel))
+          .to_raise(Net::OpenTimeout)
+        reconnect_request = stub_request(:post, disconnect_url)
 
-        expect(Rails.logger).to have_received(:error).with('error message')
+        service.disconnect_channel_provider
+
+        expect(reconnect_request).not_to have_been_requested
       end
     end
   end
@@ -1380,8 +1403,7 @@ describe Whatsapp::Providers::WhatsappBaileysService do
               webhookUrl: whatsapp_channel.inbox.callback_webhook_url,
               webhookVerifyToken: whatsapp_channel.provider_config['webhook_verify_token'],
               includeMedia: false,
-              groupsEnabled: described_class.groups_enabled?,
-              autoPresenceSubscribe: whatsapp_channel.provider_config['presence_subscribe'] || false
+              groupsEnabled: described_class.groups_enabled?
             }.to_json
           )
           .to_return(status: 200)
@@ -1400,8 +1422,7 @@ describe Whatsapp::Providers::WhatsappBaileysService do
               webhookUrl: whatsapp_channel.inbox.callback_webhook_url,
               webhookVerifyToken: whatsapp_channel.provider_config['webhook_verify_token'],
               includeMedia: false,
-              groupsEnabled: described_class.groups_enabled?,
-              autoPresenceSubscribe: whatsapp_channel.provider_config['presence_subscribe'] || false
+              groupsEnabled: described_class.groups_enabled?
             }.to_json
           )
           .to_return(status: 200)
@@ -1420,8 +1441,7 @@ describe Whatsapp::Providers::WhatsappBaileysService do
               webhookUrl: whatsapp_channel.inbox.callback_webhook_url,
               webhookVerifyToken: whatsapp_channel.provider_config['webhook_verify_token'],
               includeMedia: false,
-              groupsEnabled: described_class.groups_enabled?,
-              autoPresenceSubscribe: whatsapp_channel.provider_config['presence_subscribe'] || false
+              groupsEnabled: described_class.groups_enabled?
             }.to_json
           )
           .to_return(status: 400, body: 'reconnection failed')
@@ -1825,6 +1845,6 @@ describe Whatsapp::Providers::WhatsappBaileysService do
   end
 
   def send_message_body(hash, msg = message)
-    hash.merge(chatwootMessageId: msg.id).to_json
+    hash.merge(chatwootMessageId: "#{msg.id}:#{msg.updated_at.to_f}").to_json
   end
 end

@@ -16,18 +16,22 @@ class Messages::MessageBuilder # rubocop:disable Metrics/ClassLength
     @is_recorded_audio = params[:is_recorded_audio]
     @transcode_audio = params[:transcode_audio]
     @attachments_metadata = normalize_attachments_metadata(params[:attachments_metadata])
-    @automation_rule = content_attributes&.dig(:automation_rule_id)
+    @content_attributes = ensure_indifferent_access(content_attributes)
+    @automation_rule = @content_attributes&.dig(:automation_rule_id)
     return unless params.instance_of?(ActionController::Parameters)
 
-    @in_reply_to = content_attributes&.dig(:in_reply_to)
-    @is_reaction = content_attributes&.dig(:is_reaction)
-    @items = content_attributes&.dig(:items)
-    @zapi_args = content_attributes&.dig(:zapi_args)
+    @in_reply_to = @content_attributes&.dig(:in_reply_to)
+    @is_reaction = @content_attributes&.dig(:is_reaction)
+    @items = @content_attributes&.dig(:items)
+    @zapi_args = @content_attributes&.dig(:zapi_args)
+    @uazapi_contact_card = ensure_indifferent_access(@content_attributes&.dig(:uazapi_contact_card))
+    @uazapi_pix_button = ensure_indifferent_access(@content_attributes&.dig(:uazapi_pix_button))
   end
 
   def perform
     @message = @conversation.messages.build(message_params)
     process_attachments
+    process_structured_attachments
     process_emails
     # When the message has no quoted content, it will just be rendered as a regular message
     # The frontend is equipped to handle this case
@@ -70,6 +74,43 @@ class Messages::MessageBuilder # rubocop:disable Metrics/ClassLength
                              end
       transcode_attachment(attachment, file_like_source(uploaded_attachment)) if should_transcode?(attachment)
     end
+  end
+
+  def process_structured_attachments
+    validate_uazapi_pix_button!
+    return if @uazapi_contact_card.blank?
+    raise StandardError, I18n.t('errors.uazapi.multiple_attachments_not_supported') if @attachments.present?
+
+    full_name = @uazapi_contact_card[:full_name].to_s.strip
+    phone_number = @uazapi_contact_card[:phone_number].to_s.strip
+
+    raise StandardError, I18n.t('errors.uazapi.contact_name_required') if full_name.blank?
+    raise StandardError, I18n.t('errors.uazapi.contact_phone_required') if phone_number.blank?
+
+    name_parts = full_name.split
+
+    @message.attachments.build(
+      account_id: @message.account_id,
+      file_type: :contact,
+      fallback_title: phone_number,
+      meta: {
+        fullName: full_name,
+        firstName: name_parts.first,
+        lastName: name_parts.drop(1).join(' '),
+        organization: @uazapi_contact_card[:organization].to_s.strip.presence,
+        email: @uazapi_contact_card[:email].to_s.strip.presence,
+        url: @uazapi_contact_card[:url].to_s.strip.presence
+      }.compact_blank
+    )
+  end
+
+  def validate_uazapi_pix_button!
+    return if @uazapi_pix_button.blank?
+
+    raise StandardError, I18n.t('errors.uazapi.multiple_attachments_not_supported') if @attachments.present?
+    raise StandardError, I18n.t('errors.uazapi.pix_type_required') if @uazapi_pix_button[:pix_type].to_s.strip.blank?
+    raise StandardError, I18n.t('errors.uazapi.pix_key_required') if @uazapi_pix_button[:pix_key].to_s.strip.blank?
+    raise StandardError, I18n.t('errors.uazapi.professional_name_required') if @uazapi_pix_button[:professional_name].to_s.strip.blank?
   end
 
   def process_metadata(attachment)
@@ -225,7 +266,7 @@ class Messages::MessageBuilder # rubocop:disable Metrics/ClassLength
       private: @private,
       sender: sender,
       content_type: @params[:content_type],
-      content_attributes: content_attributes.presence,
+      content_attributes: message_content_attributes,
       items: @items,
       in_reply_to: @in_reply_to,
       is_reaction: @is_reaction,
@@ -233,6 +274,10 @@ class Messages::MessageBuilder # rubocop:disable Metrics/ClassLength
       source_id: @params[:source_id]
     }.merge(external_created_at).merge(automation_rule_id).merge(campaign_id)
       .deep_merge(template_params).merge(zapi_args).deep_merge(scheduled_message_metadata)
+  end
+
+  def message_content_attributes
+    @content_attributes.except(:uazapi_contact_card).presence
   end
 
   def email_inbox?

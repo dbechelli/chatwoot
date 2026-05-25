@@ -32,9 +32,9 @@
         "CONTENT": {
           "LABEL": "Message",
           "PLACEHOLDER": "Please write the message you want to save as a template to use later.",
-          "ERROR": "Message is required."
+          "ERROR": "Message or attachment is required."
         },
-        "SUBMIT": "Submit"
+        "SUBMIT": "Save"
       },
       "API": {
         "SUCCESS_MESSAGE": "Canned response added successfully.",
@@ -53,9 +53,9 @@
         "CONTENT": {
           "LABEL": "Message",
           "PLACEHOLDER": "Please write the message you want to save as a template to use later.",
-          "ERROR": "Message is required."
+          "ERROR": "Message or attachment is required."
         },
-        "SUBMIT": "Submit"
+        "SUBMIT": "Save"
       },
       "BUTTON_TEXT": "Edit",
       "API": {
@@ -75,6 +75,17 @@
         "YES": "Yes, delete ",
         "NO": "No, keep "
       }
+    },
+    "ATTACHMENTS": {
+      "LABEL": "Attachments",
+      "HELP_TEXT": "Saved attachments will be sent together when this canned response is used.",
+      "REMOVE": "Remove",
+      "BADGE": "Attachment",
+      "FETCH_ERROR": "Could not load the saved attachment for this canned response."
+    },
+    "UAZAPI": {
+      "BADGE": "WhatsApp",
+      "READ_ONLY": "This quick reply was created in WhatsApp and can only be viewed here."
     }
   }
 }

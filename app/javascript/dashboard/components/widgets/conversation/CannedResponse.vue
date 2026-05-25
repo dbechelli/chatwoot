@@ -20,6 +20,7 @@ export default {
         label: cannedMessage.short_code,
         key: cannedMessage.short_code,
         description: cannedMessage.content,
+        files: cannedMessage.canned_files || cannedMessage.file_urls,
       }));
     },
   },
@@ -36,7 +37,10 @@ export default {
       this.$store.dispatch('getCannedResponse', { searchKey: this.searchKey });
     },
     handleMentionClick(item = {}) {
-      this.$emit('replace', item.description);
+      this.$emit('replace', {
+        content: item.description,
+        files: item.files,
+      });
     },
   },
 };

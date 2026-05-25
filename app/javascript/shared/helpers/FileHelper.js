@@ -2,7 +2,7 @@ import { getAllowedFileTypesByChannel } from '@chatwoot/utils';
 import { INBOX_TYPES } from 'dashboard/helper/inbox';
 import { ALLOWED_FILE_TYPES } from 'shared/constants/messages';
 
-export const DEFAULT_MAXIMUM_FILE_UPLOAD_SIZE = 40;
+export const DEFAULT_MAXIMUM_FILE_UPLOAD_SIZE = 100;
 
 export const formatBytes = (bytes, decimals = 2) => {
   if (bytes === 0) return '0 Bytes';

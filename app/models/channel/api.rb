@@ -35,7 +35,239 @@ class Channel::Api < ApplicationRecord
     'API'
   end
 
+  def send_message(message)
+    validate_uazapi_configuration!
+    validate_uazapi_message!(message)
+
+    return send_pix_message(message) if uazapi_pix_button?(message)
+    return send_contact_message(message) if uazapi_contact_attachment?(message.attachments.first)
+    return send_media_message(message) if message.attachments.present?
+
+    response = uazapi_client.send_text_message(
+      recipient_id: uazapi_recipient_id(message),
+      text: message.outgoing_content,
+      quoted_message_id: message.in_reply_to_external_id,
+      track_id: message.id.to_s,
+      forward: uazapi_forwarded?(message)
+    )
+
+    extract_message_id(response)
+  end
+
+  def edit_message(message, _new_content, **)
+    return unless uazapi_enabled?
+
+    validate_uazapi_configuration!
+
+    response = uazapi_client.edit_message(message_id: message.source_id, text: message.content)
+    updated_source_id = extract_message_id(response)
+    message.update!(source_id: updated_source_id) if updated_source_id.present? && updated_source_id != message.source_id
+  end
+
+  def delete_message(message, **)
+    return unless uazapi_enabled?
+
+    validate_uazapi_configuration!
+
+    uazapi_client.delete_message(message_id: message.source_id)
+  end
+
+  def uazapi_enabled?
+    uazapi_base_url.present? || additional_attributes&.dig('provider') == 'uazapi'
+  end
+
+  def uazapi_base_url
+    additional_attributes&.dig('uazapi_base_url').presence || derived_uazapi_base_url
+  end
+
+  def uazapi_token
+    additional_attributes&.dig('uazapi_token').presence
+  end
+
+  def uazapi_direct_message_delivery?(message)
+    return false unless uazapi_enabled?
+
+    validate_uazapi_message!(message)
+    true
+  rescue StandardError
+    false
+  end
+
+  def validate_uazapi_message!(message)
+    raise I18n.t('errors.uazapi.message_required') if message.outgoing_content.blank? && message.attachments.blank? && !uazapi_pix_button?(message)
+    raise I18n.t('errors.uazapi.multiple_attachments_not_supported') if message.attachments.many?
+    return validate_uazapi_pix_button!(message) if uazapi_pix_button?(message)
+
+    return if message.attachments.blank?
+
+    attachment = message.attachments.first
+    return validate_uazapi_contact_attachment!(attachment) if uazapi_contact_attachment?(attachment)
+
+    raise I18n.t('errors.uazapi.unsupported_attachment_type') if uazapi_media_type(attachment).blank?
+    raise I18n.t('errors.uazapi.public_url_missing') if uazapi_file_url(attachment).blank?
+  end
+
   private
+
+  def uazapi_client
+    @uazapi_client ||= Uazapi::Client.new(base_url: uazapi_base_url, token: uazapi_token)
+  end
+
+  def validate_uazapi_configuration!
+    return if uazapi_base_url.present? && uazapi_token.present?
+
+    raise I18n.t('errors.uazapi.not_configured')
+  end
+
+  def derived_uazapi_base_url
+    return if webhook_url.blank?
+
+    uri = URI.parse(webhook_url)
+    return unless uri.host&.include?('uazapi.com')
+
+    "#{uri.scheme}://#{uri.host}"
+  rescue URI::InvalidURIError
+    nil
+  end
+
+  def extract_message_id(response)
+    candidates = [
+      response['id'],
+      response['messageId'],
+      response.dig('message', 'id'),
+      response.dig('message', 'messageId'),
+      response.dig('data', 'id'),
+      response.dig('data', 'messageId'),
+      response.dig('message', 'key', 'id'),
+      response.dig('data', 'message', 'id'),
+      response.dig('data', 'key', 'id')
+    ]
+
+    candidates.compact.first
+  end
+
+  def send_media_message(message)
+    attachment = message.attachments.first
+
+    response = uazapi_client.send_media_message(
+      recipient_id: uazapi_recipient_id(message),
+      media_type: uazapi_media_type(attachment),
+      file_url: uazapi_file_url(attachment),
+      text: message.outgoing_content.presence,
+      doc_name: uazapi_doc_name(attachment),
+      mime_type: attachment.file.content_type.presence,
+      reply_id: message.in_reply_to_external_id,
+      track_id: message.id.to_s,
+      forward: uazapi_forwarded?(message)
+    )
+
+    extract_message_id(response)
+  end
+
+  def send_contact_message(message)
+    attachment = message.attachments.first
+    metadata = attachment.meta.to_h.with_indifferent_access
+
+    response = uazapi_client.send_contact_message(
+      recipient_id: uazapi_recipient_id(message),
+      full_name: metadata[:fullName].presence || [metadata[:firstName], metadata[:lastName]].compact.join(' ').strip,
+      phone_number: attachment.fallback_title,
+      organization: metadata[:organization],
+      email: metadata[:email],
+      url: metadata[:url],
+      reply_id: message.in_reply_to_external_id,
+      track_id: message.id.to_s,
+      forward: uazapi_forwarded?(message)
+    )
+
+    extract_message_id(response)
+  end
+
+  def send_pix_message(message)
+    pix_data = message.content_attributes.to_h.with_indifferent_access[:uazapi_pix_button].to_h.with_indifferent_access
+
+    response = uazapi_client.send_pix_button(
+      recipient_id: uazapi_recipient_id(message),
+      pix_type: pix_data[:pix_type],
+      pix_key: pix_data[:pix_key],
+      pix_name: pix_data[:pix_name],
+      reply_id: message.in_reply_to_external_id,
+      track_id: message.id.to_s,
+      forward: uazapi_forwarded?(message)
+    )
+
+    extract_message_id(response)
+  end
+
+  def uazapi_recipient_id(message)
+    raw_recipient = [
+      message.conversation.contact.phone_number,
+      message.conversation.contact.identifier,
+      message.conversation.contact_inbox&.source_id
+    ].find(&:present?)
+
+    normalized_recipient = raw_recipient.to_s.gsub(/[^\d]/, '')
+    return normalized_recipient if normalized_recipient.present?
+    return raw_recipient if raw_recipient.present?
+
+    raise I18n.t('errors.uazapi.recipient_missing')
+  end
+
+  def uazapi_supported_attachment?(attachment)
+    uazapi_media_type(attachment).present? && uazapi_file_url(attachment).present?
+  rescue StandardError
+    false
+  end
+
+  def uazapi_contact_attachment?(attachment)
+    attachment&.file_type == 'contact'
+  end
+
+  def uazapi_pix_button?(message)
+    message.content_attributes.to_h.with_indifferent_access[:uazapi_pix_button].present?
+  end
+
+  def validate_uazapi_pix_button!(message)
+    pix_data = message.content_attributes.to_h.with_indifferent_access[:uazapi_pix_button].to_h.with_indifferent_access
+
+    raise I18n.t('errors.uazapi.pix_type_required') if pix_data[:pix_type].to_s.strip.blank?
+    raise I18n.t('errors.uazapi.pix_key_required') if pix_data[:pix_key].to_s.strip.blank?
+    raise I18n.t('errors.uazapi.professional_name_required') if pix_data[:professional_name].to_s.strip.blank?
+  end
+
+  def validate_uazapi_contact_attachment!(attachment)
+    metadata = attachment.meta.to_h.with_indifferent_access
+    full_name = metadata[:fullName].presence || [metadata[:firstName], metadata[:lastName]].compact.join(' ').strip
+
+    raise I18n.t('errors.uazapi.contact_name_required') if full_name.blank?
+    raise I18n.t('errors.uazapi.contact_phone_required') if attachment.fallback_title.blank?
+  end
+
+  def uazapi_media_type(attachment)
+    {
+      'image' => 'image',
+      'video' => 'video',
+      'audio' => 'audio',
+      'file' => 'document'
+    }[attachment.file_type]
+  end
+
+  def uazapi_file_url(attachment)
+    return attachment.external_url if attachment.external_url.present?
+
+    attachment.download_url.presence || attachment.file_url.presence
+  end
+
+  def uazapi_doc_name(attachment)
+    return unless attachment.file_type == 'file'
+    return unless attachment.file.attached?
+
+    attachment.file.filename.to_s
+  end
+
+  def uazapi_forwarded?(message)
+    message.content_attributes.is_a?(Hash) && message.content_attributes['forward'] == true
+  end
 
   def ensure_valid_agent_reply_time_window
     return if additional_attributes['agent_reply_time_window'].blank?

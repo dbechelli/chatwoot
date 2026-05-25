@@ -1,5 +1,6 @@
 <script>
 import { mapGetters } from 'vuex';
+import { useI18n } from 'vue-i18n';
 import { useAdmin } from 'dashboard/composables/useAdmin';
 import { useAccount } from 'dashboard/composables/useAccount';
 import OnboardingView from '../OnboardingView.vue';
@@ -18,12 +19,13 @@ export default {
   },
   setup() {
     const { isAdmin } = useAdmin();
-
     const { accountScopedUrl } = useAccount();
+    const { t } = useI18n();
 
     return {
       isAdmin,
       accountScopedUrl,
+      t,
     };
   },
   computed: {
@@ -36,15 +38,15 @@ export default {
     }),
     loadingIndicatorMessage() {
       if (this.uiFlags.isFetching) {
-        return this.$t('CONVERSATION.LOADING_INBOXES');
+        return this.t('CONVERSATION.LOADING_INBOXES');
       }
-      return this.$t('CONVERSATION.LOADING_CONVERSATIONS');
+      return this.t('CONVERSATION.LOADING_CONVERSATIONS');
     },
     conversationMissingMessage() {
       if (!this.isOnExpandedLayout) {
-        return this.$t('CONVERSATION.SELECT_A_CONVERSATION');
+        return this.t('CONVERSATION.SELECT_A_CONVERSATION');
       }
-      return this.$t('CONVERSATION.404');
+      return this.t('CONVERSATION.404');
     },
     newInboxURL() {
       return this.accountScopedUrl('settings/inboxes/new');

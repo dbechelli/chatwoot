@@ -112,7 +112,8 @@ class FilterService
     [
       @conversations.assigned_to(@user).count,
       @conversations.unassigned.count,
-      @conversations.count
+      @conversations.count,
+      @conversations.where(status: 'resolved').count
     ]
   end
 

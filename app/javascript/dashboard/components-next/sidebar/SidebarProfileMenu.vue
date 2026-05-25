@@ -2,6 +2,7 @@
 import { computed } from 'vue';
 import Auth from 'dashboard/api/auth';
 import { useMapGetter } from 'dashboard/composables/store';
+import { useSidebarContext } from './provider';
 import { useI18n } from 'vue-i18n';
 import Avatar from 'next/avatar/Avatar.vue';
 import SidebarProfileMenuStatus from './SidebarProfileMenuStatus.vue';
@@ -15,10 +16,6 @@ import {
 } from 'next/dropdown-menu/base';
 import CustomBrandPolicyWrapper from '../../components/CustomBrandPolicyWrapper.vue';
 
-defineProps({
-  isCollapsed: { type: Boolean, default: false },
-});
-
 const emit = defineEmits(['close', 'openKeyShortcutModal']);
 
 defineOptions({
@@ -26,6 +23,7 @@ defineOptions({
 });
 
 const { t } = useI18n();
+const { isSidebarCollapsed } = useSidebarContext();
 
 const currentUser = useMapGetter('getCurrentUser');
 const currentUserAvailability = useMapGetter('getCurrentUserAvailability');
@@ -124,19 +122,14 @@ const allowedMenuItems = computed(() => {
 </script>
 
 <template>
-  <DropdownContainer
-    class="relative min-w-0"
-    :class="isCollapsed ? 'w-auto' : 'w-full'"
-    @close="emit('close')"
-  >
+  <DropdownContainer class="relative w-full min-w-0" @close="emit('close')">
     <template #trigger="{ toggle, isOpen }">
       <button
-        class="flex gap-2 items-center p-1 text-left rounded-lg cursor-pointer hover:bg-n-alpha-1"
-        :class="[
-          { 'bg-n-alpha-1': isOpen },
-          isCollapsed ? 'justify-center' : 'w-full',
-        ]"
-        :title="isCollapsed ? currentUser.available_name : undefined"
+        class="flex gap-2 items-center p-1 w-full text-left rounded-lg cursor-pointer hover:bg-n-alpha-1"
+        :class="{
+          'bg-n-alpha-1': isOpen,
+          'justify-center': isSidebarCollapsed,
+        }"
         @click="toggle"
       >
         <Avatar
@@ -147,7 +140,7 @@ const allowedMenuItems = computed(() => {
           class="flex-shrink-0"
           rounded-full
         />
-        <div v-if="!isCollapsed" class="min-w-0">
+        <div v-if="!isSidebarCollapsed" class="min-w-0">
           <div class="text-sm font-medium leading-4 truncate text-n-slate-12">
             {{ currentUser.available_name }}
           </div>

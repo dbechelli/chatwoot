@@ -47,8 +47,7 @@ class Whatsapp::Providers::WhatsappBaileysService < Whatsapp::Providers::BaseSer
         webhookVerifyToken: whatsapp_channel.provider_config['webhook_verify_token'],
         # TODO: Remove on Baileys v2, default will be false
         includeMedia: false,
-        groupsEnabled: self.class.groups_enabled?,
-        autoPresenceSubscribe: whatsapp_channel.provider_config['presence_subscribe'] || false
+        groupsEnabled: self.class.groups_enabled?
       }.compact.to_json
     )
 
@@ -57,14 +56,22 @@ class Whatsapp::Providers::WhatsappBaileysService < Whatsapp::Providers::BaseSer
     true
   end
 
+  # Best-effort disconnect: we tell the Baileys API to drop the session and
+  # move on regardless of the response. A stale or already-cleared session
+  # (404), a Baileys API hiccup (5xx), or even a network error should not
+  # block a provider conversion or channel teardown — the only point of
+  # calling this is to avoid leaving a dangling session, not to gate the
+  # caller's flow on that cleanup succeeding.
   def disconnect_channel_provider
     response = HTTParty.delete(
       "#{provider_url}/connections/#{whatsapp_channel.phone_number}",
-      headers: api_headers
+      headers: api_headers,
+      timeout: 10
     )
-
-    raise ProviderUnavailableError unless process_response(response)
-
+    Rails.logger.warn("[WHATSAPP][BAILEYS] disconnect_channel_provider non-success status=#{response.code}") unless response.success?
+    true
+  rescue StandardError => e
+    Rails.logger.warn("[WHATSAPP][BAILEYS] disconnect_channel_provider failed (ignored): #{e.message}")
     true
   end
 
@@ -264,7 +271,7 @@ class Whatsapp::Providers::WhatsappBaileysService < Whatsapp::Providers::BaseSer
     persist_group_settings(group_contact, metadata)
     persist_invite_code(group_contact) unless soft
     persist_pending_join_requests(group_contact, inbox) unless soft
-    try_update_group_avatar(group_contact) unless soft
+    Channels::Whatsapp::BaileysUpdateGroupAvatarJob.perform_later(group_contact) unless soft
 
     participant_contacts = build_participant_contacts(metadata[:participants], inbox, skip_avatars: soft)
     sync_group_members(group_contact, participant_contacts)
@@ -405,7 +412,8 @@ class Whatsapp::Providers::WhatsappBaileysService < Whatsapp::Providers::BaseSer
       "#{provider_url}/connections/#{whatsapp_channel.phone_number}/profile-picture-url",
       headers: api_headers,
       query: { jid: jid },
-      format: :json
+      format: :json,
+      timeout: 10
     )
 
     return nil unless process_response(response)
@@ -464,6 +472,12 @@ class Whatsapp::Providers::WhatsappBaileysService < Whatsapp::Providers::BaseSer
   def edit_message(recipient_id, message, new_content)
     @recipient_id = recipient_id
 
+    key = {
+      id: message.source_id,
+      remoteJid: remote_jid,
+      fromMe: message.message_type == 'outgoing'
+    }
+
     response = HTTParty.patch(
       "#{provider_url}/connections/#{whatsapp_channel.phone_number}/messages",
       headers: api_headers,
@@ -474,9 +488,123 @@ class Whatsapp::Providers::WhatsappBaileysService < Whatsapp::Providers::BaseSer
       }.to_json
     )
 
+    # Fallback to the native Baileys format via send-message if the PATCH endpoint is not supported
+    unless response.success?
+      response = HTTParty.post(
+        "#{provider_url}/connections/#{whatsapp_channel.phone_number}/send-message",
+        headers: api_headers,
+        body: {
+          jid: remote_jid,
+          messageContent: {
+            text: new_content,
+            edit: key
+          }
+        }.to_json
+      )
+    end
+
     raise ProviderUnavailableError unless process_response(response)
 
     true
+  end
+
+  def forward_message(message, destination_jids)
+    Rails.logger.info "Forward service: Starting forward for message #{message.id}"
+
+    # Try to get the original WAMessage object, or build one if not available
+    wamessage = message.content_attributes['wamessage']
+    if wamessage.blank?
+      Rails.logger.info "Forward service: No original WAMessage, building from message data"
+      wamessage = build_wamessage_from_message(message)
+    end
+
+    Rails.logger.info "Forward service: WAMessage ready: #{wamessage.inspect}"
+
+    # Convert destination JIDs to WhatsApp format
+    formatted_jids = destination_jids.map do |jid|
+      jid.ends_with?('@lid') ? jid : "#{jid.delete('+')}@s.whatsapp.net"
+    end
+    Rails.logger.info "Forward service: Destination JIDs: #{formatted_jids.inspect}"
+
+    url = "#{provider_url}/connections/#{whatsapp_channel.phone_number}/forward-message"
+    Rails.logger.info "Forward service: Posting to: #{url}"
+
+    # Send the WAMessage object as required by Baileys API
+    response = HTTParty.post(
+      url,
+      headers: api_headers,
+      body: {
+        message: wamessage,
+        destinationJids: formatted_jids
+      }.to_json
+    )
+
+    Rails.logger.info "Forward service: Response status: #{response.code}"
+    Rails.logger.info "Forward service: Response body: #{response.body}"
+
+    raise ProviderUnavailableError unless process_response(response)
+
+    response.parsed_response.dig('data', 'results')
+  rescue StandardError => e
+    Rails.logger.error "Forward service error: #{e.class.name} - #{e.message}"
+    Rails.logger.error e.backtrace.join("\n")
+    raise e
+  end
+
+  def build_wamessage_from_message(message)
+    # Build a WAMessage structure from Chatwoot message data
+    unless message.source_id.present?
+      raise StandardError, 'Message does not have a source_id. Cannot build WAMessage for forwarding.'
+    end
+
+    contact_identifier = message.conversation.contact.identifier
+    if contact_identifier.blank?
+      raise StandardError, 'Contact identifier is missing. Cannot build WAMessage for forwarding.'
+    end
+
+    # Build the remote JID
+    remote_jid = if contact_identifier.ends_with?('@lid')
+                   contact_identifier
+                 else
+                   "#{contact_identifier.delete('+')}@s.whatsapp.net"
+                 end
+
+    # Build the message content based on type
+    message_content = if message.attachments.present?
+                        build_wamessage_media_content(message)
+                      elsif message.content.present?
+                        { conversation: message.content }
+                      else
+                        { conversation: '' }
+                      end
+
+    # Build the complete WAMessage structure
+    {
+      key: {
+        remoteJid: remote_jid,
+        id: message.source_id,
+        fromMe: message.message_type == 'outgoing'
+      },
+      messageTimestamp: message.content_attributes['external_created_at'] || message.created_at.to_i,
+      message: message_content
+    }
+  end
+
+  def build_wamessage_media_content(message)
+    # For messages with attachments, build appropriate media message structure
+    attachment = message.attachments.first
+    case attachment.file_type
+    when 'image'
+      { imageMessage: { caption: message.content } }
+    when 'video'
+      { videoMessage: { caption: message.content } }
+    when 'audio'
+      { audioMessage: {} }
+    when 'file', 'sticker'
+      { documentMessage: { caption: message.content } }
+    else
+      { conversation: message.content }
+    end
   end
 
   private
@@ -583,7 +711,12 @@ class Whatsapp::Providers::WhatsappBaileysService < Whatsapp::Providers::BaseSer
       body: {
         jid: remote_jid,
         messageContent: @message_content,
-        chatwootMessageId: @message.id
+        # baileys-api uses this as an idempotency key. Reactions UPDATE a single
+        # Message row in place across toggle/replace/remove cycles, so reusing
+        # only `id` would make every follow-up send hit the cached response and
+        # never reach WhatsApp. Suffixing with updated_at gives each send a fresh
+        # key while still letting Sidekiq retries of the same attempt dedupe.
+        chatwootMessageId: "#{@message.id}:#{@message.updated_at.to_f}"
       }.to_json,
       timeout: 120
     )
@@ -859,7 +992,6 @@ class Whatsapp::Providers::WhatsappBaileysService < Whatsapp::Providers::BaseSer
   end
 
   with_error_handling :setup_channel_provider,
-                      :disconnect_channel_provider,
                       :send_message,
                       :toggle_typing_status,
                       :presence_subscribe,

@@ -23,6 +23,7 @@ module Events::Types
   # FIXME: deprecate the opened and resolved events in future in favor of status changed event.
   CONVERSATION_OPENED = 'conversation.opened'
   CONVERSATION_RESOLVED = 'conversation.resolved'
+  CONVERSATION_RESOLUTION_REQUIRED = 'conversation.resolution_required'
   CONVERSATION_CAPTAIN_INFERENCE_RESOLVED = 'conversation.captain_inference_resolved'
   CONVERSATION_CAPTAIN_INFERENCE_HANDOFF = 'conversation.captain_inference_handoff'
 
@@ -30,6 +31,11 @@ module Events::Types
   CONVERSATION_CONTACT_CHANGED = 'conversation.contact_changed'
   ASSIGNEE_CHANGED = 'assignee.changed'
   TEAM_CHANGED = 'team.changed'
+
+  # kanban events
+  KANBAN_CARD_CREATED = 'kanban_card_created'
+  KANBAN_CARD_UPDATED = 'kanban_card_updated'
+  KANBAN_CARD_DELETED = 'kanban_card_deleted'
   CONVERSATION_TYPING_ON = 'conversation.typing_on'
   CONVERSATION_RECORDING = 'conversation.recording'
   CONVERSATION_TYPING_OFF = 'conversation.typing_off'
@@ -41,6 +47,7 @@ module Events::Types
   FIRST_REPLY_CREATED = 'first.reply.created'
   REPLY_CREATED = 'reply.created'
   MESSAGE_UPDATED = 'message.updated'
+  MESSAGE_DELETED = 'message.deleted'
   MESSAGES_READ = 'messages.read'
 
   # scheduled message events

@@ -12,11 +12,14 @@ import {
 } from './helpers/actionHelpers';
 import messageReadActions from './actions/messageReadActions';
 import messageTranslateActions from './actions/messageTranslateActions';
+import messageForwardActions from './actions/messageForwardActions';
 import * as Sentry from '@sentry/vue';
 import {
   handleVoiceCallCreated,
   handleVoiceCallUpdated,
+  syncConversationCallVisibility,
 } from 'dashboard/helper/voice';
+import { throwErrorMessage } from '../../utils/api';
 
 export const hasMessageFailedWithExternalError = pendingMessage => {
   // This helper is used to check if the message has failed with an external error.
@@ -53,7 +56,7 @@ const actions = {
         { commit, dispatch },
         params,
         data,
-        params.assigneeType
+        params.tabType || params.assigneeType
       );
     } catch (error) {
       // Handle error
@@ -197,7 +200,7 @@ const actions = {
       try {
         await dispatch('fetchPreviousMessages', {
           after,
-          before: data.messages[0].id,
+          before: data.messages?.[0]?.id,
           conversationId: data.id,
         });
         commit(types.SET_CHAT_DATA_FETCHED, data.id);
@@ -343,11 +346,23 @@ const actions = {
   ) {
     try {
       const { data } = await MessageApi.delete(conversationId, messageId);
-      commit(types.ADD_MESSAGE, data);
+      commit(types.DELETE_MESSAGE, { conversationId, messageId });
       commit(types.DELETE_CONVERSATION_ATTACHMENTS, data);
     } catch (error) {
-      throw new Error(error);
+      throwErrorMessage(error);
     }
+  },
+
+  toggleMessageReaction: function toggleMessageReaction(
+    _context,
+    { conversationId, messageId, emoji, echoId }
+  ) {
+    // The optimistic Message is dispatched to the store by the caller.
+    // Backend echoes back the same echo_id via ActionCable MESSAGE_CREATED, and
+    // findPendingMessageIndex in the ADD_MESSAGE mutation swaps the fake for
+    // the real one. Returning the promise lets callers reconcile if the cable
+    // echo is delayed/missing.
+    return MessageApi.toggleReaction(conversationId, messageId, emoji, echoId);
   },
 
   editMessage: async function editMessage(
@@ -363,7 +378,7 @@ const actions = {
       commit(types.ADD_MESSAGE, data);
       return data;
     } catch (error) {
-      throw new Error(error);
+      throwErrorMessage(error);
     }
   },
 
@@ -411,19 +426,18 @@ const actions = {
     }
   },
 
-  updateConversation({ commit, dispatch }, conversation) {
-    const {
-      meta: { sender },
-    } = conversation;
+  updateConversation({ commit, dispatch, rootGetters }, conversation) {
+    const sender = conversation.meta?.sender;
 
     commit(types.UPDATE_CONVERSATION, conversation);
+    syncConversationCallVisibility(conversation, rootGetters?.getCurrentUserID);
 
     dispatch('conversationLabels/setConversationLabel', {
       id: conversation.id,
       data: conversation.labels,
     });
 
-    dispatch('contacts/setContact', sender);
+    if (sender) dispatch('contacts/setContact', sender);
   },
 
   updateConversationLastActivity(
@@ -597,6 +611,7 @@ const actions = {
 
   ...messageReadActions,
   ...messageTranslateActions,
+  ...messageForwardActions,
 };
 
 export default actions;

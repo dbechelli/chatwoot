@@ -3,11 +3,52 @@ import InboxesAPI from '../../../api/inboxes';
 import AnalyticsHelper from '../../../helper/AnalyticsHelper';
 import { ACCOUNT_EVENTS } from '../../../helper/AnalyticsHelper/events';
 
+const isBlobLike = value =>
+  typeof Blob !== 'undefined' && value instanceof Blob;
+
+const isFileLike = value =>
+  typeof File !== 'undefined' && value instanceof File;
+
+const appendFormDataValue = (formData, key, value) => {
+  if (value === undefined) {
+    return;
+  }
+
+  if (
+    value === null ||
+    isBlobLike(value) ||
+    isFileLike(value) ||
+    value instanceof Date
+  ) {
+    formData.append(key, value);
+    return;
+  }
+
+  if (Array.isArray(value)) {
+    if (!value.length) {
+      formData.append(`${key}[]`, '');
+      return;
+    }
+
+    value.forEach(item => appendFormDataValue(formData, `${key}[]`, item));
+    return;
+  }
+
+  if (typeof value === 'object') {
+    Object.keys(value).forEach(nestedKey => {
+      appendFormDataValue(formData, `${key}[${nestedKey}]`, value[nestedKey]);
+    });
+    return;
+  }
+
+  formData.append(key, value);
+};
+
 export const buildInboxData = inboxParams => {
   const formData = new FormData();
   const { channel = {}, ...inboxProperties } = inboxParams;
   Object.keys(inboxProperties).forEach(key => {
-    formData.append(key, inboxProperties[key]);
+    appendFormDataValue(formData, key, inboxProperties[key]);
   });
   const { selectedFeatureFlags, ...channelParams } = channel;
   // selectedFeatureFlags needs to be empty when creating a website channel
@@ -21,7 +62,7 @@ export const buildInboxData = inboxParams => {
     }
   }
   Object.keys(channelParams).forEach(key => {
-    formData.append(`channel[${key}]`, channel[key]);
+    appendFormDataValue(formData, `channel[${key}]`, channelParams[key]);
   });
   return formData;
 };

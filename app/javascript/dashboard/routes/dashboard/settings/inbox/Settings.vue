@@ -21,6 +21,7 @@ import PreChatFormSettings from './PreChatForm/Settings.vue';
 import WeeklyAvailability from './components/WeeklyAvailability.vue';
 import GreetingsEditor from 'shared/components/GreetingsEditor.vue';
 import ConfigurationPage from './settingsPage/ConfigurationPage.vue';
+import VoiceConfigurationPage from './settingsPage/VoiceConfigurationPage.vue';
 import CustomerSatisfactionPage from './settingsPage/CustomerSatisfactionPage.vue';
 import CollaboratorsPage from './settingsPage/CollaboratorsPage.vue';
 import BotConfiguration from './components/BotConfiguration.vue';
@@ -47,6 +48,7 @@ export default {
     BotConfiguration,
     CollaboratorsPage,
     ConfigurationPage,
+    VoiceConfigurationPage,
     CustomerSatisfactionPage,
     FacebookReauthorize,
     GreetingsEditor,
@@ -94,6 +96,8 @@ export default {
       selectedInboxName: '',
       channelWebsiteUrl: '',
       webhookUrl: '',
+      uazapiBaseUrl: '',
+      uazapiToken: '',
       channelWelcomeTitle: '',
       channelWelcomeTagline: '',
       selectedFeatureFlags: [],
@@ -115,9 +119,33 @@ export default {
     ...mapGetters({
       accountId: 'getCurrentAccountId',
       isFeatureEnabledonAccount: 'accounts/isFeatureEnabledonAccount',
+      isOnChatwootCloud: 'globalConfig/isOnChatwootCloud',
       uiFlags: 'inboxes/getUIFlags',
       portals: 'portals/allPortals',
     }),
+    isInboundEmailEnabled() {
+      return this.isFeatureEnabledonAccount(
+        this.accountId,
+        FEATURE_FLAGS.INBOUND_EMAILS
+      );
+    },
+    showContinuityToggle() {
+      if (this.isInboundEmailEnabled) return true;
+      return this.isOnChatwootCloud;
+    },
+    isContinuityDisabled() {
+      return this.isOnChatwootCloud && !this.isInboundEmailEnabled;
+    },
+    continuityDescription() {
+      if (this.isContinuityDisabled) {
+        return this.$t(
+          'INBOX_MGMT.SETTINGS_POPUP.ENABLE_CONTINUITY_VIA_EMAIL_DISABLED_TEXT'
+        );
+      }
+      return this.$t(
+        'INBOX_MGMT.SETTINGS_POPUP.ENABLE_CONTINUITY_VIA_EMAIL_SUB_TEXT'
+      );
+    },
     selectedTabKey() {
       return this.tabs[this.selectedTabIndex]?.key;
     },
@@ -162,19 +190,17 @@ export default {
         },
       ];
 
-      if (!this.isAVoiceChannel) {
-        visibleToAllChannelTabs = [
-          ...visibleToAllChannelTabs,
-          {
-            key: 'business-hours',
-            name: this.$t('INBOX_MGMT.TABS.BUSINESS_HOURS'),
-          },
-          {
-            key: 'csat',
-            name: this.$t('INBOX_MGMT.TABS.CSAT'),
-          },
-        ];
-      }
+      visibleToAllChannelTabs = [
+        ...visibleToAllChannelTabs,
+        {
+          key: 'business-hours',
+          name: this.$t('INBOX_MGMT.TABS.BUSINESS_HOURS'),
+        },
+        {
+          key: 'csat',
+          name: this.$t('INBOX_MGMT.TABS.CSAT'),
+        },
+      ];
 
       if (this.isAWebWidgetInbox) {
         visibleToAllChannelTabs = [
@@ -190,7 +216,6 @@ export default {
         this.isATwilioChannel ||
         this.isALineChannel ||
         this.isAPIInbox ||
-        this.isAVoiceChannel ||
         (this.isAnEmailChannel && !this.inbox.provider) ||
         this.shouldShowWhatsAppConfiguration ||
         this.isAWebWidgetInbox ||
@@ -223,6 +248,24 @@ export default {
           {
             key: 'whatsapp-health',
             name: this.$t('INBOX_MGMT.TABS.ACCOUNT_HEALTH'),
+          },
+        ];
+      }
+
+      if (
+        this.isATwilioChannel &&
+        this.inbox.phone_number &&
+        this.inbox.medium === 'sms' &&
+        this.isFeatureEnabledonAccount(
+          this.accountId,
+          FEATURE_FLAGS.CHANNEL_VOICE
+        )
+      ) {
+        visibleToAllChannelTabs = [
+          ...visibleToAllChannelTabs,
+          {
+            key: 'voice-configuration',
+            name: this.$t('INBOX_MGMT.TABS.VOICE'),
           },
         ];
       }
@@ -423,6 +466,8 @@ export default {
       this.avatarUrl = this.inbox.avatar_url;
       this.selectedInboxName = this.inbox.name;
       this.webhookUrl = this.inbox.webhook_url;
+      this.uazapiBaseUrl = this.inbox.additional_attributes?.uazapi_base_url || '';
+      this.uazapiToken = this.inbox.additional_attributes?.uazapi_token || '';
       this.greetingEnabled = this.inbox.greeting_enabled || false;
       this.greetingMessage = this.inbox.greeting_message || '';
       this.emailCollectEnabled = this.inbox.enable_email_collect;
@@ -538,6 +583,7 @@ export default {
       LocalStorage.set(this.widgetBuilderStorageKey, bubbleSettings);
 
       try {
+        const apiChannelAdditionalAttributes = this.buildApiChannelAdditionalAttributes();
         const payload = {
           id: this.currentInboxId,
           name: this.selectedInboxName?.trim(),
@@ -557,17 +603,25 @@ export default {
             widget_color: this.inbox.widget_color,
             website_url: this.channelWebsiteUrl,
             webhook_url: this.webhookUrl,
+            additional_attributes: apiChannelAdditionalAttributes,
             welcome_title: this.channelWelcomeTitle || '',
             welcome_tagline: this.channelWelcomeTagline || '',
             selectedFeatureFlags: this.selectedFeatureFlags,
             reply_time: this.replyTime || 'in_a_few_minutes',
-            continuity_via_email: this.continuityViaEmail,
+            continuity_via_email:
+              this.isInboundEmailEnabled && this.continuityViaEmail,
           },
         };
         if (this.avatarFile) {
           payload.avatar = this.avatarFile;
         }
-        await this.$store.dispatch('inboxes/updateInbox', payload);
+        const updatedInbox = await this.$store.dispatch('inboxes/updateInbox', {
+          ...payload,
+          formData: !!this.avatarFile,
+        });
+        if (updatedInbox?.id === this.inbox.id) {
+          this.syncInboxData();
+        }
         useAlert(this.$t('INBOX_MGMT.EDIT.API.SUCCESS_MESSAGE'));
         this.showBusinessNameInput = false;
       } catch (error) {
@@ -594,6 +648,29 @@ export default {
             : this.$t('INBOX_MGMT.DELETE.API.AVATAR_ERROR_MESSAGE')
         );
       }
+    },
+    buildApiChannelAdditionalAttributes() {
+      const existingAttributes = { ...(this.inbox.additional_attributes || {}) };
+      const hasBaseUrl = !!this.uazapiBaseUrl?.trim();
+      const hasToken = !!this.uazapiToken?.trim();
+
+      if (hasBaseUrl && hasToken) {
+        return {
+          ...existingAttributes,
+          provider: 'uazapi',
+          uazapi_base_url: this.uazapiBaseUrl.trim(),
+          uazapi_token: this.uazapiToken,
+        };
+      }
+
+      const cleanedAttributes = { ...existingAttributes };
+      delete cleanedAttributes.uazapi_base_url;
+      delete cleanedAttributes.uazapi_token;
+      if (cleanedAttributes.provider === 'uazapi') {
+        delete cleanedAttributes.provider;
+      }
+
+      return cleanedAttributes;
     },
     toggleSenderNameType(key) {
       this.senderNameType = key;
@@ -630,6 +707,17 @@ export default {
   validations: {
     webhookUrl: {
       shouldBeUrl,
+    },
+    uazapiBaseUrl: {
+      shouldBeUrl,
+      isCompleteUazapiConfig(value) {
+        return !!value?.trim() === !!this.uazapiToken?.trim();
+      },
+    },
+    uazapiToken: {
+      isCompleteUazapiConfig(value) {
+        return !!value?.trim() === !!this.uazapiBaseUrl?.trim();
+      },
     },
     selectedInboxName: {},
   },
@@ -756,7 +844,7 @@ export default {
             <SettingsFieldSection
               v-if="isAPIInbox"
               :label="
-                $t('INBOX_MGMT.ADD.WEBSITE_CHANNEL.CHANNEL_WEBHOOK_URL.LABEL')
+                $t('INBOX_MGMT.ADD.API_CHANNEL.WEBHOOK_URL.LABEL')
               "
             >
               <woot-input
@@ -764,18 +852,63 @@ export default {
                 class="[&>input]:!mb-0"
                 :class="{ error: v$.webhookUrl.$error }"
                 :placeholder="
-                  $t(
-                    'INBOX_MGMT.ADD.WEBSITE_CHANNEL.CHANNEL_WEBHOOK_URL.PLACEHOLDER'
-                  )
+                  $t('INBOX_MGMT.ADD.API_CHANNEL.WEBHOOK_URL.PLACEHOLDER')
                 "
                 :error="
                   v$.webhookUrl.$error
-                    ? $t(
-                        'INBOX_MGMT.ADD.WEBSITE_CHANNEL.CHANNEL_WEBHOOK_URL.ERROR'
-                      )
+                    ? $t('INBOX_MGMT.ADD.WEBSITE_CHANNEL.CHANNEL_WEBHOOK_URL.ERROR')
                     : ''
                 "
                 @blur="v$.webhookUrl.$touch"
+              />
+            </SettingsFieldSection>
+
+            <SettingsFieldSection
+              v-if="isAPIInbox"
+              :label="$t('INBOX_MGMT.ADD.API_CHANNEL.UAZAPI_BASE_URL.LABEL')"
+              :help-text="$t('INBOX_MGMT.ADD.API_CHANNEL.UAZAPI_BASE_URL.SUBTITLE')"
+            >
+              <woot-input
+                v-model="uazapiBaseUrl"
+                class="[&>input]:!mb-0"
+                name="uazapi_base_url"
+                autocomplete="off"
+                autocapitalize="off"
+                autocorrect="off"
+                spellcheck="false"
+                :class="{ error: v$.uazapiBaseUrl.$error || v$.uazapiToken.$error }"
+                :placeholder="$t('INBOX_MGMT.ADD.API_CHANNEL.UAZAPI_BASE_URL.PLACEHOLDER')"
+                :error="
+                  v$.uazapiBaseUrl.$error || v$.uazapiToken.$error
+                    ? $t('INBOX_MGMT.ADD.API_CHANNEL.UAZAPI_ERROR')
+                    : ''
+                "
+                @blur="v$.uazapiBaseUrl.$touch"
+              />
+            </SettingsFieldSection>
+
+            <SettingsFieldSection
+              v-if="isAPIInbox"
+              :label="$t('INBOX_MGMT.ADD.API_CHANNEL.UAZAPI_TOKEN.LABEL')"
+              :help-text="$t('INBOX_MGMT.ADD.API_CHANNEL.UAZAPI_TOKEN.SUBTITLE')"
+            >
+              <woot-input
+                v-model="uazapiToken"
+                type="password"
+                class="[&>input]:!mb-0"
+                name="uazapi_token"
+                autocomplete="new-password"
+                autocapitalize="off"
+                autocorrect="off"
+                spellcheck="false"
+                :class="{ error: v$.uazapiBaseUrl.$error || v$.uazapiToken.$error }"
+                :placeholder="$t('INBOX_MGMT.ADD.API_CHANNEL.UAZAPI_TOKEN.PLACEHOLDER')"
+                :error="
+                  v$.uazapiBaseUrl.$error || v$.uazapiToken.$error
+                    ? $t('INBOX_MGMT.ADD.API_CHANNEL.UAZAPI_ERROR')
+                    : ''
+                "
+                @blur="v$.uazapiToken.$touch"
               />
             </SettingsFieldSection>
 
@@ -831,7 +964,6 @@ export default {
             </SettingsFieldSection>
 
             <SettingsFieldSection
-              v-if="!isAVoiceChannel"
               :label="$t('INBOX_MGMT.HELP_CENTER.LABEL')"
               :help-text="$t('INBOX_MGMT.HELP_CENTER.SUB_TEXT')"
             >
@@ -1192,15 +1324,15 @@ export default {
               />
 
               <SettingsToggleSection
-                v-if="isAWebWidgetInbox"
+                v-if="isAWebWidgetInbox && showContinuityToggle"
                 v-model="continuityViaEmail"
                 :header="
                   $t('INBOX_MGMT.SETTINGS_POPUP.ENABLE_CONTINUITY_VIA_EMAIL')
                 "
-                :description="
-                  $t(
-                    'INBOX_MGMT.SETTINGS_POPUP.ENABLE_CONTINUITY_VIA_EMAIL_SUB_TEXT'
-                  )
+                :description="continuityDescription"
+                :hide-toggle="isContinuityDisabled"
+                :class="
+                  isContinuityDisabled ? 'cursor-not-allowed opacity-50' : ''
                 "
               />
             </SettingsAccordion>
@@ -1209,7 +1341,7 @@ export default {
               <NextButton
                 v-if="isAPIInbox"
                 type="submit"
-                :disabled="v$.webhookUrl.$invalid"
+                :disabled="v$.$invalid"
                 :label="$t('INBOX_MGMT.SETTINGS_POPUP.UPDATE')"
                 :is-loading="uiFlags.isUpdating"
                 @click="updateInbox"
@@ -1258,6 +1390,12 @@ export default {
           :class="isAWebWidgetInbox ? 'max-w-7xl' : 'max-w-4xl'"
         >
           <ConfigurationPage :inbox="inbox" />
+        </div>
+        <div
+          v-if="selectedTabKey === 'voice-configuration'"
+          class="mx-6 max-w-4xl"
+        >
+          <VoiceConfigurationPage :inbox="inbox" />
         </div>
         <div v-if="selectedTabKey === 'csat'">
           <CustomerSatisfactionPage :inbox="inbox" />

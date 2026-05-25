@@ -6,13 +6,14 @@ import { useSidebarContext } from './provider';
 
 const props = defineProps({
   label: { type: String, required: true },
-  to: { type: [String, Object], required: true },
+  to: { type: [String, Object], default: null },
   icon: { type: [String, Object], default: null },
   active: { type: Boolean, default: false },
   component: { type: Function, default: null },
+  onClick: { type: Function, default: null },
 });
 
-const { resolvePermissions, resolveFeatureFlag } = useSidebarContext();
+const { resolvePermissions, resolveFeatureFlag, isSidebarCollapsed } = useSidebarContext();
 
 const shouldRenderComponent = computed(() => {
   return typeof props.component === 'function' || isVNode(props.component);
@@ -25,16 +26,20 @@ const shouldRenderComponent = computed(() => {
     :permissions="resolvePermissions(to)"
     :feature-flag="resolveFeatureFlag(to)"
     as="li"
-    class="py-0.5 ltr:pl-2 rtl:pr-2 rtl:mr-3 ltr:ml-3 relative text-n-slate-11 child-item before:bg-n-slate-4 after:bg-transparent after:border-n-slate-4 before:left-0 rtl:before:right-0 min-w-0"
+    class="py-0.5 ltr:pl-3 rtl:pr-3 rtl:mr-3 ltr:ml-3 relative text-n-slate-11 child-item before:bg-n-slate-4 after:bg-transparent after:border-n-slate-4 before:left-0 rtl:before:right-0"
   >
     <component
-      :is="to ? 'router-link' : 'div'"
+      :is="to ? 'router-link' : 'button'"
       :to="to"
+      type="button"
+      v-tooltip="isSidebarCollapsed ? label : ''"
       :title="label"
-      class="flex h-8 items-center gap-2 px-2 py-1 rounded-lg hover:bg-gradient-to-r from-transparent via-n-slate-3/70 to-n-slate-3/70 group min-w-0"
+      class="flex h-8 items-center gap-2 px-2 py-1 rounded-lg max-w-[9.438rem] hover:bg-gradient-to-r from-transparent via-n-slate-3/70 to-n-slate-3/70 group"
       :class="{
-        'text-n-slate-12 bg-n-alpha-2 active': active,
+        'text-n-blue-text bg-n-alpha-2 active': active,
+        'justify-center': isSidebarCollapsed,
       }"
+      @click="onClick"
     >
       <component
         :is="component"
@@ -44,10 +49,8 @@ const shouldRenderComponent = computed(() => {
         :active
       />
       <template v-else>
-        <span v-if="icon" class="size-4 grid place-content-center rounded-full">
-          <Icon :icon="icon" class="size-4 inline-block" />
-        </span>
-        <div class="flex-1 truncate min-w-0 text-sm">{{ label }}</div>
+        <Icon v-if="icon" :icon="icon" class="size-4 inline-block" />
+        <div v-if="!isSidebarCollapsed" class="flex-1 truncate min-w-0">{{ label }}</div>
       </template>
     </component>
   </Policy>

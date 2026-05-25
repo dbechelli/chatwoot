@@ -5,7 +5,7 @@ class Api::V1::Accounts::ContactsController < Api::V1::Accounts::BaseController
   sort_on :phone_number, type: :string
   sort_on :last_activity_at, internal_name: :order_on_last_activity_at, type: :scope, scope_params: [:direction]
   sort_on :created_at, internal_name: :order_on_created_at, type: :scope, scope_params: [:direction]
-  sort_on :company, internal_name: :order_on_company_name, type: :scope, scope_params: [:direction]
+  sort_on :company_name, internal_name: :order_on_company_name, type: :scope, scope_params: [:direction]
   sort_on :city, internal_name: :order_on_city, type: :scope, scope_params: [:direction]
   sort_on :country, internal_name: :order_on_country_name, type: :scope, scope_params: [:direction]
 
@@ -24,9 +24,21 @@ class Api::V1::Accounts::ContactsController < Api::V1::Accounts::BaseController
   def search
     render json: { error: 'Specify search string with parameter q' }, status: :unprocessable_entity if params[:q].blank? && return
 
+    query = params[:q].strip
+    normalized_query = query.gsub(/\D/, '')
+
     contacts = Current.account.contacts.where(
-      'name ILIKE :search OR email ILIKE :search OR phone_number ILIKE :search OR contacts.identifier LIKE :search',
-      search: "%#{params[:q].strip}%"
+      <<~SQL.squish,
+        name ILIKE :search OR
+        email ILIKE :search OR
+        phone_number ILIKE :search OR
+        contacts.identifier LIKE :search OR
+        (:normalized_query <> '' AND regexp_replace(COALESCE(phone_number, ''), '\\D', '', 'g') LIKE :normalized_search) OR
+        (:normalized_query <> '' AND regexp_replace(COALESCE(contacts.identifier, ''), '\\D', '', 'g') LIKE :normalized_search)
+      SQL
+      search: "%#{query}%",
+      normalized_query: normalized_query,
+      normalized_search: "%#{normalized_query}%"
     )
     @contacts = fetch_contacts_with_has_more(contacts)
   end

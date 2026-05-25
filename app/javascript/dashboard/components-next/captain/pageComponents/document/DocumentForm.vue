@@ -19,7 +19,7 @@ const props = defineProps({
 
 const emit = defineEmits(['submit', 'cancel']);
 
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const MAX_FILE_SIZE = 100 * 1024 * 1024; // 100MB
 
 const { t } = useI18n();
 

@@ -136,6 +136,9 @@ const tableHeaders = computed(() => {
     t('CANNED_MGMT.LIST.TABLE_HEADER.ACTIONS'),
   ];
 });
+
+const isReadOnlyUazapiTemplate = cannedItem =>
+  cannedItem.additional_attributes?.uazapi_on_whatsapp === true;
 </script>
 
 <template>
@@ -212,9 +215,23 @@ const tableHeaders = computed(() => {
             <template #default>
               <BaseTableCell class="max-w-0">
                 <div class="flex flex-col gap-2 min-w-0">
-                  <span class="text-heading-3 text-n-slate-12 truncate block">
-                    {{ cannedItem.short_code }}
-                  </span>
+                  <div class="flex items-center gap-2 min-w-0">
+                    <span class="text-heading-3 text-n-slate-12 truncate block">
+                      {{ cannedItem.short_code }}
+                    </span>
+                    <span
+                      v-if="cannedItem.canned_files?.length"
+                      class="text-xs px-2 py-1 rounded-full bg-n-slate-2 text-n-slate-11"
+                    >
+                      {{ $t('CANNED_MGMT.ATTACHMENTS.BADGE') }}
+                    </span>
+                    <span
+                      v-if="isReadOnlyUazapiTemplate(cannedItem)"
+                      class="text-xs px-2 py-1 rounded-full bg-n-amber-2 text-n-amber-11"
+                    >
+                      {{ $t('CANNED_MGMT.UAZAPI.BADGE') }}
+                    </span>
+                  </div>
                   <p class="text-body-main text-n-slate-11 line-clamp-5">
                     {{ getPlainText(cannedItem.content) }}
                   </p>
@@ -228,15 +245,21 @@ const tableHeaders = computed(() => {
                     icon="i-woot-edit-pen"
                     slate
                     sm
+                    :disabled="isReadOnlyUazapiTemplate(cannedItem)"
                     @click="openEditPopup(cannedItem)"
                   />
                   <Button
-                    v-tooltip.top="$t('CANNED_MGMT.DELETE.BUTTON_TEXT')"
+                    v-tooltip.top="
+                      isReadOnlyUazapiTemplate(cannedItem)
+                        ? $t('CANNED_MGMT.UAZAPI.READ_ONLY')
+                        : $t('CANNED_MGMT.DELETE.BUTTON_TEXT')
+                    "
                     icon="i-woot-bin"
                     slate
                     sm
                     class="hover:enabled:text-n-ruby-11 hover:enabled:bg-n-ruby-2"
                     :is-loading="loading[cannedItem.id]"
+                    :disabled="isReadOnlyUazapiTemplate(cannedItem)"
                     @click="openDeletePopup(cannedItem)"
                   />
                 </div>
@@ -256,6 +279,8 @@ const tableHeaders = computed(() => {
         :id="activeResponse.id"
         :edshort-code="activeResponse.short_code"
         :edcontent="activeResponse.content"
+        :attachments="activeResponse.canned_files || activeResponse.file_urls || []"
+        :additional-attributes="activeResponse.additional_attributes || {}"
         :on-close="hideEditPopup"
       />
     </woot-modal>

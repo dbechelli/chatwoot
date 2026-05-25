@@ -20,7 +20,34 @@ cleanup() {
 trap cleanup EXIT
 
 echo "Downloading zip file from $URL..."
-if wget -q -O "$ZIP_FILE" "$URL"; then
+
+# Use curl with redirect following. For Google Drive URLs, handle the confirmation
+# token required for files that trigger the virus-scan warning page.
+if curl -fsSL \
+  --cookie /tmp/brand_cookies.txt \
+  --cookie-jar /tmp/brand_cookies.txt \
+  -o "$ZIP_FILE" \
+  "$URL"; then
+  # Check if what we got is actually an HTML page (Google Drive confirmation)
+  MIME=$(file -b --mime-type "$ZIP_FILE" 2>/dev/null || echo "unknown")
+  if [ "$MIME" = "text/html" ]; then
+    echo "Got HTML confirmation page from Google Drive, extracting confirm token..."
+    CONFIRM=$(grep -o 'confirm=[^&"]*' "$ZIP_FILE" | head -1 | cut -d= -f2)
+    if [ -z "$CONFIRM" ]; then
+      CONFIRM=$(grep -o 'uuid=[^&"]*' "$ZIP_FILE" | head -1 | cut -d= -f2)
+    fi
+    if [ -n "$CONFIRM" ]; then
+      CONFIRM_URL="${URL}&confirm=${CONFIRM}"
+      echo "Retrying download with confirmation token..."
+      curl -fsSL \
+        --cookie /tmp/brand_cookies.txt \
+        --cookie-jar /tmp/brand_cookies.txt \
+        -o "$ZIP_FILE" \
+        "$CONFIRM_URL"
+    else
+      echo "Warning: Could not extract confirmation token. Proceeding with downloaded file."
+    fi
+  fi
   echo "Download successful."
 else
   echo "Error: Failed to download file from $URL"
@@ -38,7 +65,8 @@ else
   exit 1
 fi
 
-echo "Flattening all files from extracted archive…"
+echo "Flattening all files from extracted archive..."
 find "$EXTRACT_DIR" -type f -exec mv -f {} "$TARGET_DIR/" \;
 
-echo "Process completed."
+echo "Process completed. Files placed in $TARGET_DIR/:"
+find "$TARGET_DIR" -maxdepth 1 \( -name "*.svg" -o -name "*.png" -o -name "*.ico" \) | sort

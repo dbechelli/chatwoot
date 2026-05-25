@@ -6,6 +6,7 @@ const state = {
   mineCount: 0,
   unAssignedCount: 0,
   allCount: 0,
+  resolvedCount: 0,
 };
 
 export const getters = {
@@ -53,14 +54,16 @@ export const mutations = {
   [types.SET_CONV_TAB_META](
     $state,
     {
-      mine_count: mineCount,
-      unassigned_count: unAssignedCount,
-      all_count: allCount,
+      mine_count: mineCount = $state.mineCount,
+      unassigned_count: unAssignedCount = $state.unAssignedCount,
+      all_count: allCount = $state.allCount,
+      resolved_count: resolvedCount = $state.resolvedCount,
     } = {}
   ) {
     $state.mineCount = mineCount;
     $state.allCount = allCount;
     $state.unAssignedCount = unAssignedCount;
+    $state.resolvedCount = resolvedCount;
     $state.updatedOn = new Date();
   },
 };

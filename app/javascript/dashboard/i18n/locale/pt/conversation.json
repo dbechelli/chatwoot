@@ -30,6 +30,8 @@
     "CLICK_HERE": "Clique aqui",
     "LOADING_INBOXES": "A carregar caixas de entrada",
     "LOADING_CONVERSATIONS": "A carregar conversas",
+    "LOAD_PREVIOUS_CONVERSATIONS": "Carregar conversas anteriores",
+    "LOADING_PREVIOUS_CONVERSATIONS": "A carregar conversas anteriores...",
     "CANNOT_REPLY": "Não pode responder porque",
     "24_HOURS_WINDOW": "Mensagens bloqueadas durante 24 horas",
     "48_HOURS_WINDOW": "Mensagens bloqueadas durante 48 horas",
@@ -71,7 +73,8 @@
     "REPLY_MESSAGE_NOT_FOUND": "Mensagem indisponível",
     "CARD": {
       "SHOW_LABELS": "Mostrar etiquetas",
-      "HIDE_LABELS": "Ocultar etiquetas"
+      "HIDE_LABELS": "Ocultar etiquetas",
+      "LABELS_COUNT": "{count} labels"
     },
     "VOICE_CALL": {
       "INCOMING_CALL": "Incoming call",
@@ -82,7 +85,9 @@
       "CALL_ENDED": "Call ended",
       "NOT_ANSWERED_YET": "Not answered yet",
       "THEY_ANSWERED": "They answered",
-      "YOU_ANSWERED": "You answered"
+      "YOU_ANSWERED": "You answered",
+      "AGENT_ANSWERED": "{agentName} answered",
+      "JOIN_CALL": "Join call"
     },
     "HEADER": {
       "RESOLVE_ACTION": "Resolver",
@@ -92,6 +97,7 @@
       "OPEN": "Mais",
       "CLOSE": "Fechar",
       "DETAILS": "Detalhes",
+      "COPY_ID_SUCCESS": "Conversation ID copied to clipboard",
       "SNOOZED_UNTIL": "Suspender até",
       "SNOOZED_UNTIL_TOMORROW": "Adiada até amanhã",
       "SNOOZED_UNTIL_NEXT_WEEK": "Adiada até a próxima semana",
@@ -362,7 +368,19 @@
       "PREVIOUS_CONVERSATION": "Conversas anteriores",
       "MACROS": "Macros",
       "LINEAR_ISSUES": "Casos Linear Associados",
-      "SHOPIFY_ORDERS": "Shopify Orders"
+      "SHOPIFY_ORDERS": "Shopify Orders",
+      "SHARED_FILES": "Attachments"
+    },
+    "SHARED_FILES": {
+      "EMPTY": "No attachments yet",
+      "DOWNLOAD": "Download file",
+      "DOWNLOAD_ERROR": "Could not download the file. Please try again.",
+      "MEDIA_HEADING": "Media",
+      "FILES_HEADING": "Files",
+      "VIEW_ALL": "Visualizar todos",
+      "SHOW_LESS": "Show less",
+      "MORE_COUNT": "+{count}",
+      "UNTITLED_FILE": "Untitled file"
     },
     "SHOPIFY": {
       "ORDER_ID": "Order #{id}",
@@ -448,5 +466,25 @@
   },
   "GALLERY_VIEW": {
     "ERROR_DOWNLOADING": "Unable to download attachment. Please try again"
+  },
+  "FORWARD_MESSAGE": {
+    "TITLE": "Reencaminhar mensagem",
+    "DESCRIPTION": "Selecione os contactos para reencaminhar esta mensagem",
+    "SEARCH_PLACEHOLDER": "Procurar contactos por nome, email ou telefone...",
+    "NO_CONTACTS": "Nenhum contacto encontrado",
+    "NO_CONTACTS_FOUND": "Nenhum contacto encontrado para esta pesquisa",
+    "SEARCHING": "A procurar contactos...",
+    "NO_SELECTION": "Nenhum contacto selecionado",
+    "UNKNOWN_CONTACT": "Contacto desconhecido",
+    "SELECTED_COUNT": "{count} selecionado(s)",
+    "INCLUDE_ATTACHMENTS": "Incluir anexos",
+    "FORWARD": "Reencaminhar",
+    "CANCEL": "Cancelar",
+    "SUCCESS": "Mensagem reencaminhada para {count} contacto(s)",
+    "ERROR": "Falha ao reencaminhar mensagem",
+    "PARTIAL_ERROR": "Falha ao reencaminhar para {count} contacto(s)",
+    "NO_MESSAGES": "Nenhuma mensagem para reencaminhar",
+    "LOADING_CONTACTS": "A carregar contactos...",
+    "SELECT_AT_LEAST_ONE": "Selecione pelo menos um contacto"
   }
 }

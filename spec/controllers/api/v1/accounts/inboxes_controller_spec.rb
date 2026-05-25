@@ -501,6 +501,31 @@ RSpec.describe 'Inboxes API', type: :request do
         expect(api_channel.reload.webhook_url).to eq('webhook.test')
       end
 
+      it 'updates api inbox additional_attributes when administrator' do
+        api_channel = create(:channel_api, account: account)
+        api_inbox = create(:inbox, channel: api_channel, account: account)
+
+        patch "/api/v1/accounts/#{account.id}/inboxes/#{api_inbox.id}",
+              headers: admin.create_new_auth_token,
+              params: {
+                channel: {
+                  additional_attributes: {
+                    provider: 'uazapi',
+                    uazapi_base_url: 'https://demo.uazapi.com',
+                    uazapi_token: 'secret-token'
+                  }
+                }
+              },
+              as: :json
+
+        expect(response).to have_http_status(:success)
+        expect(api_channel.reload.additional_attributes).to include(
+          'provider' => 'uazapi',
+          'uazapi_base_url' => 'https://demo.uazapi.com',
+          'uazapi_token' => 'secret-token'
+        )
+      end
+
       it 'updates whatsapp inbox when administrator' do
         stub_request(:post, 'https://waba.360dialog.io/v1/configs/webhook').to_return(status: 200, body: '', headers: {})
         stub_request(:get, 'https://waba.360dialog.io/v1/configs/templates').to_return(status: 200, body: '', headers: {})
@@ -568,8 +593,10 @@ RSpec.describe 'Inboxes API', type: :request do
         email_channel = create(:channel_email, account: account)
         email_inbox = create(:inbox, channel: email_channel, account: account)
 
-        imap_connection = double
-        allow(Mail).to receive(:connection).and_return(imap_connection)
+        imap_connection = instance_double(Net::IMAP, disconnected?: false)
+        allow(Net::IMAP).to receive(:new).and_return(imap_connection)
+        allow(imap_connection).to receive(:login)
+        allow(imap_connection).to receive(:disconnect)
 
         patch "/api/v1/accounts/#{account.id}/inboxes/#{email_inbox.id}",
               headers: admin.create_new_auth_token,
@@ -578,7 +605,8 @@ RSpec.describe 'Inboxes API', type: :request do
                   imap_enabled: true,
                   imap_address: 'imap.gmail.com',
                   imap_port: 993,
-                  imap_login: 'imaptest@gmail.com'
+                  imap_login: 'imaptest@gmail.com',
+                  imap_authentication: 'login'
                 }
               },
               as: :json
@@ -587,6 +615,7 @@ RSpec.describe 'Inboxes API', type: :request do
         expect(email_channel.reload.imap_enabled).to be true
         expect(email_channel.reload.imap_address).to eq('imap.gmail.com')
         expect(email_channel.reload.imap_port).to eq(993)
+        expect(email_channel.reload.imap_authentication).to eq('login')
       end
 
       it 'updates avatar when administrator' do
@@ -1003,6 +1032,19 @@ RSpec.describe 'Inboxes API', type: :request do
              as: :json
 
         expect(response).to have_http_status(:unauthorized)
+      end
+
+      it 'does not allow binding an agent bot from another account' do
+        other_account = create(:account)
+        foreign_bot = create(:agent_bot, account: other_account)
+
+        post "/api/v1/accounts/#{account.id}/inboxes/#{inbox.id}/set_agent_bot",
+             headers: admin.create_new_auth_token,
+             params: { agent_bot: foreign_bot.id },
+             as: :json
+
+        expect(response).to have_http_status(:not_found)
+        expect(inbox.reload.agent_bot).to be_nil
       end
     end
   end

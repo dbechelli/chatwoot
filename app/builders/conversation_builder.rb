@@ -10,7 +10,10 @@ class ConversationBuilder
   def look_up_exising_conversation
     return unless @contact_inbox.inbox.lock_to_single_conversation?
 
-    @contact_inbox.inbox.conversations.where(contact_id: @contact_inbox.contact_id).last
+    conversation = @contact_inbox.inbox.conversations.where(contact_id: @contact_inbox.contact_id).last
+    return conversation if conversation && !conversation.resolved?
+
+    nil
   end
 
   def create_new_conversation

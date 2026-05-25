@@ -5,6 +5,7 @@ class Api::V1::Accounts::ConversationsController < Api::V1::Accounts::BaseContro
 
   before_action :conversation, except: [:index, :meta, :search, :create, :filter, :presence_subscribe_bulk]
   before_action :inbox, :contact, :contact_inbox, only: [:create]
+  before_action :set_current_conversation, only: [:previous_resolved]
 
   ATTACHMENT_RESULTS_PER_PAGE = 100
 
@@ -25,10 +26,15 @@ class Api::V1::Accounts::ConversationsController < Api::V1::Accounts::BaseContro
     @conversations_count = result[:count]
   end
 
+  def whatsapp_groups
+    @groups = whatsapp_group_conversations
+    @groups_count = @groups.count
+  end
+
   def attachments
     @attachments_count = @conversation.attachments.count
     @attachments = @conversation.attachments
-                                .includes(:message)
+                                .includes({ file_attachment: :blob }, message: [:inbox, { sender: { avatar_attachment: :blob } }])
                                 .order(created_at: :desc)
                                 .page(attachment_params[:page])
                                 .per(ATTACHMENT_RESULTS_PER_PAGE)
@@ -153,11 +159,42 @@ class Api::V1::Accounts::ConversationsController < Api::V1::Accounts::BaseContro
 
   def destroy
     authorize @conversation, :destroy?
-    ::DeleteObjectJob.perform_later(@conversation, Current.user, request.ip)
+    ::DeleteObjectJob.perform_now(@conversation, Current.user, request.ip)
     head :ok
   end
 
+  def previous_resolved
+    contact = @current_conversation.contact
+    if contact.blank?
+      @previous_conversations = []
+      @messages = []
+      return
+    end
+
+    query = Current.account.conversations
+                   .where(contact_id: contact.id, status: :resolved)
+                   .where.not(id: @current_conversation.id)
+
+    if params[:before_id].present? && params[:before_id] != 'null'
+      before_conversation = Current.account.conversations.find_by(id: params[:before_id])
+      query = query.where('created_at < ?', before_conversation.created_at) if before_conversation
+    end
+
+    @previous_conversations = query.order(created_at: :desc)
+                                   .limit(params[:limit] || 1)
+
+    conversation_ids = @previous_conversations.pluck(:id)
+    @messages = Message.where(conversation_id: conversation_ids)
+                       .includes(:sender, :attachments, :conversation)
+                       .order(created_at: :asc)
+  end
+
   private
+
+  def set_current_conversation
+    @current_conversation = Current.account.conversations.find_by!(display_id: params[:id])
+    authorize @current_conversation, :show?
+  end
 
   def permitted_update_params
     # TODO: Move the other conversation attributes to this method and remove specific endpoints for each attribute
@@ -166,6 +203,21 @@ class Api::V1::Accounts::ConversationsController < Api::V1::Accounts::BaseContro
 
   def attachment_params
     params.permit(:page)
+  end
+
+  def whatsapp_group_conversations
+    Current.account.conversations
+           .joins(:contact)
+           .joins('INNER JOIN inboxes ON inboxes.id = conversations.inbox_id')
+           .joins('INNER JOIN channel_whatsapp ON channel_whatsapp.id = inboxes.channel_id')
+           .where(inboxes: { channel_type: 'Channel::Whatsapp' })
+           .where(channel_whatsapp: { provider: 'zapi' })
+           .where("conversations.additional_attributes ->> 'is_whatsapp_group' = 'true' OR \
+                   conversations.additional_attributes ->> 'type' = 'group' OR \
+                   contacts.identifier LIKE '%@g.us'")
+           .includes(:contact)
+           .distinct
+           .order(last_activity_at: :desc)
   end
 
   def presence_subscribe_params

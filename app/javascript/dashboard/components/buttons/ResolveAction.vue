@@ -5,6 +5,7 @@ import { useToggle } from '@vueuse/core';
 import { useI18n } from 'vue-i18n';
 import { useStore, useStoreGetters } from 'dashboard/composables/store';
 import { useEmitter } from 'dashboard/composables/emitter';
+import { emitter } from 'shared/helpers/mitt';
 import { useKeyboardEvents } from 'dashboard/composables/useKeyboardEvents';
 import { useConversationRequiredAttributes } from 'dashboard/composables/useConversationRequiredAttributes';
 
@@ -14,6 +15,7 @@ import wootConstants from 'dashboard/constants/globals';
 import {
   CMD_REOPEN_CONVERSATION,
   CMD_RESOLVE_CONVERSATION,
+  CMD_OPEN_KANBAN_MODAL,
 } from 'dashboard/helper/commandbar/events';
 
 import ButtonGroup from 'dashboard/components-next/buttonGroup/ButtonGroup.vue';
@@ -138,6 +140,11 @@ const onCmdResolveConversation = () => {
   }
 };
 
+const openKanbanModal = () => {
+  closeDropdown();
+  emitter.emit(CMD_OPEN_KANBAN_MODAL);
+};
+
 const keyboardEvents = {
   'Alt+KeyM': {
     action: () => arrowDownButtonRef.value?.$el.click(),
@@ -224,6 +231,18 @@ useEmitter(CMD_RESOLVE_CONVERSATION, onCmdResolveConversation);
       class="border rounded-lg shadow-lg border-n-strong dark:border-n-strong box-content p-2 w-fit z-10 bg-n-alpha-3 backdrop-blur-[100px] absolute block left-auto top-full mt-0.5 start-0 xl:start-auto xl:end-0 max-w-[12.5rem] min-w-[9.75rem] [&_ul>li]:mb-0"
     >
       <WootDropdownMenu class="mb-0">
+        <WootDropdownItem>
+          <Button
+            :label="t('KANBAN.SIDEBAR_TITLE')"
+            ghost
+            slate
+            sm
+            start
+            icon="i-lucide-trello"
+            class="w-full"
+            @click="openKanbanModal"
+          />
+        </WootDropdownItem>
         <WootDropdownItem v-if="!isPending">
           <Button
             :label="t('CONVERSATION.RESOLVE_DROPDOWN.SNOOZE_UNTIL')"

@@ -256,12 +256,7 @@
         },
         "SELECT_PROVIDER": {
           "TITLE": "Select your API provider",
-          "DESCRIPTION": "Choose your WhatsApp provider. You can connect directly through Meta which requires no setup, or connect through Twilio using your account credentials.",
-          "ZAPI_PROMO": {
-            "TITLE": "Looking for a reliable WhatsApp solution?",
-            "DESCRIPTION": "Z-API offers superior stability compared to Baileys and is much simpler to set up than Cloud or Twilio - no complex configuration required. Perfect for businesses that want to get started quickly.",
-            "CTA": "Use Z-API"
-          }
+          "DESCRIPTION": "Choose your WhatsApp provider. You can connect directly through Meta which requires no setup, or connect through Twilio using your account credentials."
         },
         "INBOX_NAME": {
           "LABEL": "Inbox Name",
@@ -369,13 +364,6 @@
           "MANUAL_FALLBACK": "If your number is already connected to the WhatsApp Business Platform (API), or if you’re a tech provider onboarding your own number, please use the {link} flow",
           "MANUAL_LINK_TEXT": "manual setup flow"
         },
-        "ZAPI_PROMO": {
-          "SETUP_BANNER": {
-            "TITLE": "Get 10% off your Z-API subscription",
-            "DESCRIPTION": "Create your Z-API account using our affiliate link and receive 10% off. Simple setup, reliable connections, and great support.",
-            "CTA": "Create Z-API Account"
-          }
-        },
         "API": {
           "ERROR_MESSAGE": "We were not able to save the WhatsApp channel"
         }
@@ -434,6 +422,17 @@
           "SUBTITLE": "Configure the URL where you want to receive callbacks on events.",
           "PLACEHOLDER": "Webhook URL"
         },
+        "UAZAPI_BASE_URL": {
+          "LABEL": "UAZAPI Base URL",
+          "SUBTITLE": "Optional. Configure the UAZAPI instance base URL to enable direct message edit and delete actions.",
+          "PLACEHOLDER": "https://your-subdomain.uazapi.com"
+        },
+        "UAZAPI_TOKEN": {
+          "LABEL": "UAZAPI Token",
+          "SUBTITLE": "Optional. Provide the instance token used in the `token` header for UAZAPI requests.",
+          "PLACEHOLDER": "UAZAPI token"
+        },
+        "UAZAPI_ERROR": "Fill both UAZAPI Base URL and UAZAPI Token, or leave both empty.",
         "SUBMIT_BUTTON": "Create API Channel",
         "API": {
           "ERROR_MESSAGE": "We were not able to save the api channel"
@@ -716,7 +715,17 @@
       "WIDGET_BUILDER": "Widget Builder",
       "BOT_CONFIGURATION": "Bot Configuration",
       "ACCOUNT_HEALTH": "Account Health",
-      "CSAT": "CSAT"
+      "CSAT": "CSAT",
+      "VOICE": "Voice"
+    },
+    "VOICE_CONFIGURATION": {
+      "ENABLE_VOICE": {
+        "LABEL": "Enable Voice Calling",
+        "DESCRIPTION": "Enable voice calling on this inbox. Agents will be able to make and receive phone calls."
+      },
+      "CREDENTIALS": {
+        "DESCRIPTION": "Voice calling requires Twilio API Key credentials. These are used to generate tokens for agent voice connections."
+      }
     },
     "CHANNEL_PREFERENCES": "Channel Preferences",
     "WIDGET_FEATURES": "Widget features",
@@ -825,6 +834,7 @@
       "SENDER_NAME_SECTION_TEXT": "Enable/Disable showing Agent's name in email, if disabled it will show business name",
       "ENABLE_CONTINUITY_VIA_EMAIL": "Enable conversation continuity via email",
       "ENABLE_CONTINUITY_VIA_EMAIL_SUB_TEXT": "Conversations will continue over email if the contact email address is available.",
+      "ENABLE_CONTINUITY_VIA_EMAIL_DISABLED_TEXT": "This feature is available on a paid plan. Upgrade to enable conversation continuity via email.",
       "LOCK_TO_SINGLE_CONVERSATION": "Conversation Routing",
       "LOCK_TO_SINGLE_CONVERSATION_SUB_TEXT": "Configure conversation creation for existing contacts",
       "INBOX_UPDATE_TITLE": "Inbox Settings",
@@ -1131,7 +1141,8 @@
         "LABEL": "Password",
         "PLACE_HOLDER": "Password"
       },
-      "ENABLE_SSL": "Enable SSL"
+      "ENABLE_SSL": "Enable SSL",
+      "AUTH_MECHANISM": "Authentication"
     },
     "MICROSOFT": {
       "TITLE": "Microsoft",

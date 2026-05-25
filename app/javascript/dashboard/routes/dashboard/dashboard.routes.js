@@ -4,6 +4,7 @@ import { routes as searchRoutes } from '../../modules/search/search.routes';
 import { routes as contactRoutes } from './contacts/routes';
 import { routes as companyRoutes } from './companies/routes';
 import { routes as notificationRoutes } from './notifications/routes';
+import { routes as calendarRoutes } from './calendar/routes';
 import { routes as inboxRoutes } from './inbox/routes';
 import { frontendURL } from '../../helper/URLHelper';
 import helpcenterRoutes from './helpcenter/helpcenter.routes';
@@ -15,6 +16,7 @@ import internalChatRoutes from './internalChat/internalChat.routes';
 import AppContainer from './Dashboard.vue';
 import Suspended from './suspended/Index.vue';
 import NoAccounts from './noAccounts/Index.vue';
+import OnboardingAccountDetails from './onboarding/Index.vue';
 
 export default {
   routes: [
@@ -28,6 +30,7 @@ export default {
         ...conversation.routes,
         ...settings.routes,
         ...contactRoutes,
+        ...calendarRoutes,
         ...companyRoutes,
         ...searchRoutes,
         ...notificationRoutes,
@@ -36,6 +39,14 @@ export default {
         ...dashboardAppsRoutes.routes,
         ...internalChatRoutes.routes,
       ],
+    },
+    {
+      path: frontendURL('accounts/:accountId/onboarding'),
+      name: 'onboarding_account_details',
+      meta: {
+        permissions: ['administrator', 'agent', 'custom_role'],
+      },
+      component: OnboardingAccountDetails,
     },
     {
       path: frontendURL('accounts/:accountId/suspended'),

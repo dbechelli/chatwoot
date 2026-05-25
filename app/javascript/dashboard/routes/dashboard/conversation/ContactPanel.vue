@@ -14,11 +14,13 @@ import ContactConversations from './ContactConversations.vue';
 import ConversationAction from './ConversationAction.vue';
 import ConversationParticipant from './ConversationParticipant.vue';
 import ContactInfo from './contact/ContactInfo.vue';
-import GroupContactInfo from './contact/GroupContactInfo.vue';
 import ContactNotes from './contact/ContactNotes.vue';
 import ScheduledMessages from './scheduledMessages/ScheduledMessages.vue';
 import ConversationInfo from './ConversationInfo.vue';
 import CustomAttributes from './customAttributes/CustomAttributes.vue';
+import KanbanPanel from './KanbanPanel.vue';
+import WhatsappGroupPanel from 'dashboard/components/WhatsappGroupPanel.vue';
+import SharedFiles from './SharedFiles.vue';
 import Draggable from 'vuedraggable';
 import MacrosList from './Macros/List.vue';
 import ShopifyOrdersList from 'dashboard/components/widgets/conversation/ShopifyOrdersList.vue';
@@ -56,7 +58,7 @@ const isShopifyFeatureEnabled = computed(
   () => shopifyIntegration.value.enabled
 );
 
-const { isCloudFeatureEnabled } = useAccount();
+const { isCloudFeatureEnabled, accountId } = useAccount();
 
 const isLinearFeatureEnabled = computed(() =>
   isCloudFeatureEnabled(FEATURE_FLAGS.LINEAR)
@@ -89,14 +91,6 @@ const conversationAdditionalAttributes = computed(
 );
 
 const channelType = computed(() => currentChat.value.meta?.channel);
-const isGroupConversation = computed(
-  () => currentChat.value.group_type === 'group'
-);
-const sidebarTitle = computed(() =>
-  isGroupConversation.value
-    ? 'GROUP.SIDEBAR_TITLE'
-    : 'CONVERSATION.SIDEBAR.CONTACT'
-);
 
 const contactGetter = useMapGetter('contacts/getContact');
 const contactId = computed(() => currentChat.value.meta?.sender?.id);
@@ -105,22 +99,39 @@ const contactAdditionalAttributes = computed(
   () => contact.value.additional_attributes || {}
 );
 
+const isWhatsappGroup = computed(() => {
+  const chat = currentChat.value;
+  if (!chat) return false;
+
+  // 1. Check conversation attributes
+  const chatAttrs = chat.additional_attributes || {};
+  if (chatAttrs.is_whatsapp_group || chatAttrs.type === 'group' || chatAttrs.chat_type === 'group') return true;
+
+  // 2. Check contact attributes
+  const c = contact.value;
+  if (c) {
+    const contactAttrs = c.additional_attributes || {};
+    if (c.is_whatsapp_group || contactAttrs.is_whatsapp_group || contactAttrs.is_group) return true;
+    
+    // 3. Check Source ID / Identifier (Standard for WhatsApp Groups: ends in @g.us)
+    if (c.identifier && String(c.identifier).includes('@g.us')) return true;
+  }
+
+  // 4. Check Sender Meta in Conversation
+  if (chat.meta?.sender?.source_id && String(chat.meta.sender.source_id).includes('@g.us')) return true;
+
+  return false;
+});
+
 const getContactDetails = () => {
   if (contactId.value) {
     store.dispatch('contacts/show', { id: contactId.value });
   }
 };
 
-const triggerGroupSync = () => {
-  if (isGroupConversation.value && contactId.value) {
-    store.dispatch('groupMembers/sync', { contactId: contactId.value });
-  }
-};
-
 watch(contactId, (newContactId, prevContactId) => {
   if (newContactId && newContactId !== prevContactId) {
     getContactDetails();
-    triggerGroupSync();
   }
 });
 
@@ -141,7 +152,6 @@ const closeContactPanel = () => {
 onMounted(() => {
   conversationSidebarItems.value = conversationSidebarItemsOrder.value;
   getContactDetails();
-  triggerGroupSync();
   store.dispatch('attributes/get', 0);
   // Load integrations to ensure linear integration state is available
   store.dispatch('integrations/get', 'linear');
@@ -151,12 +161,35 @@ onMounted(() => {
 <template>
   <div class="w-full">
     <SidebarActionsHeader
-      :title="$t(sidebarTitle)"
+      :title="$t('CONVERSATION.SIDEBAR.CONTACT')"
       @close="closeContactPanel"
     />
-    <GroupContactInfo v-if="isGroupConversation" :contact="contact" />
-    <ContactInfo v-else :contact="contact" :channel-type="channelType" />
+    <ContactInfo :contact="contact" :channel-type="channelType" />
     <div class="px-2 pb-8 list-group">
+      
+      <!-- Kanban CRM Panel -->
+      <div class="mb-3 conversation--actions">
+        <AccordionItem
+          :title="$t('KANBAN.SIDEBAR_TITLE') || 'CRM / Kanban'"
+          :is-open="true"
+        >
+          <KanbanPanel :conversation-id="conversationId" />
+        </AccordionItem>
+      </div>
+
+      <!-- WhatsApp Group Panel -->
+      <div v-if="isWhatsappGroup" class="mb-3 conversation--actions">
+        <AccordionItem
+          :title="$t('WHATSAPP_GROUPS.TITLE') || 'Grupo WhatsApp'"
+          :is-open="true"
+        >
+          <WhatsappGroupPanel 
+            :conversation-id="conversationId" 
+            :account-id="accountId"
+          />
+        </AccordionItem>
+      </div>
+
       <Draggable
         :list="conversationSidebarItems"
         animation="200"
@@ -335,16 +368,22 @@ onMounted(() => {
               <ContactNotes :contact-id="contactId" />
             </AccordionItem>
           </div>
+          <div v-else-if="element.name === 'shared_files'">
+            <AccordionItem
+              :title="$t('CONVERSATION_SIDEBAR.ACCORDION.SHARED_FILES')"
+              :is-open="isContactSidebarItemOpen('is_shared_files_open')"
+              compact
+              @toggle="
+                value => toggleSidebarUIState('is_shared_files_open', value)
+              "
+            >
+              <SharedFiles />
+            </AccordionItem>
+          </div>
         </template>
       </Draggable>
     </div>
   </div>
 </template>
 
-<style lang="scss" scoped>
-::v-deep {
-  .contact--profile {
-    @apply pb-3 border-b border-solid border-n-weak;
-  }
-}
-</style>
+

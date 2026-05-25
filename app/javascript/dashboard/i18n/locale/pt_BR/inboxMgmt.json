@@ -256,12 +256,7 @@
         },
         "SELECT_PROVIDER": {
           "TITLE": "Selecione seu provedor de API",
-          "DESCRIPTION": "Escolha seu provedor do WhatsApp. Você pode se conectar diretamente através de metade, que não requer nenhuma configuração ou se conectar pelo Twilio usando as credenciais da sua conta.",
-          "ZAPI_PROMO": {
-            "TITLE": "Procurando uma solução WhatsApp confiável?",
-            "DESCRIPTION": "Z-API oferece estabilidade superior comparado ao Baileys e é muito mais simples de configurar que Cloud ou Twilio - sem necessidade de configuração complexa. Perfeito para empresas que querem começar rapidamente.",
-            "CTA": "Usar Z-API"
-          }
+          "DESCRIPTION": "Escolha seu provedor do WhatsApp. Você pode se conectar diretamente através da Meta, que não requer nenhuma configuração, ou se conectar pelo Twilio usando as credenciais da sua conta."
         },
         "INBOX_NAME": {
           "LABEL": "Nome da Caixa de Entrada",
@@ -369,13 +364,6 @@
           "MANUAL_FALLBACK": "Se o seu número já estiver conectado à Plataforma WhatsApp Business (API) ou se você for um provedor de tecnologia integrando o seu próprio número, use o fluxo de {link}",
           "MANUAL_LINK_TEXT": "fluxo de configuração manual"
         },
-        "ZAPI_PROMO": {
-          "SETUP_BANNER": {
-            "TITLE": "Ganhe 10% de desconto na sua assinatura Z-API",
-            "DESCRIPTION": "Crie sua conta Z-API usando nosso link de afiliado e receba 10% de desconto. Configuração simples, conexões confiáveis e ótimo suporte.",
-            "CTA": "Criar Conta Z-API"
-          }
-        },
         "API": {
           "ERROR_MESSAGE": "Não foi possível salvar o canal do WhatsApp"
         }
@@ -434,6 +422,17 @@
           "SUBTITLE": "Configure a URL onde você deseja receber callbacks em eventos.",
           "PLACEHOLDER": "URL do Webhook"
         },
+        "UAZAPI_BASE_URL": {
+          "LABEL": "URL base da UAZAPI",
+          "SUBTITLE": "Opcional. Configure a URL base da instância UAZAPI para habilitar edição e exclusão diretas de mensagens.",
+          "PLACEHOLDER": "https://seu-subdominio.uazapi.com"
+        },
+        "UAZAPI_TOKEN": {
+          "LABEL": "Token da UAZAPI",
+          "SUBTITLE": "Opcional. Informe o token da instância usado no cabeçalho `token` das requisições da UAZAPI.",
+          "PLACEHOLDER": "Token da UAZAPI"
+        },
+        "UAZAPI_ERROR": "Preencha a URL base da UAZAPI e o token da UAZAPI, ou deixe os dois em branco.",
         "SUBMIT_BUTTON": "Criar canal de API",
         "API": {
           "ERROR_MESSAGE": "Não foi possível salvar o canal de API"
@@ -716,7 +715,17 @@
       "WIDGET_BUILDER": "Construtor de Widget",
       "BOT_CONFIGURATION": "Configuração do Bot",
       "ACCOUNT_HEALTH": "Saúde da conta",
-      "CSAT": "CSAT"
+      "CSAT": "CSAT",
+      "VOICE": "Voz"
+    },
+    "VOICE_CONFIGURATION": {
+      "ENABLE_VOICE": {
+        "LABEL": "Habilitar Chamada de Voz",
+        "DESCRIPTION": "Habilite chamadas de voz nesta caixa de entrada. Agentes poderão fazer e receber chamadas telefônicas."
+      },
+      "CREDENTIALS": {
+        "DESCRIPTION": "Chamada de voz requer credenciais de chave da API Twilio. Elas são usadas para gerar tokens para conexões de voz do agente."
+      }
     },
     "CHANNEL_PREFERENCES": "Preferências do Canal",
     "WIDGET_FEATURES": "Recursos do widget",
@@ -825,6 +834,7 @@
       "SENDER_NAME_SECTION_TEXT": "Ativar/Desativar exibição do nome do agente no e-mail, se estiver desativado, exibirá o nome da empresa",
       "ENABLE_CONTINUITY_VIA_EMAIL": "Habilitar continuidade das conversas por e-mail",
       "ENABLE_CONTINUITY_VIA_EMAIL_SUB_TEXT": "As conversas continuarão sobre o e-mail se o endereço de e-mail de contato estiver disponível.",
+      "ENABLE_CONTINUITY_VIA_EMAIL_DISABLED_TEXT": "Este recurso está disponível em um plano pago. Atualize para ativar a continuidade da conversa via e-mail.",
       "LOCK_TO_SINGLE_CONVERSATION": "Roteamento de Conversa",
       "LOCK_TO_SINGLE_CONVERSATION_SUB_TEXT": "Configurar a criação de conversas para contatos existentes",
       "INBOX_UPDATE_TITLE": "Configurações da Caixa de Entrada",
@@ -1145,7 +1155,8 @@
         "LABEL": "Senha",
         "PLACE_HOLDER": "Senha"
       },
-      "ENABLE_SSL": "Habilitar o SSL"
+      "ENABLE_SSL": "Habilitar o SSL",
+      "AUTH_MECHANISM": "Autenticação"
     },
     "MICROSOFT": {
       "TITLE": "Microsoft",
