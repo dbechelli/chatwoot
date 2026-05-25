@@ -27,9 +27,7 @@ import ChatTypeTabs from './widgets/ChatTypeTabs.vue';
 import DeleteCustomViews from 'dashboard/routes/dashboard/customviews/DeleteCustomViews.vue';
 import ConversationBulkActions from './widgets/conversation/conversationBulkActions/Index.vue';
 import TeleportWithDirection from 'dashboard/components-next/TeleportWithDirection.vue';
-import Spinner from 'dashboard/components-next/spinner/Spinner.vue';
 import ForwardMessageModal from './widgets/conversation/ForwardMessageModal.vue';
-import IntersectionObserver from 'dashboard/components/IntersectionObserver.vue';
 import ConversationResolveAttributesModal from 'dashboard/components-next/ConversationWorkflow/ConversationResolveAttributesModal.vue';
 
 import { useUISettings } from 'dashboard/composables/useUISettings';
@@ -297,6 +295,10 @@ const conversationListPagination = computed(() => {
 const isResolvedTab = computed(() => {
   return activeAssigneeTab.value === wootConstants.ASSIGNEE_TYPE.RESOLVED;
 });
+
+const effectiveActiveStatus = computed(() =>
+  isResolvedTab.value ? wootConstants.STATUS_TYPE.RESOLVED : activeStatus.value
+);
 
 const conversationFilters = computed(() => {
   // Para a aba resolved, filtramos por status=resolved com assignee_type=all
@@ -675,6 +677,7 @@ function updateAssigneeTab(selectedTab) {
 
 function onBasicFilterChange(value, type) {
   if (type === 'status') {
+    if (isResolvedTab.value) return;
     activeStatus.value = value;
   } else if (type === 'group_type') {
     activeGroupType.value = value;
@@ -1020,7 +1023,7 @@ watch(conversationFilters, (newVal, oldVal) => {
       :has-applied-filters="hasAppliedFilters"
       :has-active-folders="hasActiveFolders"
       :can-manage-active-folder="canManageActiveFolder"
-      :active-status="activeStatus"
+      :active-status="effectiveActiveStatus"
       :is-on-expanded-layout="isOnExpandedLayout"
       :conversation-stats="conversationStats"
       :is-list-loading="chatListLoading && !conversationList.length"
