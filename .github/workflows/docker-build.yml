@@ -10,6 +10,7 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   build-and-push:
@@ -63,16 +64,38 @@ jobs:
 
       - name: Trigger Coolify Deployment
         if: github.ref == 'refs/heads/claude/add-resolved-tab-hESJN'
+        continue-on-error: true
         run: |
-          if [ -n "${{ secrets.COOLIFY_WEBHOOK }}" ]; then
-            if [ -n "${{ secrets.COOLIFY_TOKEN }}" ]; then
-              echo "Triggering deployment with Authentication Token..."
-              curl -X GET "${{ secrets.COOLIFY_WEBHOOK }}" -H "Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}" --retry 3 --retry-delay 5
-            else
-              echo "Triggering deployment via Webhook URL..."
-              curl -X GET "${{ secrets.COOLIFY_WEBHOOK }}" --retry 3 --retry-delay 5
-            fi
-            echo "Triggered Coolify deployment"
-          else
+          if [ -z "${{ secrets.COOLIFY_WEBHOOK }}" ]; then
             echo "COOLIFY_WEBHOOK secret not set, skipping deployment trigger"
+            exit 0
+          fi
+
+          echo "Triggering Coolify deployment..."
+          if [ -n "${{ secrets.COOLIFY_TOKEN }}" ]; then
+            HTTP_STATUS=$(curl -s -o /tmp/coolify_response.txt -w "%{http_code}" \
+              --max-time 30 \
+              --connect-timeout 10 \
+              --retry 3 \
+              --retry-delay 5 \
+              --retry-connrefused \
+              -X GET "${{ secrets.COOLIFY_WEBHOOK }}" \
+              -H "Authorization: Bearer ${{ secrets.COOLIFY_TOKEN }}")
+          else
+            HTTP_STATUS=$(curl -s -o /tmp/coolify_response.txt -w "%{http_code}" \
+              --max-time 30 \
+              --connect-timeout 10 \
+              --retry 3 \
+              --retry-delay 5 \
+              --retry-connrefused \
+              -X GET "${{ secrets.COOLIFY_WEBHOOK }}")
+          fi
+
+          echo "HTTP status: $HTTP_STATUS"
+          echo "Response: $(cat /tmp/coolify_response.txt)"
+
+          if [[ "$HTTP_STATUS" =~ ^2 ]]; then
+            echo "Coolify deployment triggered successfully."
+          else
+            echo "Warning: Coolify webhook returned HTTP $HTTP_STATUS. Docker image was pushed; deploy may need to be triggered manually."
           fi
