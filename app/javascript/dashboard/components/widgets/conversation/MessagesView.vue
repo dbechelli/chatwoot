@@ -360,7 +360,7 @@ export default {
 
   watch: {
     currentChat(newChat, oldChat) {
-      if (newChat.id === oldChat?.id) {
+      if (newChat.id === oldChat.id) {
         return;
       }
       this.fetchAllAttachmentsFromCurrentChat();
@@ -372,7 +372,6 @@ export default {
       this.loadedConversationsCount = 0;
       this.lastLoadedConversationId = null;
       this.hasCheckedForPrevious = false;
-      // Check if there are previous conversations
       this.checkForPreviousConversations();
       this.resetReplyEditorHeight();
     },
