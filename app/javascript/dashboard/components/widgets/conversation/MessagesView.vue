@@ -360,7 +360,7 @@ export default {
 
   watch: {
     currentChat(newChat, oldChat) {
-      if (newChat.id === oldChat.id) {
+      if (newChat.id === oldChat?.id) {
         return;
       }
       this.fetchAllAttachmentsFromCurrentChat();
@@ -659,7 +659,7 @@ export default {
         try {
           await this.$store.dispatch('fetchPreviousMessages', {
             conversationId: this.currentChat.id,
-            before: this.currentChat.messages[0].id,
+            before: this.currentChat.messages?.[0]?.id,
           });
           const heightDifference =
             this.conversationPanel.scrollHeight - this.heightBeforeLoad;
